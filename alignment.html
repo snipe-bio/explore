@@ -20,6 +20,18 @@
             width: 100%;
             height: 150px;
             margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .dropzone .file-list {
+            height: 100px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .dropzone .dz-message {
+            text-align: center;
+            margin: 2em 0;
         }
         .column {
             flex: 1;
@@ -59,15 +71,24 @@
     <div class="container">
         <div class="column">
             <strong>Samples</strong>
-            <div class="dropzone" id="samples-dropzone"></div>
+            <div class="dropzone" id="samples-dropzone">
+                <div class="dz-message">Click or drop files here to upload</div>
+                <div class="file-list"></div>
+            </div>
         </div>
         <div class="column">
             <strong>Reference Genome</strong>
-            <div class="dropzone" id="reference-dropzone"></div>
+            <div class="dropzone" id="reference-dropzone">
+                <div class="dz-message">Click or drop a single file here to upload</div>
+                <div class="file-list"></div>
+            </div>
         </div>
         <div class="column">
             <strong>Amplicon</strong>
-            <div class="dropzone" id="amplicon-dropzone"></div>
+            <div class="dropzone" id="amplicon-dropzone">
+                <div class="dz-message">Click or drop files here to upload</div>
+                <div class="file-list"></div>
+            </div>
         </div>
     </div>
 
@@ -75,43 +96,34 @@
     <script>
         Dropzone.autoDiscover = false;
 
-        // Configuration for Samples Dropzone
-        new Dropzone("#samples-dropzone", {
-            url: "#",
-            autoProcessQueue: false,
-            uploadMultiple: true,
-            init: function() {
-                this.on("addedfile", function(file) {
-                    createFileRow(file, this, "#samples-dropzone");
-                });
-            }
-        });
+        function setupDropzone(elementId) {
+            const dropzone = new Dropzone(elementId, {
+                url: "#",
+                autoProcessQueue: false,
+                uploadMultiple: true,
+                clickable: true,  // Make the dropzone clickable
+                previewsContainer: false,  // Disable file preview thumbnails
+                init: function() {
+                    this.on("addedfile", function(file) {
+                        createFileRow(file, this, elementId + ' .file-list');
+                    });
+                }
+            });
 
-        // Configuration for Reference Genome Dropzone, allowing only one file
-        new Dropzone("#reference-dropzone", {
-            url: "#",
-            autoProcessQueue: false,
-            maxFiles: 1,
-            init: function() {
-                this.on("addedfile", function(file) {
-                    createFileRow(file, this, "#reference-dropzone");
-                });
-            }
-        });
+            // If there are no files, show the message
+            dropzone.on("totaluploadprogress", function(progress) {
+                const fileList = document.querySelector(elementId + ' .file-list');
+                if (fileList.childNodes.length === 0) {
+                    document.querySelector(elementId + ' .dz-message').style.display = 'block';
+                } else {
+                    document.querySelector(elementId + ' .dz-message').style.display = 'none';
+                }
+            });
 
-        // Configuration for Amplicon Dropzone
-        new Dropzone("#amplicon-dropzone", {
-            url: "#",
-            autoProcessQueue: false,
-            uploadMultiple: true,
-            init: function() {
-                this.on("addedfile", function(file) {
-                    createFileRow(file, this, "#amplicon-dropzone");
-                });
-            }
-        });
+            return dropzone;
+        }
 
-        function createFileRow(file, dropzoneInstance, dropzoneSelector) {
+        function createFileRow(file, dropzoneInstance, fileListSelector) {
             const fileRow = document.createElement('div');
             fileRow.className = 'file-row';
             const fileName = document.createElement('span');
@@ -124,13 +136,21 @@
             deleteBtn.onclick = function() {
                 dropzoneInstance.removeFile(file);
                 fileRow.parentNode.removeChild(fileRow);
+                // Trigger file list update
+                dropzoneInstance.emit("totaluploadprogress");
             };
 
             fileRow.appendChild(fileName);
             fileRow.appendChild(deleteBtn);
 
-            document.querySelector(dropzoneSelector).appendChild(fileRow);
+            document.querySelector(fileListSelector).appendChild(fileRow);
+            // Hide the message when files are present
+            document.querySelector(fileListSelector).parentNode.querySelector('.dz-message').style.display = 'none';
         }
+
+        setupDropzone("#samples-dropzone");
+        setupDropzone("#reference-dropzone");
+        setupDropzone("#amplicon-dropzone");
     </script>
 </body>
 </html>
