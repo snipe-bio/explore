@@ -1,0 +1,59 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 20px;
+}
+.dropzone {
+    border: 2px dashed #007BFF;
+    border-radius: 10px;
+    background: white;
+    padding: 20px;
+    width: 100%;
+    height: 150px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+.dropzone .file-list {
+    height: 100px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+.dropzone .dz-message {
+    text-align: center;
+    margin: 2em 0;
+}
+.column {
+    flex: 1;
+    padding: 10px;
+}
+.container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+.file-row {
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    margin-top: 8px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.file-name {
+    font-size: 16px;
+    color: #333;
+}
+.delete-btn {
+    cursor: pointer;
+    background-color: #dc3545;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
