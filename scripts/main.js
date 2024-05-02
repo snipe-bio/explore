@@ -1,54 +1,44 @@
 Dropzone.autoDiscover = false;
 
-function setupDropzone(elementId) {
-    const dropzone = new Dropzone(elementId, {
-        url: "#",
-        autoProcessQueue: false,
-        uploadMultiple: true,
+function setupDropzone(elementId, fileType) {
+    return new Dropzone(elementId, {
+        url: '#', // Dummy action as no server interaction is required
+        autoProcessQueue: false, // Don't process queue as we're handling files client-side
         clickable: true,
-        previewsContainer: false,
+        previewsContainer: false, // Disable preview
         init: function() {
-            this.on("addedfile", function(file) {
-                createFileRow(file, this, elementId + ' .file-list');
+            this.on('addedfile', function(file) {
+                if (this.options.maxFiles === 1 && this.files.length > 1) {
+                    this.removeFile(this.files[0]); // Keep only the most recent file if only one is allowed
+                }
+                
+                const fileRowContainer = document.querySelector(elementId + ' .file-list');
+                if (fileRowContainer) { // Ensure container is found
+                    const fileRow = document.createElement('div');
+                    fileRow.className = 'file-info row';
+                    fileRow.innerHTML = `<div class="col-xs-8">${file.name} - ${(file.size / 1024).toFixed(2)} KB</div>
+                                         <div class="col-xs-4 text-right"><button class="btn btn-danger btn-xs remove-file">Remove</button></div>`;
+                    
+                    fileRow.querySelector('.remove-file').addEventListener('click', () => {
+                        this.removeFile(file);
+                        fileRowContainer.removeChild(fileRow);
+                    });
+
+                    fileRowContainer.appendChild(fileRow);
+                }
+
+                // Handle the file data (size, etc.)
+                handleFileData(file, fileType);
             });
         }
     });
-
-    dropzone.on("totaluploadprogress", function(progress) {
-        const fileList = document.querySelector(elementId + ' .file-list');
-        if (fileList.childNodes.length === 0) {
-            document.querySelector(elementId + ' .dz-message').style.display = 'block';
-        } else {
-            document.querySelector(elementId + ' .dz-message').style.display = 'none';
-        }
-    });
-
-    return dropzone;
 }
 
-function createFileRow(file, dropzoneInstance, fileListSelector) {
-    const fileRow = document.createElement('div');
-    fileRow.className = 'file-row';
-    const fileName = document.createElement('span');
-    fileName.className = 'file-name';
-    fileName.textContent = `${file.name} (${file.size} bytes)`;
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.onclick = function() {
-        dropzoneInstance.removeFile(file);
-        fileRow.parentNode.removeChild(fileRow);
-        dropzoneInstance.emit("totaluploadprogress");
-    };
-
-    fileRow.appendChild(fileName);
-    fileRow.appendChild(deleteBtn);
-
-    document.querySelector(fileListSelector).appendChild(fileRow);
-    document.querySelector(fileListSelector).parentNode.querySelector('.dz-message').style.display = 'none';
+function handleFileData(file, fileType) {
+    console.log(`File type: ${fileType}, Size: ${(file.size / 1024).toFixed(2)} KB`);
+    // Additional handling based on file type can be added here
 }
 
-setupDropzone("#samples-dropzone");
-setupDropzone("#reference-dropzone");
-setupDropzone("#amplicon-dropzone");
+setupDropzone('#samples-dropzone', 'sample');
+setupDropzone('#reference-dropzone', 'genome');
+setupDropzone('#amplicon-dropzone', 'amplicon');
