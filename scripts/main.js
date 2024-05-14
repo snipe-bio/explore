@@ -10,7 +10,7 @@ async function loadPyodideAndPackages() {
     try {
         console.log('Loading Pyodide...');
         const pyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/", fullStdLib : true,
         });
         console.log('Pyodide loaded successfully.');
 
@@ -25,15 +25,30 @@ async function loadPyodideAndPackages() {
         console.log('Local Python files loaded successfully.');
 
         await pyodide.runPythonAsync(`
-            print(dir(Signature))
             print(dir(SigType))
-
         `);
         console.log('Python code executed successfully.');
+
+        return pyodide;
     } catch (error) {
         console.error('Failed to load Pyodide or packages:', error);
     } finally {
         showLoadingAnimation(false);
+    }
+}
+
+let pyodideReady = loadPyodideAndPackages();
+
+async function handleFileData(file, fileType) {
+    const fileContent = await file.text();
+    const pyodide = await pyodideReady;
+
+    if (fileType === 'sample') {
+        window.sampleSignature = fileContent;
+    } else if (fileType === 'genome') {
+        window.genomeSignature = fileContent;
+    } else if (fileType === 'amplicon') {
+        window.ampliconSignature = fileContent;
     }
 }
 
@@ -70,14 +85,91 @@ function setupDropzone(elementId, fileType) {
     });
 }
 
-function handleFileData(file, fileType) {
-    console.log(`File type: ${fileType}, Size: ${(file.size / 1024).toFixed(2)} KB`);
-    // Additional handling based on file type can be added here
+document.getElementById('submitBtn').addEventListener('click', async function() {
+    if (!window.sampleSignature) {
+        alert('At least one sample file is required.');
+        return;
+    }
+    if (!window.genomeSignature && !window.ampliconSignature) {
+        alert('At least one genome or amplicon file is required.');
+        return;
+    }
+    await processSignatures();
+});
+
+async function processSignatures() {
+    const pyodide = await pyodideReady;
+    let result;
+
+    if (window.sampleSignature && window.genomeSignature && window.ampliconSignature) {
+        result = await pyodide.runPythonAsync(`
+            import json
+            sample_sig_str = json.loads("""${window.sampleSignature}""")
+            genome_sig_str = json.loads("""${window.genomeSignature}""")
+            amplicon_sig_str = json.loads("""${window.ampliconSignature}""")
+
+            sample = Signature(51, SigType.SAMPLE)
+            sample.load_from_json_string(json.dumps(sample_sig_str))
+
+            genome = Signature(51, SigType.GENOME)
+            genome.load_from_json_string(json.dumps(genome_sig_str))
+
+            amplicon = Signature(51, SigType.AMPLICON)
+            amplicon.load_from_json_string(json.dumps(amplicon_sig_str))
+
+            sample.add_reference_signature(genome)
+            sample.add_amplicon_signature(amplicon, name='exome')
+
+            {
+                "reference_stats": sample.reference_stats.all_stats(),
+                "amplicon_stats": sample.amplicon_stats["exome"].all_stats()
+            }
+        `);
+    } else if (window.sampleSignature && window.genomeSignature) {
+        result = await pyodide.runPythonAsync(`
+            import json
+            sample_sig_str = json.loads("""${window.sampleSignature}""")
+            genome_sig_str = json.loads("""${window.genomeSignature}""")
+
+            sample = Signature(51, SigType.SAMPLE)
+            sample.load_from_json_string(json.dumps(sample_sig_str))
+
+            print(sample)
+
+            genome = Signature(51, SigType.GENOME)
+            genome.load_from_json_string(json.dumps(genome_sig_str))
+
+            sample.add_reference_signature(genome)
+
+            {
+                "reference_stats": sample.reference_stats.all_stats()
+            }
+        `);
+    } else if (window.sampleSignature && window.ampliconSignature) {
+        result = await pyodide.runPythonAsync(`
+            import json
+            sample_sig_str = json.loads("""${window.sampleSignature}""")
+            amplicon_sig_str = json.loads("""${window.ampliconSignature}""")
+
+            sample = Signature(51, SigType.SAMPLE)
+            sample.load_from_json_string(json.dumps(sample_sig_str))
+
+            amplicon = Signature(51, SigType.AMPLICON)
+            amplicon.load_from_json_string(json.dumps(amplicon_sig_str))
+
+            sample.add_amplicon_signature(amplicon, name='exome')
+
+            {
+                "amplicon_stats": sample.amplicon_stats["exome"].all_stats()
+            }
+        `);
+    }
+
+    if (result) {
+        console.log(result.toJs());
+    }
 }
 
 setupDropzone('#samples-dropzone', 'sample');
 setupDropzone('#reference-dropzone', 'genome');
 setupDropzone('#amplicon-dropzone', 'amplicon');
-
-// Load Pyodide and the Python package
-loadPyodideAndPackages();
