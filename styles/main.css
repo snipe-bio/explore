@@ -95,3 +95,23 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.search-container {
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#searchBox {
+    padding: 10px;
+    font-size: 16px;
+    width: 70%;
+}
+
+#searchButton {
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+#plot {
+    height: 500px;
+}
