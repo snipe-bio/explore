@@ -121,6 +121,7 @@ async function processSignatures() {
             sample.add_amplicon_signature(amplicon, name='exome')
 
             {
+                "sample_stats": sample.all_stats,
                 "reference_stats": sample.reference_stats.all_stats(),
                 "amplicon_stats": sample.amplicon_stats["exome"].all_stats()
             }
