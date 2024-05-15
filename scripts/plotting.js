@@ -114,22 +114,18 @@ document.getElementById('speciesDropdown').addEventListener('change', function()
         xLog: false,
         yLog: false
     };
+
+    // Autofill genome upload box
+    fetch(`../data/${species}_genome.sig`)
+        .then(response => response.text())
+        .then(data => {
+            // Assuming the genomeDropzone is already initialized
+            const mockFile = new File([data], `${species}_genome.sig`, { type: 'application/octet-stream' });
+            Dropzone.forElement('#reference-dropzone').emit("addedfile", mockFile);
+            Dropzone.forElement('#reference-dropzone').emit("complete", mockFile);
+        });
+
+    document.getElementById('searchContainer').style.display = 'block';
+    document.getElementById('plot').style.display = 'block';
     initializePlot(plotConfig);
 });
-
-// Initialize plot for the default species (dog) on page load
-window.onload = () => {
-    document.getElementById('speciesDropdown').value = 'dog';
-    const plotConfig = {
-        plotDiv: 'plot',
-        dataUrl: '../data/dog_data.json',
-        x: 'trimmed_unique_hashes',
-        y: 'trimmed_genomic_hashes',
-        xTitle: 'Unique Hashes',
-        yTitle: 'Genomic Coverage',
-        mainTitle: 'Unique Hashes vs Genomic Coverage (Dog)',
-        xLog: false,
-        yLog: false
-    };
-    initializePlot(plotConfig);
-};

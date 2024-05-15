@@ -35,20 +35,19 @@
                     <div class="form-group">
                         <label for="speciesDropdown">Select Species:</label>
                         <select class="form-control" id="speciesDropdown">
+                            <option value="" disabled selected>Select a species</option>
                             <option value="dog">Dog</option>
                             <option value="human">Human</option>
                         </select>
                     </div>
-                    <div class="search-container">
+                    <div class="search-container" style="display: none;" id="searchContainer">
                         <input type="text" id="searchBox" placeholder="Search by run, biosample, experiment, bioproject...">
                         <button id="searchButton">Search</button>
                     </div>
-                    <div id="plot" style="height: 500px;"></div>
+                    <div id="plot" style="height: 500px; display: none;"></div>
                 </div>
             </div>
         </div>
-    
-
 
         <div class="col-md-4">
             <div class="panel panel-default">
