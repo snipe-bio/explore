@@ -10,7 +10,7 @@ async function loadPyodideAndPackages() {
     try {
         console.log('Loading Pyodide...');
         const pyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/", 
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/",
             fullStdLib: true
         });
         console.log('Pyodide loaded successfully.');
@@ -118,11 +118,14 @@ async function processSignatures() {
             genome_sig_str = json.loads("""${genomeFile}""")
             genome = Signature(51, SigType.GENOME)
             genome.load_from_json_string(json.dumps(genome_sig_str))
+            genome_name = genome.name
+            amplicon_name = ""
 
             ${ampliconFile ? `
                 amplicon_sig_str = json.loads("""${ampliconFile}""")
                 amplicon = Signature(51, SigType.AMPLICON)
                 amplicon.load_from_json_string(json.dumps(amplicon_sig_str))
+                amplicon_name = amplicon.name
             ` : ''}
         `);
 
@@ -131,28 +134,63 @@ async function processSignatures() {
                 sample_sig_str = json.loads("""${sample.content}""")
                 sample = Signature(51, SigType.SAMPLE)
                 sample.load_from_json_string(json.dumps(sample_sig_str))
-
                 sample.add_reference_signature(genome)
+                sample_name = sample.name if sample.name else "${sample.name}"
 
                 ${ampliconFile ? `
                     sample.add_amplicon_signature(amplicon, name='exome')
                 ` : ''}
 
-                {
+                result = {
                     "sample_stats": sample.all_stats,
                     "reference_stats": sample.reference_stats.all_stats(),
-                    ${ampliconFile ? `"amplicon_stats": sample.amplicon_stats["exome"].all_stats(),` : ''}
+                    ${ampliconFile ? `"amplicon_stats": sample.amplicon_stats[amplicon_name].all_stats(),` : ''}
+                    "sample_name": sample_name,
+                    "genome_name": genome_name,
+                    "amplicon_name": amplicon_name
                 }
+                result
             `);
 
-            result[sample.name] = sampleResult.toJs();
+            const sampleResultJS = sampleResult.toJs();
+            console.log('Sample result:', sampleResultJS); // Debugging line
+            result[sampleResultJS.get('sample_name')] = sampleResultJS;
         }
 
-        console.log(result);
+        displayResults(result);
     } catch (error) {
         console.error('Error processing signatures:', error);
     }
 }
+
+function displayResults(result) {
+    const resultsTableBody = document.getElementById('resultsTableBody');
+    resultsTableBody.innerHTML = ''; // Clear previous results
+
+    console.log('Displaying results:', result); // Debugging line
+
+    for ([sampleName, data] of Object.entries(result)) {
+
+        const sampleStats = data.get('sample_stats');
+        const referenceStats = data.get('reference_stats');
+        const ampliconStats = data.get('amplicon_stats');
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${sampleName}</td>
+            <td>${sampleStats.get('unique_hashes')}</td>
+            <td>${sampleStats.get('total_abundance')}</td>
+            <td>${referenceStats.get(`${data.get('genome_name')}_saturation`)}</td>
+            <td>${referenceStats.get(`${data.get('genome_name')}_total_abundance`)}</td>
+            <td>${ampliconStats ? ampliconStats.get(`${data.get('amplicon_name')}_saturation`) : 'N/A'}</td>
+            <td>${ampliconStats ? ampliconStats.get(`${data.get('amplicon_name')}_total_abundance`) : 'N/A'}</td>
+        `;
+        resultsTableBody.appendChild(row);
+    }
+
+    document.getElementById('resultsTableContainer').style.display = 'block';
+}
+
 
 setupDropzone('#samples-dropzone', 'sample');
 setupDropzone('#reference-dropzone', 'genome');
