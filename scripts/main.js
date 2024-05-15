@@ -114,42 +114,44 @@ async function processSignatures() {
 
     try {
         await pyodide.runPythonAsync(`
-            import json
-            genome_sig_str = json.loads("""${genomeFile}""")
-            genome = Signature(51, SigType.GENOME)
-            genome.load_from_json_string(json.dumps(genome_sig_str))
-            genome_name = genome.name
-            amplicon_name = ""
+import json
+genome_sig_str = json.loads("""${genomeFile}""")
+genome = Signature(51, SigType.GENOME)
+genome.load_from_json_string(json.dumps(genome_sig_str))
+genome_name = genome.name
+amplicon_name = ""
 
-            ${ampliconFile ? `
-                amplicon_sig_str = json.loads("""${ampliconFile}""")
-                amplicon = Signature(51, SigType.AMPLICON)
-                amplicon.load_from_json_string(json.dumps(amplicon_sig_str))
-                amplicon_name = amplicon.name
-            ` : ''}
+${ampliconFile ? `
+amplicon_sig_str = json.loads("""${ampliconFile}""")
+amplicon = Signature(51, SigType.AMPLICON)
+amplicon.load_from_json_string(json.dumps(amplicon_sig_str))
+print(f"debug:::::: {amplicon.name}")
+amplicon_name = amplicon.name
+` : ''}
         `);
 
         for (let sample of sampleFiles) {
             let sampleResult = await pyodide.runPythonAsync(`
-                sample_sig_str = json.loads("""${sample.content}""")
-                sample = Signature(51, SigType.SAMPLE)
-                sample.load_from_json_string(json.dumps(sample_sig_str))
-                sample.add_reference_signature(genome)
-                sample_name = sample.name if sample.name else "${sample.name}"
+import json
+sample_sig_str = json.loads("""${sample.content}""")
+sample = Signature(51, SigType.SAMPLE)
+sample.load_from_json_string(json.dumps(sample_sig_str))
+sample.add_reference_signature(genome)
+sample_name = sample.name if sample.name else "${sample.name}"
 
-                ${ampliconFile ? `
-                    sample.add_amplicon_signature(amplicon, name='exome')
-                ` : ''}
+${ampliconFile ? `
+sample.add_amplicon_signature(amplicon)
+` : ''}
 
-                result = {
-                    "sample_stats": sample.all_stats,
-                    "reference_stats": sample.reference_stats.all_stats(),
-                    ${ampliconFile ? `"amplicon_stats": sample.amplicon_stats[amplicon_name].all_stats(),` : ''}
-                    "sample_name": sample_name,
-                    "genome_name": genome_name,
-                    "amplicon_name": amplicon_name
-                }
-                result
+result = {
+"sample_stats": sample.all_stats,
+"reference_stats": sample.reference_stats.all_stats(),
+${ampliconFile ? `"amplicon_stats": sample.amplicon_stats[amplicon_name].all_stats(),` : ''}
+"sample_name": sample_name,
+"genome_name": genome_name,
+"amplicon_name": amplicon_name
+}
+result
             `);
 
             const sampleResultJS = sampleResult.toJs();
@@ -169,8 +171,7 @@ function displayResults(result) {
 
     console.log('Displaying results:', result); // Debugging line
 
-    for ([sampleName, data] of Object.entries(result)) {
-
+    for (const [sampleName, data] of Object.entries(result)) {
         const sampleStats = data.get('sample_stats');
         const referenceStats = data.get('reference_stats');
         const ampliconStats = data.get('amplicon_stats');
@@ -190,7 +191,6 @@ function displayResults(result) {
 
     document.getElementById('resultsTableContainer').style.display = 'block';
 }
-
 
 setupDropzone('#samples-dropzone', 'sample');
 setupDropzone('#reference-dropzone', 'genome');
