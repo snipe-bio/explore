@@ -197,56 +197,24 @@ setupDropzone('#samples-dropzone', 'sample');
 setupDropzone('#reference-dropzone', 'genome');
 setupDropzone('#amplicon-dropzone', 'amplicon');
 
-document.getElementById('speciesDropdown').addEventListener('change', function() {
-    const species = this.value;
-    const genomeDropdown = document.getElementById('genomeDropdown');
-    const genomeDropdownContainer = document.getElementById('genomeDropdownContainer');
-    const plotDropdownContainer = document.getElementById('plotDropdownContainer');
-    genomeDropdownContainer.style.display = 'block';
-    plotDropdownContainer.style.display = 'none';
-    document.getElementById('plot').style.display = 'none';
-
-    while (genomeDropdown.firstChild) {
-        genomeDropdown.removeChild(genomeDropdown.firstChild);
-    }
-
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.disabled = true;
-    defaultOption.selected = true;
-    defaultOption.textContent = 'Select a genome';
-    genomeDropdown.appendChild(defaultOption);
-
-    if (species === 'dog') {
-        const option1 = document.createElement('option');
-        option1.value = 'CanFam3.1';
-        option1.textContent = 'CanFam3.1';
-        genomeDropdown.appendChild(option1);
-
-        const option2 = document.createElement('option');
-        option2.value = 'other';
-        option2.textContent = 'Other';
-        genomeDropdown.appendChild(option2);
-    } else if (species === 'human') {
-        const option1 = document.createElement('option');
-        option1.value = 'HG38';
-        option1.textContent = 'HG38';
-        genomeDropdown.appendChild(option1);
-
-        const option2 = document.createElement('option');
-        option2.value = 'other';
-        option2.textContent = 'Other';
-        genomeDropdown.appendChild(option2);
-    }
-});
-
 document.getElementById('genomeDropdown').addEventListener('change', function() {
     const genome = this.value;
     const species = document.getElementById('speciesDropdown').value;
     const plotDropdownContainer = document.getElementById('plotDropdownContainer');
     const referencePanel = document.getElementById('referencePanel');
+    const searchContainer = document.getElementById('searchContainer');
+    const plot = document.getElementById('plot');
+
+    // Hide plot and plot dropdown container initially
+    plot.style.display = 'none';
     plotDropdownContainer.style.display = 'none';
+    searchContainer.style.display = 'none';
     referencePanel.style.display = 'none';
+
+    // Clear previous files from the reference genome dropzone by mimicking click on remove buttons
+    const referenceDropzone = Dropzone.forElement('#reference-dropzone');
+    const fileRows = document.querySelectorAll('#reference-dropzone .file-info .remove-file');
+    fileRows.forEach(removeButton => removeButton.click());
 
     if (genome === 'CanFam3.1' || genome === 'HG38') {
         const plotDropdown = document.getElementById('plotDropdown');
@@ -268,19 +236,60 @@ document.getElementById('genomeDropdown').addEventListener('change', function() 
         plotDropdown.appendChild(plotOption);
 
         plotDropdownContainer.style.display = 'block';
-        referencePanel.style.display = 'none';
 
         fetch(`../data/${species}_genome.sig`)
             .then(response => response.text())
             .then(data => {
                 const mockFile = new File([data], `${species}_genome.sig`, { type: 'application/octet-stream' });
-                Dropzone.forElement('#reference-dropzone').emit("addedfile", mockFile);
-                Dropzone.forElement('#reference-dropzone').emit("complete", mockFile);
+                referenceDropzone.emit("addedfile", mockFile);
+                referenceDropzone.emit("complete", mockFile);
             });
     } else {
         referencePanel.style.display = 'block';
     }
 });
+
+document.getElementById('speciesDropdown').addEventListener('change', function() {
+    const genomeDropdownContainer = document.getElementById('genomeDropdownContainer');
+    const genomeDropdown = document.getElementById('genomeDropdown');
+
+    genomeDropdownContainer.style.display = 'block';
+    while (genomeDropdown.firstChild) {
+        genomeDropdown.removeChild(genomeDropdown.firstChild);
+    }
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    defaultOption.textContent = 'Select a genome';
+    genomeDropdown.appendChild(defaultOption);
+
+    if (this.value === 'dog') {
+        const option1 = document.createElement('option');
+        option1.value = 'CanFam3.1';
+        option1.textContent = 'CanFam3.1';
+        genomeDropdown.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = 'other';
+        option2.textContent = 'Other';
+        genomeDropdown.appendChild(option2);
+    } else if (this.value === 'human') {
+        const option1 = document.createElement('option');
+        option1.value = 'HG38';
+        option1.textContent = 'HG38';
+        genomeDropdown.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = 'other';
+        option2.textContent = 'Other';
+        genomeDropdown.appendChild(option2);
+    }
+});
+
+
+
 
 document.getElementById('plotDropdown').addEventListener('change', function() {
     const plot = this.value;
