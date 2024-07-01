@@ -1,3 +1,4 @@
+// main.js
 Dropzone.autoDiscover = false;
 
 function showLoadingAnimation(show) {
@@ -195,3 +196,109 @@ function displayResults(result) {
 setupDropzone('#samples-dropzone', 'sample');
 setupDropzone('#reference-dropzone', 'genome');
 setupDropzone('#amplicon-dropzone', 'amplicon');
+
+document.getElementById('speciesDropdown').addEventListener('change', function() {
+    const species = this.value;
+    const genomeDropdown = document.getElementById('genomeDropdown');
+    const genomeDropdownContainer = document.getElementById('genomeDropdownContainer');
+    const plotDropdownContainer = document.getElementById('plotDropdownContainer');
+    genomeDropdownContainer.style.display = 'block';
+    plotDropdownContainer.style.display = 'none';
+    document.getElementById('plot').style.display = 'none';
+
+    while (genomeDropdown.firstChild) {
+        genomeDropdown.removeChild(genomeDropdown.firstChild);
+    }
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    defaultOption.textContent = 'Select a genome';
+    genomeDropdown.appendChild(defaultOption);
+
+    if (species === 'dog') {
+        const option1 = document.createElement('option');
+        option1.value = 'CanFam3.1';
+        option1.textContent = 'CanFam3.1';
+        genomeDropdown.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = 'other';
+        option2.textContent = 'Other';
+        genomeDropdown.appendChild(option2);
+    } else if (species === 'human') {
+        const option1 = document.createElement('option');
+        option1.value = 'HG38';
+        option1.textContent = 'HG38';
+        genomeDropdown.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = 'other';
+        option2.textContent = 'Other';
+        genomeDropdown.appendChild(option2);
+    }
+});
+
+document.getElementById('genomeDropdown').addEventListener('change', function() {
+    const genome = this.value;
+    const species = document.getElementById('speciesDropdown').value;
+    const plotDropdownContainer = document.getElementById('plotDropdownContainer');
+    const referencePanel = document.getElementById('referencePanel');
+    plotDropdownContainer.style.display = 'none';
+    referencePanel.style.display = 'none';
+
+    if (genome === 'CanFam3.1' || genome === 'HG38') {
+        const plotDropdown = document.getElementById('plotDropdown');
+        while (plotDropdown.firstChild) {
+            plotDropdown.removeChild(plotDropdown.firstChild);
+        }
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        defaultOption.textContent = 'Select a plot';
+        plotDropdown.appendChild(defaultOption);
+
+        // Add specific plots for the selected genome
+        const plotOption = document.createElement('option');
+        plotOption.value = 'defaultPlot';
+        plotOption.textContent = 'Default Plot';
+        plotDropdown.appendChild(plotOption);
+
+        plotDropdownContainer.style.display = 'block';
+        referencePanel.style.display = 'none';
+
+        fetch(`../data/${species}_genome.sig`)
+            .then(response => response.text())
+            .then(data => {
+                const mockFile = new File([data], `${species}_genome.sig`, { type: 'application/octet-stream' });
+                Dropzone.forElement('#reference-dropzone').emit("addedfile", mockFile);
+                Dropzone.forElement('#reference-dropzone').emit("complete", mockFile);
+            });
+    } else {
+        referencePanel.style.display = 'block';
+    }
+});
+
+document.getElementById('plotDropdown').addEventListener('change', function() {
+    const plot = this.value;
+    const species = document.getElementById('speciesDropdown').value;
+
+    const plotConfig = {
+        plotDiv: 'plot',
+        dataUrl: `../data/${species}_data2.json`,
+        x: 'unique_hashes',
+        y: 'genomic_saturation',
+        xTitle: 'Unique Hashes',
+        yTitle: 'Genomic Coverage',
+        mainTitle: `Unique Hashes vs Genomic Coverage (${species.charAt(0).toUpperCase() + species.slice(1)})`,
+        xLog: false,
+        yLog: false
+    };
+
+    document.getElementById('searchContainer').style.display = 'block';
+    document.getElementById('plot').style.display = 'block';
+    initializePlot(plotConfig);
+});

@@ -1,4 +1,4 @@
-// scripts/plotting.js
+// plotting.js
 function plotData({divId, data, x, y, xTitle, yTitle, mainTitle, xLog, yLog, highlightIds = []}) {
     const uniqueAssayTypes = [...new Set(data.map(d => d.assay_type))];
     
@@ -10,12 +10,7 @@ function plotData({divId, data, x, y, xTitle, yTitle, mainTitle, xLog, yLog, hig
             type: 'scatter',
             name: assay_type,
             text: data.filter(d => d.assay_type === assay_type).map(d => 
-                `Run: ${d.run}, 
-                Biosample: ${d.biosample}, 
-                Experiment: ${d.experiment}, 
-                BioProject: ${d.bioproject}
-                Coding_Saturation: ${d.coding_saturation},
-                Genomic_Saturation: ${d.genomic_saturation},
+                `Run: ${d.run}, Biosample: ${d.biosample}, Experiment: ${d.experiment}, BioProject: ${d.bioproject}, Coding_Saturation: ${d.coding_saturation}, Genomic_Saturation: ${d.genomic_saturation},
                 `
                 ),
             marker: { size: 10, opacity: 0.5 },
@@ -31,11 +26,11 @@ function plotData({divId, data, x, y, xTitle, yTitle, mainTitle, xLog, yLog, hig
             type: 'scatter',
             text: highlightIds.map(id => 
                 `Run: ${data[id].run}, 
-                Biosample: ${data[id].biosample}, 
-                Experiment: ${data[id].experiment}, 
-                BioProject: ${data[id].bioproject}
-                Coding_Saturation: ${data[id].coding_saturation},
-                Genomic_Saturation: ${data[id].genomic_saturation},
+Biosample: ${data[id].biosample}, 
+Experiment: ${data[id].experiment}, 
+BioProject: ${data[id].bioproject}
+Coding_Saturation: ${data[id].coding_saturation},
+Genomic_Saturation: ${data[id].genomic_saturation},
                 `),
             name: extracted_highlight,
             marker: { color: 'black', size: 14, opacity: 0.8 },
@@ -100,32 +95,3 @@ function initializePlot(config) {
             });
         });
 }
-
-document.getElementById('speciesDropdown').addEventListener('change', function() {
-    const species = this.value;
-    const plotConfig = {
-        plotDiv: 'plot',
-        dataUrl: `../data/${species}_data.json`,
-        x: 'trimmed_unique_hashes',
-        y: 'trimmed_genomic_hashes',
-        xTitle: 'Unique Hashes',
-        yTitle: 'Genomic Coverage',
-        mainTitle: `Unique Hashes vs Genomic Coverage (${species.charAt(0).toUpperCase() + species.slice(1)})`,
-        xLog: false,
-        yLog: false
-    };
-
-    // Autofill genome upload box
-    fetch(`../data/${species}_genome.sig`)
-        .then(response => response.text())
-        .then(data => {
-            // Assuming the genomeDropzone is already initialized
-            const mockFile = new File([data], `${species}_genome.sig`, { type: 'application/octet-stream' });
-            Dropzone.forElement('#reference-dropzone').emit("addedfile", mockFile);
-            Dropzone.forElement('#reference-dropzone').emit("complete", mockFile);
-        });
-
-    document.getElementById('searchContainer').style.display = 'block';
-    document.getElementById('plot').style.display = 'block';
-    initializePlot(plotConfig);
-});
