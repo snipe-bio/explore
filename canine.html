@@ -159,9 +159,10 @@
             display: flex;
             flex-wrap: wrap;
         }
-    
+
         .two-column-checkboxes .checkbox-item {
-            width: 10%; /* Make each checkbox take up half the row */
+            width: 10%;
+            /* Make each checkbox take up half the row */
             box-sizing: border-box;
         }
 
@@ -1292,7 +1293,9 @@
                                     doc.text(`Group By: ${groupBy}`, 60, detailsYPosition + 40);
                                 }
 
-                                const assayTypeValue = document.getElementById(`assay-type-${plotId}`).value || 'All';
+                                const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
+                                const assayTypeValue = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value).join(', ') || 'All';
+
                                 doc.text(`Assay Type: ${assayTypeValue}`, 60, detailsYPosition + 80);
 
                                 // Add user's notes
@@ -1575,5 +1578,7 @@
         function startTour() {
             driverInstance.drive();
         }
+
+
 
     </script>
