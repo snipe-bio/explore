@@ -153,6 +153,20 @@
             margin-right: 0.5rem;
         }
 
+        /* CHECKBOXES in Assay Type */
+
+        .two-column-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+        }
+    
+        .two-column-checkboxes .checkbox-item {
+            width: 10%; /* Make each checkbox take up half the row */
+            box-sizing: border-box;
+        }
+
+        /* END: CHECKBOXES in Assay Type */
+
 
 
         label {
@@ -661,7 +675,7 @@
                 header: true,
                 delimiter: "\t",
                 complete: function (results) {
-                    data = results.data;
+                    data = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
 
                     // Assign a unique ID to each data point
                     data.forEach((row, index) => {
@@ -682,7 +696,7 @@
             if (plotCounter === 1) {
                 plotHTML += `
                     <div class="search-container">
-                        <input type="text" id="search-input" placeholder="Search...">
+                        <input type="text" id="search-input" placeholder="Search using BioProject, Experiment, or BioSample...">
                         <button id="search-button" class="button">Search</button>
                     </div>
                 `;
@@ -734,6 +748,7 @@
             if (plotCounter === 1) {
                 document.getElementById('search-button').addEventListener('click', searchAndSelectPoints);
             }
+
         }
 
         function renderDynamicControls(plotId) {
@@ -802,11 +817,15 @@
             // Common control for Assay Type
             controlsHTML += `
                 <div class="control-group">
-                    <label for="assay-type-${plotId}">Assay Type:</label>
-                    <select id="assay-type-${plotId}">
-                        <option value="">All Assay Types</option>
-                        ${[...new Set(data.map(row => row["Assay Type"]))].map(type => `<option value="${type}">${type}</option>`).join('')}
-                    </select>
+                    <label>Assay Type:</label>
+                    <div id="assay-type-checkboxes-${plotId}" class="checkbox-group scrollable-checkboxes two-column-checkboxes">
+                        ${[...new Set(data.map(row => row["Assay Type"]).filter(type => type))].map(type => `
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="assay-type-${type}-${plotId}" name="assay-type-${plotId}" value="${type}" checked>
+                                <label for="assay-type-${type}-${plotId}">${type}</label>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             `;
 
@@ -865,17 +884,23 @@
         function updatePlot(plotId) {
             const plotDiv = document.getElementById(plotId);
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
-            const selectedAssayType = document.getElementById(`assay-type-${plotId}`).value;
+            // const selectedAssayType = document.getElementById(`assay-type-${plotId}`).value;
 
-            currentPlotData = selectedAssayType ? data.filter(row => row["Assay Type"] === selectedAssayType) : data;
+            const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
+            const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
+
+
+            // currentPlotData = selectedAssayType ? data.filter(row => row["Assay Type"] === selectedAssayType) : data;
+            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["Assay Type"])) : data;
 
             if (plotType === 'scatter') {
                 const xAxis = document.getElementById(`x-axis-${plotId}`).value;
                 const yAxis = document.getElementById(`y-axis-${plotId}`).value;
                 const hueColumn = document.getElementById(`hue-${plotId}`).value;
 
-                if (!xAxis || !yAxis || !hueColumn) {
-                    plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select values for X-Axis, Y-Axis, and Color to generate the plot.</p>';
+                // if (!xAxis || !yAxis || !hueColumn) {
+                if (!xAxis || !yAxis) {
+                    plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select values for X-Axis, Y-Axis.</p>';
                     return;
                 }
 
