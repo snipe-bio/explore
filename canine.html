@@ -9,6 +9,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.18.0/plotly.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+    <!-- Driver.js CSS and JS -->
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css" />
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -493,6 +498,67 @@
                 background-position: 0% 50%;
             }
         }
+
+        /* DRIVERJS */
+
+
+        .driver-popover.driverjs-theme {
+            background-color: #fde047;
+            color: #000;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-title {
+            font-size: 20px;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-title,
+        .driver-popover.driverjs-theme .driver-popover-description,
+        .driver-popover.driverjs-theme .driver-popover-progress-text {
+            color: #000;
+        }
+
+        .driver-popover.driverjs-theme button {
+            flex: 1;
+            text-align: center;
+            background-color: #000;
+            color: #ffffff;
+            border: 2px solid #000;
+            text-shadow: none;
+            font-size: 14px;
+            padding: 5px 8px;
+            border-radius: 6px;
+        }
+
+        .driver-popover.driverjs-theme button:hover {
+            background-color: #000;
+            color: #ffffff;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-navigation-btns {
+            justify-content: space-between;
+            gap: 3px;
+        }
+
+        /* Hide the close button */
+        .driver-popover.driverjs-theme .driver-popover-close-btn {
+            display: none;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-left.driver-popover-arrow {
+            border-left-color: #fde047;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-right.driver-popover-arrow {
+            border-right-color: #fde047;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-top.driver-popover-arrow {
+            border-top-color: #fde047;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-bottom.driver-popover-arrow {
+            border-bottom-color: #fde047;
+        }
     </style>
 </head>
 
@@ -534,6 +600,14 @@
             <i class="fa fa-arrow-down"></i>
             <span>Scroll to Table</span>
         </button>
+
+        <!-- driverJS -->
+        <button id="start-tour" class="floating-button">
+            <i class="fa fa-question-circle"></i>
+            <span>Start Tour</span>
+        </button>
+
+
     </div>
 
 
@@ -1287,4 +1361,194 @@
             // Save the PDF
             doc.save("snipe_visualization_report.pdf");
         }
+
+        // ========================================
+        // STEP BY STEP TOUR
+        // ========================================
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize the tour after the page has loaded
+            initOnboardingTour();
+
+            // Check if the tour has been shown before
+            if (localStorage.getItem('tourShown') !== 'true') {
+                startTour();
+            }
+
+            // Attach event listener to the "Start Tour" button
+            const startTourButton = document.getElementById('start-tour');
+            startTourButton.addEventListener('click', function () {
+                startTour();
+            });
+        });
+
+        let driverInstance;
+
+        function initOnboardingTour() {
+            // Access the Driver class from the window object
+            const driver = window.driver.js.driver; // For Driver.js version 1.0.1
+
+            const steps = [
+                {
+                    element: '.container h1',
+                    popover: {
+                        title: 'Welcome to Snipe Canine Visualization Dashboard',
+                        description: 'This dashboard helps you visualize and analyze the Canine SRA experiments.',
+                        position: 'bottom'
+                    }
+                },
+                {
+                    element: '.search-container',
+                    popover: {
+                        title: 'Search',
+                        description: 'Use the search bar to find specific data points by BioProject, BioSample, or Experiment.',
+                        position: 'bottom'
+                    }
+                },
+                {
+                    element: '#add-view',
+                    popover: {
+                        title: 'Add View',
+                        description: 'Click here to add a new plot view to the dashboard.',
+                        position: 'bottom'
+                    }
+                },
+                {
+                    element: '#plot-type-plot-1',
+                    popover: {
+                        title: 'Plot Type',
+                        description: 'Select the type of plot to visualize your data (e.g., Scatter Plot, Histogram, Boxplot).',
+                        position: 'bottom'
+                    }
+                },
+                {
+                    element: '#x-axis-plot-1',
+                    popover: {
+                        title: 'X-Axis',
+                        description: 'Select the variable to be displayed on the X-Axis of the plot.',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#y-axis-plot-1',
+                    popover: {
+                        title: 'Y-Axis',
+                        description: 'Select the variable to be displayed on the Y-Axis of the plot.',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#hue-plot-1',
+                    popover: {
+                        title: 'Color By',
+                        description: 'Choose a column to color the data points by a categorical or scalar value.',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#assay-type-plot-1',
+                    popover: {
+                        title: 'Assay Type',
+                        description: 'Filter the plot based on assay type. You can select one or view all assay types.',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '.plot-container',
+                    popover: {
+                        title: 'Plot Area',
+                        description: 'This is where your plots will appear. Customize the plot using the controls above it.',
+                        position: 'top'
+                    }
+                },
+                {
+                    element: '#export-plot-plot-1',
+                    popover: {
+                        title: 'Export Plot',
+                        description: 'Click here to export the plot as a 300 DPI PNG image.',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#title-plot-1',
+                    popover: {
+                        title: 'Plot Title',
+                        description: 'You can add a title to your plot here.',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#notes-plot-1',
+                    popover: {
+                        title: 'Plot Notes',
+                        description: 'Add any relevant notes to your plot here.',
+                        position: 'right'
+                    }
+                },
+                {
+                    element: '#clear-selections',
+                    popover: {
+                        title: 'Clear Selections',
+                        description: 'Click here to clear all selected data points.',
+                        position: 'left'
+                    }
+                },
+                {
+                    element: '#export-table',
+                    popover: {
+                        title: 'Export Table',
+                        description: 'Use this button to export the selected data points as a TSV file.',
+                        position: 'left'
+                    }
+                },
+                {
+                    element: '#export-pdf',
+                    popover: {
+                        title: 'Export Snipe Report',
+                        description: 'Click here to export a comprehensive report of your data and plots as a PDF.',
+                        position: 'left'
+                    }
+                },
+                {
+                    element: '#scroll-to-table',
+                    popover: {
+                        title: 'Scroll to Table',
+                        description: 'Use this button to quickly navigate to the selected data points table.',
+                        position: 'left'
+                    }
+                },
+                {
+                    element: '#data-selection-section',
+                    popover: {
+                        title: 'Selected Data Points',
+                        description: 'This section displays the data points you have selected from the plots.',
+                        position: 'top'
+                    }
+                }
+            ];
+
+
+            driverInstance = driver({
+                animate: true,
+                opacity: 0.75,
+                padding: 10,
+                allowClose: true,
+                overlayClickNext: false,
+                doneBtnText: 'Finish',
+                closeBtnText: 'Close',
+                nextBtnText: '→',
+                prevBtnText: '←',
+                showButtons: false,
+                keyboardControl: true,
+                showProgress: true,
+                steps: steps,
+                // popoverClass: 'driverjs-theme',
+            });
+
+        }
+
+        function startTour() {
+            driverInstance.drive();
+        }
+
     </script>
