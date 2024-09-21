@@ -366,7 +366,93 @@
 
         /* Floating Buttons Container */
         .floating-buttons {
-            position: fixed;
+            position: fixed;        /* Floating Button Style */
+            .floating-button {
+                background-color: #e74c3c;
+                /* Default color, overridden per button */
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 50%;
+                /* Make it circular */
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                transition: width 0.3s ease, border-radius 0.3s ease;
+                width: 50px;
+                /* Initial width to fit the icon */
+                height: 50px;
+                /* Fixed height */
+                overflow: hidden;
+                /* Hide text initially */
+                position: relative;
+            }
+    
+            .floating-button i {
+                font-size: 24px;
+                /* Icon size */
+                /* margin-left: 10px; */
+                margin: 0;
+                /* Center the icon */
+                
+            }
+    
+            .floating-button span {
+                opacity: 0;
+                /* Hide text initially */
+                margin-left: 10px;
+                transition: opacity 0.3s ease;
+                white-space: nowrap;
+            }
+    
+            .floating-button:hover {
+                width: 200px;
+                /* Expand width on hover */
+                border-radius: 25px;
+                /* Rounded rectangle when expanded */
+            }
+    
+            .floating-button:hover span {
+                opacity: 1;
+                /* Show text on hover */
+            }
+    
+            /* Individual Button Styles */
+            #clear-selections {
+                background-color: #e74c3c;
+            }
+    
+            #clear-selections:hover {
+                background-color: #c0392b;
+            }
+    
+            #export-table {
+                background-color: #f39c12;
+            }
+    
+            #export-table:hover {
+                background-color: #d35400;
+            }
+    
+            #export-pdf {
+                background: linear-gradient(-45deg, #405de6, #5851db, #833ab4, #c13584);
+                background-size: 400% 400%;
+                animation: gradientAnimation 15s ease infinite;
+            }
+    
+            #export-pdf:hover {
+                background-size: 200% 200%;
+            }
+    
+            #scroll-to-table {
+                background-color: #9b59b6;
+            }
+    
+            #scroll-to-table:hover {
+                background-color: #8e44ad;
+            }
+
             right: 20px;
             top: 50%;
             transform: translateY(-50%);
@@ -376,6 +462,7 @@
             z-index: 1000;
             align-items: flex-end;
         }
+        
 
         /* Floating Button Style */
         .floating-button {
@@ -459,6 +546,10 @@
 
         #scroll-to-table:hover {
             background-color: #8e44ad;
+        }
+
+        #help-button {
+            background-color: #3498db;
         }
 
         /* Gradient Animation */
@@ -574,8 +665,133 @@
         .driver-popover.driverjs-theme .driver-popover-arrow-side-bottom.driver-popover-arrow {
             border-bottom-color: #fde047;
         }
+
+        /* END: DRIVERJS */
+
+        /* START: HELP AREA */
+
+        /* Modal overlay */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(5px);
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-direction: column;
+            /* Ensure column layout for centering */
+        }
+
+        /* Modal content */
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            text-align: left;
+            /* Center content */
+        }
+
+        /* Close button */
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Modal header */
+        .modal-content h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Column definitions inside modal */
+        #modal-column-definitions {
+            margin-top: 2rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Styles for the definitions list */
+        #modal-column-definitions dl {
+            margin: 0;
+        }
+
+        #modal-column-definitions dt {
+            font-weight: bold;
+            color: #34495e;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        #modal-column-definitions dd {
+            margin: 0 0 1rem 0;
+            color: #2c3e50;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Scrollbar styling (for WebKit browsers) */
+        #modal-column-definitions::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #modal-column-definitions::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #modal-column-definitions::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        #modal-column-definitions::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+
+
+        /* END: HELP AREA */
     </style>
 </head>
+
+
+<!-- Help Modal -->
+<div id="help-modal" class="modal">
+    <div class="modal-content">
+        <span id="close-modal" class="close-button">&times;</span>
+        <h2>Column Definitions</h2>
+        <div id="modal-column-definitions">
+            <!-- Column definitions will be inserted here -->
+        </div>
+    </div>
+</div>
 
 <body>
     <div class="container">
@@ -616,9 +832,14 @@
             <span>Scroll to Table</span>
         </button>
 
+        <button id="help-button" class="floating-button">
+            <i class="fa-solid fa-circle-question"></i>
+            <span>Columns description</span>
+        </button>
+
         <!-- driverJS -->
         <button id="start-tour" class="floating-button">
-            <i class="fa fa-question-circle"></i>
+            <i class="fa fa-book"></i>
             <span>Start Tour</span>
         </button>
 
@@ -683,10 +904,54 @@
                         row._uniqueId = index.toString(); // Ensure ID is a string
                     });
 
+                    // Populate column definitions in the modal
+                    populateModalColumnDefinitions();
+
                     addNewPlot();
                 }
             });
         }
+
+
+        // Column Definitions
+        const columnDefinitions = {
+            "Experiment": "Unique identifier for the sequencing experiment.",
+            "Assay Type": "Type of sequencing assay performed.",
+            "BioSample": "Biological sample from which the data was generated.",
+            "BioProject": "Project under which the data was generated.",
+            "Alignment-free genome coverage index": "Index representing genome coverage without alignment.",
+            "Genomic k-mers mean abundance": "Mean abundance of genomic k-mers.",
+            "Alignment-free exome coverage index": "Index representing exome coverage without alignment.",
+            "Exome k-mers mean abundance": "Mean abundance of exome k-mers.",
+            "X Ploidy score": "Score representing X chromosome ploidy.",
+            "Y Coverage score": "Score representing Y chromosome coverage.",
+            "Predicted Contamination Index": "Index predicting contamination levels.",
+            "Fraction of Singleton K-mers Total Abundance": "Fraction of singleton k-mers in total abundance.",
+            "Fraction of Non-Reference Repetitive K-mers Total Abundance": "Fraction of non-reference repetitive k-mers in total abundance.",
+            "Fraction of Non-Reference K-mers Total Abundance": "Fraction of non-reference k-mers in total abundance.",
+            // Add definitions for other columns as needed
+        };
+
+        // Function to populate the modal with column definitions
+        function populateModalColumnDefinitions() {
+            const columnDefinitionsDiv = document.getElementById('modal-column-definitions');
+            if (!columnDefinitionsDiv) return;
+
+            let htmlContent = '<dl>';
+
+            const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
+
+            columns.forEach(col => {
+                const definition = columnDefinitions[col] || "No definition available.";
+                htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
+            });
+
+            htmlContent += '</dl>';
+
+            columnDefinitionsDiv.innerHTML = htmlContent;
+        }
+
+
 
         function addNewPlot() {
             plotCounter++;
@@ -1408,6 +1673,25 @@
             startTourButton.addEventListener('click', function () {
                 startTour();
             });
+
+            const helpButton = document.getElementById('help-button');
+            const helpModal = document.getElementById('help-modal');
+            const closeModalButton = document.getElementById('close-modal');
+
+            helpButton.addEventListener('click', function () {
+                helpModal.style.display = 'flex'; // Show the modal using flex layout
+            });
+
+            closeModalButton.addEventListener('click', function () {
+                helpModal.style.display = 'none'; // Hide the modal
+            });
+
+            window.addEventListener('click', function (event) {
+                if (event.target === helpModal) {
+                    helpModal.style.display = 'none'; // Hide modal when clicking outside the content
+                }
+            });
+
         });
 
         let driverInstance;
