@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snipe Investigation Dashboard</title>
+    <title>Snipe Canine Visualization Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.18.0/plotly.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -342,17 +342,77 @@
             /* Plus icon */
         }
 
+        /* START: FLOATING BUTTON*/
+
+        /* Floating Buttons Container */
+        .floating-buttons {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            align-items: flex-end;
+        }
+
+        /* Floating Button Style */
+        .floating-button {
+            background-color: #e74c3c;
+            /* Default color, overridden per button */
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            /* Make it circular */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            transition: width 0.3s ease, border-radius 0.3s ease;
+            width: 50px;
+            /* Initial width to fit the icon */
+            height: 50px;
+            /* Fixed height */
+            overflow: hidden;
+            /* Hide text initially */
+            position: relative;
+        }
+
+        .floating-button i {
+            font-size: 20px;
+            /* Icon size */
+            margin-left: 10px;
+        }
+
+        .floating-button span {
+            opacity: 0;
+            /* Hide text initially */
+            margin-left: 10px;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .floating-button:hover {
+            width: 200px;
+            /* Expand width on hover */
+            border-radius: 25px;
+            /* Rounded rectangle when expanded */
+        }
+
+        .floating-button:hover span {
+            opacity: 1;
+            /* Show text on hover */
+        }
+
+        /* Individual Button Styles */
         #clear-selections {
             background-color: #e74c3c;
         }
 
         #clear-selections:hover {
             background-color: #c0392b;
-        }
-
-        #clear-selections::before {
-            content: "\f12d";
-            /* Eraser icon */
         }
 
         #export-table {
@@ -363,35 +423,14 @@
             background-color: #d35400;
         }
 
-        #export-table::before {
-            content: "\f56e";
-            /* File export icon */
-        }
-
         #export-pdf {
             background: linear-gradient(-45deg, #405de6, #5851db, #833ab4, #c13584);
             background-size: 400% 400%;
             animation: gradientAnimation 15s ease infinite;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         #export-pdf:hover {
             background-size: 200% 200%;
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #export-pdf::before {
-            content: "\f1c1";
-            /* File PDF icon */
         }
 
         #scroll-to-table {
@@ -402,29 +441,44 @@
             background-color: #8e44ad;
         }
 
-        #scroll-to-table::before {
-            content: "\f13d";
-            /* Anchor icon */
+        /* Gradient Animation */
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
-        .floating-buttons {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 1000;
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .floating-buttons {
+                right: 10px;
+            }
+
+            .floating-button:hover {
+                width: 160px;
+                /* Reduce expansion width */
+            }
         }
 
-        .floating-buttons .button {
-            width: 180px;
-            text-align: center;
-            padding: 12px 16px;
-            margin: 0;
-            font-size: 13px;
+        @media (max-width: 480px) {
+            .floating-buttons {
+                right: 5px;
+            }
+
+            .floating-button:hover {
+                width: 140px;
+                /* Further reduce expansion */
+            }
         }
+
 
         @keyframes gradientAnimation {
             0% {
@@ -444,7 +498,7 @@
 
 <body>
     <div class="container">
-        <h1>Snipe Investigation Dashboard</h1>
+        <h1>Snipe Canine Visualization Dashboard</h1>
         <div id="plots-container"></div>
         <div class="export-buttons">
             <button id="add-view" class="button">Add View</button>
@@ -464,12 +518,24 @@
 
 
     <div class="floating-buttons">
-        <!-- <button id="add-view" class="button">Add View</button> -->
-        <button id="clear-selections" class="button">Clear Selections</button>
-        <button id="export-table" class="button">Export Table (TSV)</button>
-        <button id="export-pdf" class="button">Export Snipe Report</button>
-        <button id="scroll-to-table" class="button">Scroll to Table</button>
+        <button id="clear-selections" class="floating-button">
+            <i class="fa fa-eraser"></i>
+            <span>Clear Selections</span>
+        </button>
+        <button id="export-table" class="floating-button">
+            <i class="fa fa-file-export"></i>
+            <span>Export Table (TSV)</span>
+        </button>
+        <button id="export-pdf" class="floating-button">
+            <i class="fa fa-file-pdf"></i>
+            <span>Export Snipe Report</span>
+        </button>
+        <button id="scroll-to-table" class="floating-button">
+            <i class="fa fa-arrow-down"></i>
+            <span>Scroll to Table</span>
+        </button>
     </div>
+
 
 
     <script>
@@ -510,7 +576,7 @@
             "Y Coverage score",
             "Predicted Contamination Index",
             "Fraction of Singleton K-mers Total Abundance",
-            "Fraction of Non-Reference Duplicate K-mers Total Abundance",
+            "Fraction of Non-Reference Repetitive K-mers Total Abundance",
             "Fraction of Non-Reference K-mers Total Abundance",
         ];
 
@@ -746,7 +812,10 @@
                     traces = [{
                         x: currentPlotData.map(row => row[xAxis]),
                         y: currentPlotData.map(row => row[yAxis]),
+                        // text: currentPlotData.map(row => hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>') ),
                         text: currentPlotData.map(row =>
+                            // Add selected X and Y columns to the hover text
+                            `X (${xAxis}): ${row[xAxis]}<br>Y (${yAxis}): ${row[yAxis]}<br>` +
                             hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>')
                         ),
                         customdata: currentPlotData.map(row => row._uniqueId),
@@ -1042,7 +1111,7 @@
                 // Cover Page
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(24);
-                doc.text("Snipe Investigation Dashboard", pageWidth / 2, 120, null, null, 'center');
+                doc.text("Snipe Canine Visualization Dashboard", pageWidth / 2, 120, null, null, 'center');
 
                 // Date and Time
                 doc.setFont('helvetica', 'normal');
@@ -1115,7 +1184,7 @@
                                     doc.text(`Y-Axis: ${yAxisValue}`, 60, detailsYPosition + 40);
                                     doc.text(`Color By: ${hueValue}`, 60, detailsYPosition + 60);
                                     // write a new line
-                                    
+
                                 } else if (plotType === 'histogram' || plotType === 'boxplot') {
                                     // Updated retrieval of selected numerical columns
                                     const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value).join(', ');
@@ -1169,7 +1238,7 @@
                     }
 
                     // Save the PDF
-                    doc.save("snipe_investigation_report.pdf");
+                    doc.save("snipe_visualization_report.pdf");
                 });
             };
         }
@@ -1216,6 +1285,6 @@
             });
 
             // Save the PDF
-            doc.save("snipe_investigation_report.pdf");
+            doc.save("snipe_visualization_report.pdf");
         }
     </script>
