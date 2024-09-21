@@ -817,7 +817,7 @@
 
             // Common control for Assay Type
             controlsHTML += `
-                <div class="control-group">
+                <div class="control-group" id="assay-type-area">
                     <label>Assay Type:</label>
                     <div id="assay-type-checkboxes-${plotId}" class="checkbox-group scrollable-checkboxes two-column-checkboxes">
                         ${[...new Set(data.map(row => row["Assay Type"]).filter(type => type))].map(type => `
@@ -1474,10 +1474,10 @@
                     }
                 },
                 {
-                    element: '#assay-type-plot-1',
+                    element: '#assay-type-area',
                     popover: {
                         title: 'Assay Type',
-                        description: 'Filter the plot based on assay type. You can select one or view all assay types.',
+                        description: 'Filter the plot based on assay type. You can select one or more assay types.',
                         position: 'right'
                     }
                 },
@@ -1578,7 +1578,5 @@
         function startTour() {
             driverInstance.drive();
         }
-
-
 
     </script>
