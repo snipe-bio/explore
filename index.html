@@ -283,11 +283,36 @@
             font-weight: bold;
         }
 
+        /* Updated styling for the search bar */
         .search-container {
             display: flex;
             align-items: center;
             margin-bottom: 1rem;
         }
+
+        .search-container input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .search-container button:hover {
+            background-color: #2980b9;
+        }
+
 
         #search-input {
             flex: 1;
@@ -733,6 +758,25 @@
             letter-spacing: 1px;
         }
 
+        /* Styling for the help button */
+        .help-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #3498db;
+            margin-top: 1rem;
+        }
+
+        .help-button i {
+            font-size: 24px;
+        }
+
+        .help-button:hover {
+            color: #2980b9;
+        }
+
+
         /* Column definitions inside modal */
         #modal-column-definitions {
             margin-top: 2rem;
@@ -862,7 +906,7 @@
     <div class="container">
         <h1>Snipe SRA Exploration Dashboard</h1>
 
-        <!-- Species and Reference Selection -->
+        <!-- Updated Species and Reference Selection with Amplicon -->
         <div class="species-selection">
             <div class="control-group">
                 <label for="species-select">Species:</label>
@@ -879,9 +923,17 @@
                 </select>
             </div>
             <div class="control-group">
+                <label for="amplicon-select">Amplicon (Optional):</label>
+                <select id="amplicon-select" disabled>
+                    <option value="">Select Amplicon (Optional)</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            <div class="control-group">
                 <button id="load-data-button" disabled>Load Data</button>
             </div>
         </div>
+
 
         <div id="plots-container"></div>
         <div class="export-buttons">
@@ -943,16 +995,25 @@
         let plotCounter = 0;
 
         // Moved species_genome_path to global scope
-        const species_genome_path = {
+        const species_genome_amplicon_path = {
             'Canine': {
-                'CanFam3.1': 'data/snipe_metadata.tsv',
+                'CanFam3.1': {
+                    '': 'data/snipe_metadata.tsv',
+                    'Exome': 'data/snipe_metadata.tsv'
+                }
             },
             'Human': {
-                'GRCh38': '',
-                'CHM13V2.0': '',
+                'GRCh38': {
+                    '': ''
+                },
+                'CHM13V2.0': {
+                    '': ''
+                }
             },
             'Zebrafish': {
-                'GRCz11': '',
+                'GRCz11': {
+                    '': ''
+                }
             }
         };
 
@@ -986,18 +1047,33 @@
         ];
 
 
+        // Updated event listeners for species, reference, and amplicon selection
         document.addEventListener('DOMContentLoaded', function () {
             // Get references to the elements
             const speciesSelect = document.getElementById('species-select');
             const referenceSelect = document.getElementById('reference-select');
+            const ampliconSelect = document.getElementById('amplicon-select');
             const loadDataButton = document.getElementById('load-data-button');
 
             // Populate species options
-            for (const species in species_genome_path) {
+            for (const species in species_genome_amplicon_path) {
                 const option = document.createElement('option');
                 option.value = species;
                 option.textContent = species;
                 speciesSelect.appendChild(option);
+            }
+
+            // Set default selected species
+            speciesSelect.value = 'Canine';
+
+            // Function to clear plots and data
+            function clearAllData() {
+                data = null;
+                currentPlotData = null;
+                selectedPoints = [];
+                plotsContainer.innerHTML = '';
+                tableContainer.innerHTML = '';
+                plotCounter = 0;
             }
 
             // Event listener for species select
@@ -1007,25 +1083,31 @@
                 // Clear previous reference options
                 referenceSelect.innerHTML = '<option value="">Select Reference Genome</option>';
                 referenceSelect.disabled = true;
+
+                // Clear amplicon options
+                ampliconSelect.innerHTML = '<option value="">Select Amplicon (Optional)</option>';
+                ampliconSelect.disabled = true;
+
                 loadDataButton.disabled = true;
 
+                // Clear data and plots
+                clearAllData();
+
                 if (selectedSpecies) {
-                    const references = species_genome_path[selectedSpecies];
+                    const references = species_genome_amplicon_path[selectedSpecies];
                     for (const reference in references) {
-                        const dataFilePath = references[reference];
                         const option = document.createElement('option');
                         option.value = reference;
                         option.textContent = reference;
-                        if (!dataFilePath) {
-                            option.disabled = true;
-                            option.textContent += ' (Data not available)';
-                        }
                         referenceSelect.appendChild(option);
                     }
                     referenceSelect.disabled = false;
-                } else {
-                    referenceSelect.disabled = true;
-                    loadDataButton.disabled = true;
+
+                    // Set default selected reference
+                    referenceSelect.value = 'CanFam3.1';
+
+                    // Trigger change event to populate amplicon
+                    referenceSelect.dispatchEvent(new Event('change'));
                 }
             });
 
@@ -1033,9 +1115,46 @@
             referenceSelect.addEventListener('change', function () {
                 const selectedSpecies = speciesSelect.value;
                 const selectedReference = referenceSelect.value;
-                const dataFilePath = species_genome_path[selectedSpecies][selectedReference];
 
-                if (selectedReference && dataFilePath) {
+                // Clear previous amplicon options
+                ampliconSelect.innerHTML = '<option value="">Select Amplicon (Optional)</option>';
+                ampliconSelect.disabled = true;
+
+                loadDataButton.disabled = true;
+
+                // Clear data and plots
+                clearAllData();
+
+                if (selectedReference) {
+                    const amplicons = species_genome_amplicon_path[selectedSpecies][selectedReference];
+                    for (const amplicon in amplicons) {
+                        const option = document.createElement('option');
+                        option.value = amplicon;
+                        option.textContent = amplicon === '' ? 'No Amplicon' : amplicon;
+                        ampliconSelect.appendChild(option);
+                    }
+                    ampliconSelect.disabled = false;
+
+                    // Set default selected amplicon
+                    ampliconSelect.value = 'Exome';
+
+                    // Trigger change event to enable load data button
+                    ampliconSelect.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // Event listener for amplicon select
+            ampliconSelect.addEventListener('change', function () {
+                const selectedSpecies = speciesSelect.value;
+                const selectedReference = referenceSelect.value;
+                const selectedAmplicon = ampliconSelect.value;
+
+                const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][selectedAmplicon];
+
+                // Clear data and plots
+                clearAllData();
+
+                if (dataFilePath) {
                     loadDataButton.disabled = false;
                 } else {
                     loadDataButton.disabled = true;
@@ -1046,17 +1165,23 @@
             loadDataButton.addEventListener('click', function () {
                 const selectedSpecies = speciesSelect.value;
                 const selectedReference = referenceSelect.value;
-                const dataFilePath = species_genome_path[selectedSpecies][selectedReference];
+                const selectedAmplicon = ampliconSelect.value;
+
+                const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][selectedAmplicon];
 
                 if (dataFilePath) {
                     loadData(dataFilePath);
                 } else {
-                    alert('Data not available for selected species and reference genome.');
+                    alert('Data not available for selected species, reference genome, and amplicon.');
                 }
             });
+
+            // Trigger initial species change to set defaults
+            speciesSelect.dispatchEvent(new Event('change'));
         });
 
 
+        // Updated loadData function to avoid triggering the tour again
         function loadData(dataFilePath) {
             Papa.parse(dataFilePath, {
                 download: true,
@@ -1093,9 +1218,14 @@
                     // Now, add the first plot
                     addNewPlot();
 
-                    // Initialize and start the tour after data is loaded
-                    initOnboardingTour();
-                    startTour();
+                    // Initialize and start the tour after data is loaded, but only if it hasn't been shown
+                    if (localStorage.getItem('tourShown') !== 'true') {
+                        initOnboardingTour();
+                        startTour();
+                        localStorage.setItem('tourShown', 'true');
+                    } else {
+                        initOnboardingTour();
+                    }
                 }
             });
         }
@@ -1153,45 +1283,46 @@
 
 
 
+        // Updated addNewPlot function
         function addNewPlot() {
             plotCounter++;
             const plotId = `plot-${plotCounter}`;
             let plotHTML = '';
 
             plotHTML += `
-                <div class="plot-container">
-                    <div class="controls">
-                        <!-- Plot Type Control -->
-                        <div class="control-group">
-                            <label for="plot-type-${plotId}">Plot Type:</label>
-                            <select id="plot-type-${plotId}">
-                                <option value="scatter">Scatter Plot</option>
-                                <option value="histogram">Histogram</option>
-                                <option value="boxplot">Boxplot</option>
-                            </select>
-                        </div>
-                        <!-- Dynamic Controls -->
-                        <div id="dynamic-controls-${plotId}" class="controls"></div>
-                    </div>
-                    <div id="${plotId}" class="plot"></div>
-                    <button id="export-plot-${plotId}" class="button">Export Plot (300 DPI PNG)</button>
-                    <div class="additional-inputs">
-                        <div class="control-group">
-                            <label for="title-${plotId}">Plot Title:</label>
-                            <input type="text" id="title-${plotId}" class="title-input" placeholder="Enter plot title...">
-                        </div>
-                        <div class="control-group">
-                            <label for="notes-${plotId}">Notes:</label>
-                            <textarea id="notes-${plotId}" class="notes-textarea" placeholder="Enter your notes here..."></textarea>
-                        </div>
-                    </div>
-                    <!-- Search Bar After Each Plot -->
-                    <div class="search-container">
-                        <input type="text" id="search-input-${plotId}" placeholder="Search using BioProject, Experiment, or BioSample...">
-                        <button id="search-button-${plotId}" class="button">Search</button>
-                    </div>
+        <div class="plot-container">
+            <div class="controls">
+                <!-- Plot Type Control -->
+                <div class="control-group">
+                    <label for="plot-type-${plotId}">Plot Type:</label>
+                    <select id="plot-type-${plotId}">
+                        <option value="scatter">Scatter Plot</option>
+                        <option value="histogram">Histogram</option>
+                        <option value="boxplot">Boxplot</option>
+                    </select>
                 </div>
-            `;
+                <!-- Dynamic Controls -->
+                <div id="dynamic-controls-${plotId}" class="controls"></div>
+            </div>
+            <div id="${plotId}" class="plot"></div>
+            <!-- Search Bar directly after the plot -->
+            <div class="search-container">
+                <input type="text" id="search-input-${plotId}" placeholder="Search using BioProject, Experiment, or BioSample...">
+                <button id="search-button-${plotId}" class="button">Search all of the currently displayed plots</button>
+            </div>
+            <button id="export-plot-${plotId}" class="button">Export Plot (300 DPI PNG)</button>
+            <div class="additional-inputs">
+                <div class="control-group">
+                    <label for="title-${plotId}">Plot Title:</label>
+                    <input type="text" id="title-${plotId}" class="title-input" placeholder="Enter plot title...">
+                </div>
+                <div class="control-group">
+                    <label for="notes-${plotId}">Notes:</label>
+                    <textarea id="notes-${plotId}" class="notes-textarea" placeholder="Enter your notes here..."></textarea>
+                </div>
+            </div>
+        </div>
+    `;
 
             plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
 
@@ -1299,6 +1430,15 @@
                 </div>
             `;
 
+            // Add help button
+            controlsHTML += `
+                <div class="control-group">
+                    <button id="help-button-${plotId}" class="help-button">
+                        <i class="fa fa-question-circle"></i>
+                    </button>
+                </div>
+            `;
+
             dynamicControlsDiv.innerHTML = controlsHTML;
 
             // Attach event listeners to new controls
@@ -1306,6 +1446,15 @@
             controls.forEach(control => {
                 control.addEventListener('change', () => updatePlot(plotId));
             });
+
+            // Attach event listener to the help button
+            const helpButton = document.getElementById(`help-button-${plotId}`);
+            if (helpButton) {
+                helpButton.addEventListener('click', function () {
+                    const helpModal = document.getElementById('help-modal');
+                    helpModal.style.display = 'flex';
+                });
+            }
 
             // For better UX, automatically update the plot when controls are rendered
             updatePlot(plotId);
@@ -1329,7 +1478,7 @@
             }
 
             const matchingPoints = data.filter(row => {
-                return ['BioProject', 'BioSample', 'Experiment', 'biosample_experiment'].some(col => {
+                return ['BioProject accession', 'BioSample accession', 'SRA Experiment accession'].some(col => {
                     return row[col] && row[col].toString().toLowerCase().includes(searchText);
                 });
             });
