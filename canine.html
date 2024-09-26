@@ -911,21 +911,23 @@
 
         // Column Definitions
         const columnDefinitions = {
-            "Experiment": "Unique identifier for the sequencing experiment.",
-            "SRA Assay type": "Type of sequencing assay performed.",
-            "BioSample": "Biological sample from which the data was generated.",
-            "BioProject": "Project under which the data was generated.",
-            "Alignment-free genome coverage index": "Index representing genome coverage without alignment.",
-            "Genomic k-mers mean abundance": "Mean abundance of genomic k-mers.",
-            "Alignment-free exome coverage index": "Index representing exome coverage without alignment.",
-            "Exome k-mers mean abundance": "Mean abundance of exome k-mers.",
-            "X Ploidy score": "Score representing X chromosome ploidy.",
-            "Y Coverage score": "Score representing Y chromosome coverage.",
-            "Predicted Contamination Index": "Index predicting contamination levels.",
-            "Fraction of Singleton K-mers Total Abundance": "Fraction of singleton k-mers in total abundance.",
-            "Fraction of Non-Reference Repetitive K-mers Total Abundance": "Fraction of non-reference repetitive k-mers in total abundance.",
-            "Fraction of Non-Reference K-mers Total Abundance": "Fraction of non-reference k-mers in total abundance.",
-            // Add definitions for other columns as needed
+            "Total unique k-mers": "It represents the unique genetic content in the sample",
+            "Genomic unique k-mers": "It represents the unique genetic content in the sample that matches the reference genome",
+            "Exome unique k-mers": "It represents the unique genetic content in the sample that matches the exome",
+            "Genome coverage index": "It shows how much of the genome bases are covered",
+            "Exome coverage index": "It shows how much of the exome bases are covered",
+            "k-mer total abundance": "It correlates with the total amount of sequencing",
+            "Genomic k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the reference genome",
+            "Exome k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the exome",
+            "Mapping index": "Genomic k-mers total Abundance as a fraction of all k-mer total abundance. It correlates with the mapped sequencing bases to the genomes",
+            "Predicted contamination index": "The fraction abundance of non-genomic k-mers if the k-mer count > 1. It represent genetic variance and increase if there is sequence contamination",
+            "Empirical contamination index": "The fraction of k-mers matching microbial sequences. It is calcuted by Sourmash software and expected to correlate with Snipe's predicted contamination index",
+            "Sequencing errors index": "The fraction abundance of non-genomic k-mers if the k-mer count = 1 (i.e., singletons). It represents sequecning errors",
+            "Autosomal k-mer mean abundance CV": "The coefficient of variation (CV) for the mean abundance of k-mers specific to each autosome. A high CV suggests variability, potentially pointing to uneven sequencing",
+            "Exome enrichment score": "A composite metric for quantifying amplicon enrichment in a sequencing experiment",
+            "chrX Ploidy score": "The ratio of the mean abundance of chrX-specific k-mers to autosomal-specific k-mers. It correlates with X chromosome ploidy",
+            "chrY Coverage score": "The ratio of sequence coverage for chrY and autosomal chromosomes.",
+            "Coverage of 1fold more sequencing": "Expected coverage with 1 fold more sequecning"
         };
 
         // Function to populate the modal with column definitions
