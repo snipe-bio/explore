@@ -1039,7 +1039,6 @@
         let plotsContainer, tableContainer, exportTableButton, clearSelectionsButton, addViewButton;
         let plotCounter = 0;
 
-        // Moved species_genome_path to global scope
         const species_genome_amplicon_path = {
             'Canine': {
                 'CanFam3.1': {
@@ -2067,7 +2066,7 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize the tour after the page has loaded
-            initOnboardingTour();
+            // initOnboardingTour();
 
             // Check if the tour has been shown before
             if (localStorage.getItem('tourShown') !== 'true') {
