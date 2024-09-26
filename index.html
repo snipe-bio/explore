@@ -300,6 +300,7 @@
         }
 
         .search-container button {
+            /* Existing styles */
             padding: 10px 20px;
             font-size: 16px;
             color: white;
@@ -307,6 +308,8 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            /* Add pulse animation */
+            animation: pulse 2s infinite;
         }
 
         .search-container button:hover {
@@ -887,6 +890,50 @@
             outline: 0;
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
+
+        /* Gentle pulsing animation for Load Data button */
+        @keyframes gentlePulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 15px 5px rgba(46, 204, 113, 0.3);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        #load-data-button:not(:disabled) {
+            animation: gentlePulse 2.5s infinite;
+            transition: background-color 0.3s ease;
+            background-color: #2ecc71;
+            /* Professional green color */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            /*move the button a bit to down*/
+            margin-top: 25px;
+        }
+
+        #load-data-button:hover {
+            background-color: #27ae60;
+            /* Darken the color slightly on hover */
+        }
+
+        /* if disabled, also margin-top: 25px; */
+        #load-data-button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            margin-top: 25px;
+        }
+
     </style>
 </head>
 
@@ -984,8 +1031,6 @@
 
 
     </div>
-
-
 
     <script>
         let data;
@@ -1218,17 +1263,13 @@
                     // Now, add the first plot
                     addNewPlot();
 
-                    // Initialize and start the tour after data is loaded, but only if it hasn't been shown
-                    if (localStorage.getItem('tourShown') !== 'true') {
-                        initOnboardingTour();
-                        startTour();
-                        localStorage.setItem('tourShown', 'true');
-                    } else {
-                        initOnboardingTour();
-                    }
+                    // Initialize and start the tour after data is loaded
+                    initOnboardingTour();
+                    startTour();
                 }
             });
         }
+
 
 
         // Column Definitions
