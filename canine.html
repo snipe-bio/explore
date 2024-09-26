@@ -153,7 +153,7 @@
             margin-right: 0.5rem;
         }
 
-        /* CHECKBOXES in Assay Type */
+        /* CHECKBOXES in SRA Assay type */
 
         .two-column-checkboxes {
             display: flex;
@@ -166,7 +166,7 @@
             box-sizing: border-box;
         }
 
-        /* END: CHECKBOXES in Assay Type */
+        /* END: CHECKBOXES in SRA Assay type */
 
 
 
@@ -879,17 +879,11 @@
         }
 
         const hoverColumns = [
-            "Experiment", "Assay Type", "BioSample", "BioProject",
-            "Alignment-free genome coverage index",
-            "Genomic k-mers mean abundance",
-            "Alignment-free exome coverage index",
-            "Exome k-mers mean abundance",
-            "X Ploidy score",
-            "Y Coverage score",
-            "Predicted Contamination Index",
-            "Fraction of Singleton K-mers Total Abundance",
-            "Fraction of Non-Reference Repetitive K-mers Total Abundance",
-            "Fraction of Non-Reference K-mers Total Abundance",
+            'SRA Experiment accession', 'BioProject accession', 'SRA Assay type', 'Genome coverage index', 
+            'Exome coverage index', 'Genomic k-mers mean abundance', 'Exome k-mers mean abundance', 
+            'Mapping index', 'Predicted contamination index', 'Empirical contamination index', 
+            'Sequencing errors index', 'Autosomal k-mer mean abundance CV', 'Exome enrichment score', 
+            'Predicted Assay type', 'chrX Ploidy score', 'chrY Coverage score'
         ];
 
 
@@ -918,7 +912,7 @@
         // Column Definitions
         const columnDefinitions = {
             "Experiment": "Unique identifier for the sequencing experiment.",
-            "Assay Type": "Type of sequencing assay performed.",
+            "SRA Assay type": "Type of sequencing assay performed.",
             "BioSample": "Biological sample from which the data was generated.",
             "BioProject": "Project under which the data was generated.",
             "Alignment-free genome coverage index": "Index representing genome coverage without alignment.",
@@ -1028,7 +1022,7 @@
             const numericalColumns = columns.filter(col => data.some(row => isNumeric(row[col])));
             const categoricalColumns = columns.filter(col => !numericalColumns.includes(col));
 
-            _cols_to_exclude_from_color = ['Experiment'];
+            _cols_to_exclude_from_color = ['SRA Experiment accession'];
             const cols_for_colorby = columns.filter(col => !_cols_to_exclude_from_color.includes(col));
 
             let controlsHTML = '';
@@ -1082,12 +1076,12 @@
                 `;
             }
 
-            // Common control for Assay Type
+            // Common control for SRA Assay type
             controlsHTML += `
                 <div class="control-group" id="assay-type-area">
-                    <label>Assay Type:</label>
+                    <label>SRA Assay type:</label>
                     <div id="assay-type-checkboxes-${plotId}" class="checkbox-group scrollable-checkboxes two-column-checkboxes">
-                        ${[...new Set(data.map(row => row["Assay Type"]).filter(type => type))].map(type => `
+                        ${[...new Set(data.map(row => row["SRA Assay type"]).filter(type => type))].map(type => `
                             <div class="checkbox-item">
                                 <input type="checkbox" id="assay-type-${type}-${plotId}" name="assay-type-${plotId}" value="${type}" checked>
                                 <label for="assay-type-${type}-${plotId}">${type}</label>
@@ -1158,8 +1152,8 @@
             const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
 
 
-            // currentPlotData = selectedAssayType ? data.filter(row => row["Assay Type"] === selectedAssayType) : data;
-            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["Assay Type"])) : data;
+            // currentPlotData = selectedAssayType ? data.filter(row => row["SRA Assay type"] === selectedAssayType) : data;
+            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["SRA Assay type"])) : data;
 
             if (plotType === 'scatter') {
                 const xAxis = document.getElementById(`x-axis-${plotId}`).value;
@@ -1478,7 +1472,7 @@
                 // Cover Page
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(24);
-                doc.text("Snipe Canine Visualization Dashboard", pageWidth / 2, 120, null, null, 'center');
+                doc.text("Snipe SRA Exploration Dashboard?", pageWidth / 2, 120, null, null, 'center');
 
                 // Date and Time
                 doc.setFont('helvetica', 'normal');
@@ -1563,7 +1557,7 @@
                                 const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
                                 const assayTypeValue = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value).join(', ') || 'All';
 
-                                doc.text(`Assay Type: ${assayTypeValue}`, 60, detailsYPosition + 80);
+                                doc.text(`SRA Assay type: ${assayTypeValue}`, 60, detailsYPosition + 80);
 
                                 // Add user's notes
                                 const notesValue = document.getElementById(`notes-${plotId}`).value;
@@ -1706,7 +1700,7 @@
                 {
                     element: '.container h1',
                     popover: {
-                        title: 'Welcome to Snipe Canine Visualization Dashboard',
+                        title: 'Snipe SRA Exploration Dashboard',
                         description: 'This dashboard helps you visualize and analyze the Canine SRA experiments.',
                         position: 'bottom'
                     }
@@ -1762,8 +1756,8 @@
                 {
                     element: '#assay-type-area',
                     popover: {
-                        title: 'Assay Type',
-                        description: 'Filter the plot based on assay type. You can select one or more assay types.',
+                        title: 'SRA Assay type',
+                        description: 'Filter the plot based on SRA Assay type. You can select one or more SRA Assay types.',
                         position: 'right'
                     }
                 },
