@@ -777,9 +777,72 @@
             background: #555;
         }
 
-
-
         /* END: HELP AREA */
+
+        /* Styles for Species Selection */
+        .species-selection {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .species-selection .control-group {
+            flex: 1;
+            margin-right: 1rem;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .species-selection .control-group:last-child {
+            margin-right: 0;
+        }
+
+        .species-selection .control-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .species-selection .control-group select,
+        .species-selection button {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 1rem;
+            color: #495057;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .species-selection button {
+            margin-top: 1rem;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .species-selection button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .species-selection select:focus,
+        .species-selection button:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
     </style>
 </head>
 
@@ -788,7 +851,7 @@
 <div id="help-modal" class="modal">
     <div class="modal-content">
         <span id="close-modal" class="close-button">&times;</span>
-        <h2>Column Definitions</h2>
+        <h2>Snipe metrics description</h2>
         <div id="modal-column-definitions">
             <!-- Column definitions will be inserted here -->
         </div>
@@ -798,6 +861,28 @@
 <body>
     <div class="container">
         <h1>Snipe SRA Exploration Dashboard</h1>
+
+        <!-- Species and Reference Selection -->
+        <div class="species-selection">
+            <div class="control-group">
+                <label for="species-select">Species:</label>
+                <select id="species-select">
+                    <option value="">Select Species</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="reference-select">Reference Genome:</label>
+                <select id="reference-select" disabled>
+                    <option value="">Select Reference Genome</option>
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+            <div class="control-group">
+                <button id="load-data-button" disabled>Load Data</button>
+            </div>
+        </div>
+
         <div id="plots-container"></div>
         <div class="export-buttons">
             <button id="add-view" class="button">Add View</button>
@@ -857,6 +942,20 @@
         let plotsContainer, tableContainer, exportTableButton, clearSelectionsButton, addViewButton;
         let plotCounter = 0;
 
+        // Moved species_genome_path to global scope
+        const species_genome_path = {
+            'Canine': {
+                'CanFam3.1': 'data/snipe_metadata.tsv',
+            },
+            'Human': {
+                'GRCh38': '',
+                'CHM13V2.0': '',
+            },
+            'Zebrafish': {
+                'GRCz11': '',
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
             plotsContainer = document.getElementById('plots-container');
             tableContainer = document.getElementById('table-container');
@@ -887,8 +986,79 @@
         ];
 
 
-        function loadData() {
-            Papa.parse("data/snipe_metadata.tsv", {
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get references to the elements
+            const speciesSelect = document.getElementById('species-select');
+            const referenceSelect = document.getElementById('reference-select');
+            const loadDataButton = document.getElementById('load-data-button');
+
+            // Populate species options
+            for (const species in species_genome_path) {
+                const option = document.createElement('option');
+                option.value = species;
+                option.textContent = species;
+                speciesSelect.appendChild(option);
+            }
+
+            // Event listener for species select
+            speciesSelect.addEventListener('change', function () {
+                const selectedSpecies = speciesSelect.value;
+
+                // Clear previous reference options
+                referenceSelect.innerHTML = '<option value="">Select Reference Genome</option>';
+                referenceSelect.disabled = true;
+                loadDataButton.disabled = true;
+
+                if (selectedSpecies) {
+                    const references = species_genome_path[selectedSpecies];
+                    for (const reference in references) {
+                        const dataFilePath = references[reference];
+                        const option = document.createElement('option');
+                        option.value = reference;
+                        option.textContent = reference;
+                        if (!dataFilePath) {
+                            option.disabled = true;
+                            option.textContent += ' (Data not available)';
+                        }
+                        referenceSelect.appendChild(option);
+                    }
+                    referenceSelect.disabled = false;
+                } else {
+                    referenceSelect.disabled = true;
+                    loadDataButton.disabled = true;
+                }
+            });
+
+            // Event listener for reference select
+            referenceSelect.addEventListener('change', function () {
+                const selectedSpecies = speciesSelect.value;
+                const selectedReference = referenceSelect.value;
+                const dataFilePath = species_genome_path[selectedSpecies][selectedReference];
+
+                if (selectedReference && dataFilePath) {
+                    loadDataButton.disabled = false;
+                } else {
+                    loadDataButton.disabled = true;
+                }
+            });
+
+            // Event listener for load data button
+            loadDataButton.addEventListener('click', function () {
+                const selectedSpecies = speciesSelect.value;
+                const selectedReference = referenceSelect.value;
+                const dataFilePath = species_genome_path[selectedSpecies][selectedReference];
+
+                if (dataFilePath) {
+                    loadData(dataFilePath);
+                } else {
+                    alert('Data not available for selected species and reference genome.');
+                }
+            });
+        });
+
+
+        function loadData(dataFilePath) {
+            Papa.parse(dataFilePath, {
                 download: true,
                 header: true,
                 delimiter: "\t",
@@ -903,7 +1073,28 @@
                     // Populate column definitions in the modal
                     populateModalColumnDefinitions();
 
+                    // Now that data is loaded, set up the rest of the UI
+                    plotsContainer = document.getElementById('plots-container');
+                    tableContainer = document.getElementById('table-container');
+                    exportTableButton = document.getElementById('export-table');
+                    clearSelectionsButton = document.getElementById('clear-selections');
+                    addViewButton = document.getElementById('add-view');
+
+                    exportTableButton.addEventListener('click', exportTableToTSV);
+                    clearSelectionsButton.addEventListener('click', clearSelections);
+                    addViewButton.addEventListener('click', addNewPlot);
+                    document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
+                    document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
+
+                    // Initialize variables
+                    selectedPoints = [];
+                    plotCounter = 0;
+
+                    // Now, add the first plot
                     addNewPlot();
+
+                    // Initialize the tour after data is loaded
+                    initOnboardingTour();
                 }
             });
         }
@@ -939,13 +1130,23 @@
 
             const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
 
-            columns.forEach(col => {
+            // This will show metrics w/o definitions as "No definition available."
+            {
+                {/*  columns.forEach(col => {
                 const definition = columnDefinitions[col] || "No definition available.";
                 htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
+            });  */}
+            }
+
+            // for only columns in columnDefinitions
+            columns.forEach(col => {
+                if (col in columnDefinitions) {
+                    const definition = columnDefinitions[col] || "No definition available.";
+                    htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
+                }
             });
 
             htmlContent += '</dl>';
-
             columnDefinitionsDiv.innerHTML = htmlContent;
         }
 
