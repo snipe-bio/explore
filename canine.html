@@ -879,10 +879,10 @@
         }
 
         const hoverColumns = [
-            'SRA Experiment accession', 'BioProject accession', 'SRA Assay type', 'Genome coverage index', 
-            'Exome coverage index', 'Genomic k-mers mean abundance', 'Exome k-mers mean abundance', 
-            'Mapping index', 'Predicted contamination index', 'Empirical contamination index', 
-            'Sequencing errors index', 'Autosomal k-mer mean abundance CV', 'Exome enrichment score', 
+            'SRA Experiment accession', 'BioProject accession', 'SRA Assay type', 'Genome coverage index',
+            'Exome coverage index', 'Genomic k-mers mean abundance', 'Exome k-mers mean abundance',
+            'Mapping index', 'Predicted contamination index', 'Empirical contamination index',
+            'Sequencing errors index', 'Autosomal k-mer mean abundance CV', 'Exome enrichment score',
             'Predicted Assay type', 'chrX Ploidy score', 'chrY Coverage score'
         ];
 
@@ -1029,29 +1029,38 @@
 
             if (plotType === 'scatter') {
                 controlsHTML = `
-                    <div class="control-group">
-                        <label for="x-axis-${plotId}">X-Axis:</label>
-                        <select id="x-axis-${plotId}">
-                            <option value="">Select X-Axis</option>
-                            <!-- ${columns.map(col => `<option value="${col}">${col}</option>`).join('')} -->
-                            ${numericalColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="y-axis-${plotId}">Y-Axis:</label>
-                        <select id="y-axis-${plotId}">
-                            <option value="">Select Y-Axis</option>
-                            ${numericalColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="hue-${plotId}">Color By:</label>
-                        <select id="hue-${plotId}">
-                            <option value="">Select Color</option>
-                            ${cols_for_colorby.map(col => `<option value="${col}">${col}</option>`).join('')}
-                        </select>
-                    </div>
-                `;
+                <!-- X-Axis Control with Log Scale -->
+                <div class="control-group">
+                    <label for="x-axis-${plotId}">X-Axis:</label>
+                    <select id="x-axis-${plotId}">
+                        <option value="">Select X-Axis</option>
+                        ${numericalColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                    <label>
+                        <input type="checkbox" id="x-log-scale-${plotId}"> Log Scale
+                    </label>
+                </div>
+                <!-- Y-Axis Control with Log Scale -->
+                <div class="control-group">
+                    <label for="y-axis-${plotId}">Y-Axis:</label>
+                    <select id="y-axis-${plotId}">
+                        <option value="">Select Y-Axis</option>
+                        ${numericalColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                    <label>
+                        <input type="checkbox" id="y-log-scale-${plotId}"> Log Scale
+                    </label>
+                </div>
+                <!-- Color By Control -->
+                <div class="control-group">
+                    <label for="hue-${plotId}">Color By:</label>
+                    <select id="hue-${plotId}">
+                        <option value="">Select Color</option>
+                        ${cols_for_colorby.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+
             } else if (plotType === 'boxplot' || plotType === 'histogram') {
                 // Use checkboxes for selecting numerical columns, wrapped in a scrollable box
                 controlsHTML = `
@@ -1160,6 +1169,10 @@
                 const yAxis = document.getElementById(`y-axis-${plotId}`).value;
                 const hueColumn = document.getElementById(`hue-${plotId}`).value;
 
+                // Get the state of the log scale checkboxes
+                const xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
+                const yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
+
                 // if (!xAxis || !yAxis || !hueColumn) {
                 if (!xAxis || !yAxis) {
                     plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select values for X-Axis, Y-Axis.</p>';
@@ -1228,8 +1241,8 @@
                 }
 
                 const layout = {
-                    xaxis: { title: xAxis },
-                    yaxis: { title: yAxis },
+                    xaxis: { title: xAxis, type: xLogScale ? 'log' : 'linear' },
+                    yaxis: { title: yAxis, type: yLogScale ? 'log' : 'linear' },
                     hovermode: 'closest',
                     showlegend: true,
                     margin: { t: 50 },
@@ -1541,12 +1554,14 @@
                                     const xAxisValue = document.getElementById(`x-axis-${plotId}`).value;
                                     const yAxisValue = document.getElementById(`y-axis-${plotId}`).value;
                                     const hueValue = document.getElementById(`hue-${plotId}`).value;
-                                    doc.text(`X-Axis: ${xAxisValue}`, 60, detailsYPosition + 20);
-                                    doc.text(`Y-Axis: ${yAxisValue}`, 60, detailsYPosition + 40);
-                                    doc.text(`Color By: ${hueValue}`, 60, detailsYPosition + 60);
-                                    // write a new line
+                                    const xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked ? 'Yes' : 'No';
+                                    const yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked ? 'Yes' : 'No';
 
-                                } else if (plotType === 'histogram' || plotType === 'boxplot') {
+                                    doc.text(`X-Axis: ${xAxisValue} (Log Scale: ${xLogScale})`, 60, detailsYPosition + 20);
+                                    doc.text(`Y-Axis: ${yAxisValue} (Log Scale: ${yLogScale})`, 60, detailsYPosition + 40);
+                                    doc.text(`Color By: ${hueValue}`, 60, detailsYPosition + 60);
+                                }
+                                else if (plotType === 'histogram' || plotType === 'boxplot') {
                                     // Updated retrieval of selected numerical columns
                                     const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value).join(', ');
                                     const groupBy = document.getElementById(`group-by-${plotId}`).value || 'None';
