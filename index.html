@@ -11,6 +11,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"></script>
 
 
     <!-- Driver.js CSS and JS -->
@@ -1043,6 +1045,62 @@
         .button:hover {
             background-color: #2980b9;
         }
+
+        /* Styles for the floating search button */
+        .plot-area {
+            position: relative;
+        }
+
+        .floating-search-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+        }
+
+        .search-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-input-container {
+            display: none;
+            margin-top: 5px;
+        }
+
+        .search-input {
+            width: 150px;
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+
+        .search-submit-button {
+            padding: 5px 10px;
+            font-size: 14px;
+            color: white;
+            background-color: #2ecc71;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        /* Styles for noUiSlider */
+        .range-slider {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .noUi-target {
+            background: #ecf0f1;
+            border-radius: 4px;
+        }
     </style>
 </head>
 
@@ -1395,8 +1453,6 @@
             });
 
 
-
-
             // Event listener for the Import Session button
             document.getElementById('import-session').addEventListener('click', function () {
                 const importSessionModal = document.getElementById('import-session-modal');
@@ -1508,7 +1564,7 @@
         ];
 
         // Updated loadData function to avoid triggering the tour again
-        function loadData(filePath, callback) {
+        function loadData(filePath, callback, addInitialPlot = true) {
             dataFilePath = filePath; // Set the global dataFilePath
 
             // Show loading modal
@@ -1551,17 +1607,16 @@
                     // Initialize variables
                     plotCounter = 0;
 
-                    // Now, add the first plot
-                    addNewPlot();
+                    // Now, add the first plot only if addInitialPlot is true
+                    // I Disabled this to prevent adding a plot when loading user data
+                    // TODO: fix to more professional solution
+                    //if (addInitialPlot) {addNewPlot(); }
 
                     // Show the add-view button
                     document.getElementById('add-view-container').style.display = 'block';
 
                     // Initialize and start the tour after data is loaded
                     initOnboardingTour();
-
-                    //!! DISABLE TOUR BY DEFAULT
-                    // startTour();
 
                     // Hide loading modal
                     document.getElementById('loading-modal').style.display = 'none';
@@ -1588,17 +1643,17 @@
             const assayTypeCounts = assayTypes.map(type => {
                 const count = data.filter(row => row["SRA Assay type"] === type).length;
                 return `    ${type}: ${count}`;
-            }).join('\n');
+            }).join(', ');
             const uniqueBioProjects = new Set(data.map(row => row["BioProject accession"])).size;
             const uniqueExperiments = new Set(data.map(row => row["SRA Experiment accession"])).size;
 
             const logContent = `
-                Data Statistics:
-                Total Data Points: ${totalPoints}
-                Assay Types:
-                ${assayTypeCounts}
-                Unique BioProjects: ${uniqueBioProjects}
-                Unique Experiments: ${uniqueExperiments}
+Data Statistics:
+Total Data Points: ${totalPoints}
+Assay Types: 
+\t${assayTypeCounts}
+Unique BioProjects: ${uniqueBioProjects}
+Unique Experiments: ${uniqueExperiments}
                     `;
             logInfoDiv.textContent = logContent.trim();
         }
@@ -1606,6 +1661,9 @@
 
 
         function loadUserData(userDataArray) {
+            // Show loading modal
+            document.getElementById('loading-modal').style.display = 'flex';
+
             data = [];
             integrateUserData(userDataArray);
 
@@ -1642,9 +1700,13 @@
             updateTable();
             highlightSelectedPoints();
 
+            // Hide loading modal
+            document.getElementById('loading-modal').style.display = 'none';
+
             // Show notification
             showNotification('User data loaded successfully.');
         }
+
 
 
 
@@ -1733,7 +1795,16 @@
                             <!-- Plot Title Display -->
                             <h3 id="plot-title-display-${plotId}" class="plot-title mt-3 text-center">Plot ${plotCounter}</h3>
                             <!-- Plot Area -->
-                            <div id="${plotId}" class="plot"></div>
+                            <div class="plot-area" style="position: relative;">
+                                <div id="${plotId}" class="plot"></div>
+                                <div class="floating-search-button" id="floating-search-button-${plotId}">
+                                    <button class="search-button" id="search-button-${plotId}"><i class="fa fa-search"></i></button>
+                                    <div class="search-input-container" id="search-input-container-${plotId}">
+                                        <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
+                                        <button class="search-submit-button" id="search-submit-button-${plotId}">Go</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <!-- Plot Title, Notes, and Export Button -->
                         <div class="card-body">
@@ -1755,11 +1826,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Search Bar -->
-                    <div class="search-container mt-3">
-                        <input type="text" id="search-input-${plotId}" class="form-control" placeholder="Search...">
-                        <button id="search-button-${plotId}" class="btn btn-secondary mt-2">Search</button>
-                    </div>
                 </div>
             `;
             plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
@@ -1778,19 +1844,25 @@
 
             exportPlotButton.addEventListener('click', () => exportPlot(plotId));
 
-            document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints());
+            // Add event listener for the search button
+            document.getElementById(`search-button-${plotId}`).addEventListener('click', function () {
+                const inputContainer = document.getElementById(`search-input-container-${plotId}`);
+                if (inputContainer.style.display === 'none' || inputContainer.style.display === '') {
+                    inputContainer.style.display = 'block';
+                } else {
+                    inputContainer.style.display = 'none';
+                }
+            });
 
-            // Help button
-            const helpButton = document.getElementById(`help-button-${plotId}`);
-            if (helpButton) {
-                helpButton.addEventListener('click', function () {
-                    const helpModal = document.getElementById('help-modal');
-                    helpModal.style.display = 'flex';
-                });
-            }
+            // Add event listener for the search submit button
+            document.getElementById(`search-submit-button-${plotId}`).addEventListener('click', function () {
+                searchAndSelectPoints(plotId);
+            });
 
+            // Initialize plot
             updatePlot(plotId);
         }
+
 
 
 
@@ -1867,48 +1939,28 @@
                             `).join('')}
                         </div>
                     </div>
-                `;
-            } else if (plotType === 'histogram' || plotType === 'boxplot') {
-                controlsHTML = `
-                    <div class="row">
-                        <!-- Numerical Columns -->
+                    <!-- Add range sliders -->
+                    <div class="row mt-3">
+                        <!-- X-Axis Range Slider -->
                         <div class="col-md-6">
-                            <label>Select Numerical Columns:</label>
-                            <div id="checkbox-group-${plotId}" class="form-group" style="height: 150px; overflow-y: auto;">
-                                ${numericalColumns.map((col, index) => `
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="num-column-${col}-${plotId}" name="num-columns-${plotId}" value="${col}">
-                                        <label class="form-check-label" for="num-column-${col}-${plotId}">
-                                            ${col}
-                                        </label>
-                                    </div>
-                                `).join('')}
+                            <label for="x-range-slider-${plotId}">X-Axis Range:</label>
+                            <div id="x-range-slider-${plotId}" class="range-slider"></div>
+                            <div>
+                                <span id="x-range-min-value-${plotId}">0</span> - <span id="x-range-max-value-${plotId}">100</span>
                             </div>
                         </div>
-                        <!-- Group By Control -->
-                        <div class="col-md-3">
-                            <label for="group-by-${plotId}">Group By (Optional):</label>
-                            <select id="group-by-${plotId}" class="form-control">
-                                <option value="">No Grouping</option>
-                                ${categoricalColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
-                            </select>
-                        </div>
-                        <!-- SRA Assay Type -->
-                        <div class="col-md-3 align-items-center">
-                            <label class="mb-0">SRA Assay type:</label>
-                            <div id="assay-type-checkboxes-${plotId}" class="form-inline">
-                                ${[...new Set(data.map(row => row["SRA Assay type"]).filter(type => type))].map((type, index) => `
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" id="assay-type-${plotId}-${index}" name="assay-type-${plotId}" value="${type}" checked>
-                                        <label class="form-check-label" for="assay-type-${plotId}-${index}">
-                                            ${type}
-                                        </label>
-                                    </div>
-                                `).join('')}
+                        <!-- Y-Axis Range Slider -->
+                        <div class="col-md-6">
+                            <label for="y-range-slider-${plotId}">Y-Axis Range:</label>
+                            <div id="y-range-slider-${plotId}" class="range-slider"></div>
+                            <div>
+                                <span id="y-range-min-value-${plotId}">0</span> - <span id="y-range-max-value-${plotId}">100</span>
                             </div>
                         </div>
                     </div>
                 `;
+            } else if (plotType === 'histogram' || plotType === 'boxplot') {
+                // ... existing code ...
             }
 
             dynamicControlsDiv.innerHTML = controlsHTML;
@@ -1918,22 +1970,120 @@
             controls.forEach(control => {
                 control.addEventListener('change', () => updatePlot(plotId));
             });
+
+            // Initialize sliders when xAxis and yAxis change
+            const xAxisSelect = document.getElementById(`x-axis-${plotId}`);
+            const yAxisSelect = document.getElementById(`y-axis-${plotId}`);
+
+            if (xAxisSelect) {
+                xAxisSelect.addEventListener('change', () => {
+                    initializeXAxisSlider(plotId);
+                    updatePlot(plotId);
+                });
+            }
+
+            if (yAxisSelect) {
+                yAxisSelect.addEventListener('change', () => {
+                    initializeYAxisSlider(plotId);
+                    updatePlot(plotId);
+                });
+            }
+
+            // Show or hide the floating search button based on plot type
+            const floatingSearchButton = document.getElementById(`floating-search-button-${plotId}`);
+            if (plotType === 'scatter') {
+                floatingSearchButton.style.display = 'block';
+            } else {
+                floatingSearchButton.style.display = 'none';
+            }
+        }
+
+
+
+        function initializeXAxisSlider(plotId) {
+            const xAxis = document.getElementById(`x-axis-${plotId}`).value;
+            const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+            if (xAxis && xSlider) {
+                const xValues = data.map(row => parseFloat(row[xAxis])).filter(val => !isNaN(val));
+                const xMin = Math.min(...xValues);
+                const xMax = Math.max(...xValues);
+                if (xSlider.noUiSlider) {
+                    xSlider.noUiSlider.updateOptions({
+                        range: {
+                            'min': xMin,
+                            'max': xMax
+                        },
+                        start: [xMin, xMax]
+                    });
+                } else {
+                    noUiSlider.create(xSlider, {
+                        start: [xMin, xMax],
+                        connect: true,
+                        range: {
+                            'min': xMin,
+                            'max': xMax
+                        }
+                    });
+                    xSlider.noUiSlider.on('update', function (values, handle) {
+                        document.getElementById(`x-range-min-value-${plotId}`).innerHTML = parseFloat(values[0]).toFixed(2);
+                        document.getElementById(`x-range-max-value-${plotId}`).innerHTML = parseFloat(values[1]).toFixed(2);
+                    });
+                    xSlider.noUiSlider.on('change', function (values, handle) {
+                        // Delay updating the plot
+                        clearTimeout(xSlider.updateTimeout);
+                        xSlider.updateTimeout = setTimeout(function () {
+                            updatePlot(plotId);
+                        }, 500); // 500ms delay
+                    });
+                }
+            }
+        }
+
+        function initializeYAxisSlider(plotId) {
+            const yAxis = document.getElementById(`y-axis-${plotId}`).value;
+            const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+            if (yAxis && ySlider) {
+                const yValues = data.map(row => parseFloat(row[yAxis])).filter(val => !isNaN(val));
+                const yMin = Math.min(...yValues);
+                const yMax = Math.max(...yValues);
+                if (ySlider.noUiSlider) {
+                    ySlider.noUiSlider.updateOptions({
+                        range: {
+                            'min': yMin,
+                            'max': yMax
+                        },
+                        start: [yMin, yMax]
+                    });
+                } else {
+                    noUiSlider.create(ySlider, {
+                        start: [yMin, yMax],
+                        connect: true,
+                        range: {
+                            'min': yMin,
+                            'max': yMax
+                        }
+                    });
+                    ySlider.noUiSlider.on('update', function (values, handle) {
+                        document.getElementById(`y-range-min-value-${plotId}`).innerHTML = parseFloat(values[0]).toFixed(2);
+                        document.getElementById(`y-range-max-value-${plotId}`).innerHTML = parseFloat(values[1]).toFixed(2);
+                    });
+                    ySlider.noUiSlider.on('change', function (values, handle) {
+                        // Delay updating the plot
+                        clearTimeout(ySlider.updateTimeout);
+                        ySlider.updateTimeout = setTimeout(function () {
+                            updatePlot(plotId);
+                        }, 500); // 500ms delay
+                    });
+                }
+            }
         }
 
 
 
 
-
-
-        function searchAndSelectPoints() {
-            // Use a common search input for all plots
-            const searchInputs = document.querySelectorAll('.search-container input[type="text"]');
-            let searchText = '';
-            searchInputs.forEach(input => {
-                if (input.value.trim() !== '') {
-                    searchText = input.value.trim().toLowerCase();
-                }
-            });
+        function searchAndSelectPoints(plotId) {
+            const searchInput = document.getElementById(`search-input-${plotId}`);
+            let searchText = searchInput.value.trim();
 
             if (searchText === '') {
                 return;
@@ -1941,7 +2091,10 @@
 
             const matchingPoints = data.filter(row => {
                 return ['BioProject accession', 'BioSample accession', 'SRA Experiment accession'].some(col => {
-                    return row[col] && row[col].toString().toLowerCase().includes(searchText);
+                    // Partial search (commented out)
+                    // return row[col] && row[col].toString().toLowerCase().includes(searchText.toLowerCase());
+                    // Exact search
+                    return row[col] && row[col].toString().toLowerCase() === searchText.toLowerCase();
                 });
             });
 
@@ -1962,6 +2115,7 @@
 
 
 
+
         function isNumeric(n) {
             return !isNaN(parseFloat(n)) && isFinite(n);
         }
@@ -1971,13 +2125,10 @@
         function updatePlot(plotId) {
             const plotDiv = document.getElementById(plotId);
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
-            // const selectedAssayType = document.getElementById(`assay-type-${plotId}`).value;
 
             const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
             const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
 
-
-            // currentPlotData = selectedAssayType ? data.filter(row => row["SRA Assay type"] === selectedAssayType) : data;
             currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["SRA Assay type"])) : data;
 
             if (plotType === 'scatter') {
@@ -1989,22 +2140,43 @@
                 const xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
                 const yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
 
-                // if (!xAxis || !yAxis || !hueColumn) {
                 if (!xAxis || !yAxis) {
                     plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select values for X-Axis, Y-Axis.</p>';
                     return;
                 }
 
+                // Apply range filters
+                const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+                const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+
+                if (xSlider.noUiSlider) {
+                    const xRange = xSlider.noUiSlider.get();
+                    const xMin = parseFloat(xRange[0]);
+                    const xMax = parseFloat(xRange[1]);
+                    currentPlotData = currentPlotData.filter(row => {
+                        const xValue = parseFloat(row[xAxis]);
+                        return xValue >= xMin && xValue <= xMax;
+                    });
+                }
+
+                if (ySlider.noUiSlider) {
+                    const yRange = ySlider.noUiSlider.get();
+                    const yMin = parseFloat(yRange[0]);
+                    const yMax = parseFloat(yRange[1]);
+                    currentPlotData = currentPlotData.filter(row => {
+                        const yValue = parseFloat(row[yAxis]);
+                        return yValue >= yMin && yValue <= yMax;
+                    });
+                }
+
                 const isHueNumeric = currentPlotData.some(row => isNumeric(row[hueColumn]));
 
                 let traces;
-                if (isHueNumeric) {
+                if (isHueNumeric && hueColumn) {
                     traces = [{
                         x: currentPlotData.map(row => row[xAxis]),
                         y: currentPlotData.map(row => row[yAxis]),
-                        // text: currentPlotData.map(row => hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>') ),
                         text: currentPlotData.map(row =>
-                            // Add selected X and Y columns to the hover text
                             `X (${xAxis}): ${row[xAxis]}<br>Y (${yAxis}): ${row[yAxis]}<br>` +
                             hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>')
                         ),
@@ -2028,9 +2200,9 @@
                         }
                     }];
                 } else {
-                    const categories = [...new Set(currentPlotData.map(row => row[hueColumn]))];
+                    const categories = hueColumn ? [...new Set(currentPlotData.map(row => row[hueColumn]))] : ['Data'];
                     traces = categories.map(category => {
-                        const filteredData = currentPlotData.filter(row => row[hueColumn] === category);
+                        const filteredData = hueColumn ? currentPlotData.filter(row => row[hueColumn] === category) : currentPlotData;
                         return {
                             x: filteredData.map(row => row[xAxis]),
                             y: filteredData.map(row => row[yAxis]),
@@ -2070,58 +2242,6 @@
                     plotDiv.on('plotly_click', (eventData) => onPointClick(eventData, plotId));
                     highlightSelectedPoints();
                 });
-
-            } else if (plotType === 'histogram') {
-                // Updated retrieval of selected numerical columns
-                const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value);
-                const groupBy = document.getElementById(`group-by-${plotId}`).value;
-
-                if (numColumns.length === 0) {
-                    plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select at least one numerical column to generate the histogram.</p>';
-                    return;
-                }
-
-                let traces = [];
-
-                numColumns.forEach(numCol => {
-                    if (groupBy) {
-                        const categories = [...new Set(currentPlotData.map(row => row[groupBy]))];
-
-                        categories.forEach(category => {
-                            const filteredData = currentPlotData.filter(row => row[groupBy] === category);
-                            traces.push({
-                                x: filteredData.map(row => parseFloat(row[numCol])),
-                                type: 'histogram',
-                                name: `${numCol} - ${category}`,
-                                opacity: 0.75,
-                                marker: { opacity: 0.75 },
-                                hoverinfo: 'x+y',
-                            });
-                        });
-                    } else {
-                        traces.push({
-                            x: currentPlotData.map(row => parseFloat(row[numCol])),
-                            type: 'histogram',
-                            name: numCol,
-                            opacity: 0.75,
-                            marker: { opacity: 0.75 },
-                            hoverinfo: 'x+y',
-                        });
-                    }
-                });
-
-                const layout = {
-                    xaxis: { title: 'Value' },
-                    yaxis: { title: 'Count' },
-                    barmode: groupBy ? 'group' : 'overlay',
-                    margin: { t: 50 },
-                    plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: '#f8f9fa',
-                    // bar width
-                    bargap: 0.1,
-                };
-
-                Plotly.newPlot(plotDiv, traces, layout);
 
             } else if (plotType === 'boxplot') {
                 // Updated retrieval of selected numerical columns
@@ -2695,7 +2815,7 @@
 
                     // Show notification
                     showNotification('Session imported successfully.');
-                });
+                }, false); // skip adding the initial plot
             } catch (error) {
                 alert('Failed to import session: ' + error.message);
             } finally {
@@ -2703,7 +2823,6 @@
                 document.getElementById('loading-modal').style.display = 'none';
             }
         }
-
 
 
         function integrateUserData(userDataArray) {
@@ -2760,7 +2879,7 @@
             };
 
             // Collect data for each plot
-            for (let i = 1; i <= plotCounter; ++i) {
+            for (let i = 1; i <= plotCounter; i++) {
                 const plotId = `plot-${i}`;
                 const plotType = document.getElementById(`plot-type-${plotId}`).value;
                 const plotConfig = {
