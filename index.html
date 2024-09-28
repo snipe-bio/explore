@@ -965,12 +965,8 @@
 <body>
     <!-- Updated Species and Reference Selection with Amplicon -->
     <div class="container">
-        <!-- ... existing container content ... -->
         <h1>Snipe SRA Exploration Dashboard</h1>
-
-        <!-- Updated Species and Reference Selection with Amplicon -->
-        <div class="species-selection">
-            <!-- ... species selection controls ... -->
+        <div id="data-selection-container" class="species-selection">
             <div class="control-group">
                 <label for="species-select">Species:</label>
                 <select id="species-select">
@@ -996,6 +992,7 @@
                 <button id="load-data-button" disabled>Load Data</button>
             </div>
         </div>
+
 
 
         <div id="plots-container"></div>
@@ -1097,6 +1094,7 @@
             const referenceSelect = document.getElementById('reference-select');
             const ampliconSelect = document.getElementById('amplicon-select');
             const loadDataButton = document.getElementById('load-data-button');
+            const dataSelectionContainer = document.getElementById('data-selection-container');
 
             plotsContainer = document.getElementById('plots-container');
             tableContainer = document.getElementById('table-container');
@@ -1221,33 +1219,49 @@
                 }
             });
 
-            // Trigger initial species change to set defaults
-            speciesSelect.dispatchEvent(new Event('change'));
-
             // Event listeners for the new buttons
             document.getElementById('export-session').addEventListener('click', exportSession);
-
-            document.getElementById('import-session').addEventListener('click', () => {
-                // ... (Import session modal code remains the same)
-            });
 
             // Event listener for the Export Session to URL button
             document.getElementById('export-session-url').addEventListener('click', exportSessionToURL);
 
-            // Check if there's session data in the URL
+            // Check if there's session data or user data in the URL
             const urlParams = new URLSearchParams(window.location.search);
             const sessionDataEncoded = urlParams.get('session');
-            if (sessionDataEncoded) {
-                const sessionDataJSON = LZString.decompressFromEncodedURIComponent(sessionDataEncoded);
-                if (sessionDataJSON) {
-                    importSession(sessionDataJSON);
+            const dataEncoded = urlParams.get('data');
+
+            let userData = null;
+            if (dataEncoded) {
+                const dataJSON = LZString.decompressFromEncodedURIComponent(dataEncoded);
+                if (dataJSON) {
+                    userData = JSON.parse(dataJSON);
                 } else {
-                    alert('Failed to load session from URL.');
+                    alert('Failed to load data from URL.');
                 }
             }
 
-            // Initialize the tour after the page has loaded
-            // Note: We initialize the tour after data is loaded
+            if (sessionDataEncoded) {
+                // Case 1 or 3: Session URL present
+                const sessionDataJSON = LZString.decompressFromEncodedURIComponent(sessionDataEncoded);
+                if (sessionDataJSON) {
+                    importSession(sessionDataJSON, userData);
+                    if (userData) {
+                        // Hide data selection since user data is provided
+                        dataSelectionContainer.style.display = 'none';
+                    }
+                } else {
+                    alert('Failed to load session from URL.');
+                }
+            } else if (userData) {
+                // Case 2: Only data URL present
+                dataSelectionContainer.style.display = 'none'; // Hide data selection
+                loadUserData(userData);
+            } else {
+                // No session or data parameter, proceed as normal
+                // Show species selection, etc.
+                // Trigger initial species change to set defaults
+                speciesSelect.dispatchEvent(new Event('change'));
+            }
 
             // Attach event listener to the "Start Tour" button
             const startTourButton = document.getElementById('start-tour');
@@ -1274,6 +1288,7 @@
             });
         });
 
+
         function scrollToTable() {
             const tableSection = document.getElementById('data-selection-section');
             tableSection.scrollIntoView({ behavior: 'smooth' });
@@ -1299,18 +1314,24 @@
 
         // Updated loadData function to avoid triggering the tour again
         function loadData(filePath, callback) {
-            dataFilePath = filePath;
+            dataFilePath = filePath; // Set the global dataFilePath
             Papa.parse(dataFilePath, {
                 download: true,
                 header: true,
                 delimiter: "\t",
                 complete: function (results) {
-                    data = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
+                    const newData = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
 
-                    // Assign a unique ID to each data point
-                    data.forEach((row, index) => {
-                        row._uniqueId = index.toString(); // Ensure ID is a string
+                    // Assign a unique ID to each data point based on a unique field
+                    newData.forEach(row => {
+                        row._uniqueId = row['SRA Experiment accession']; // Use a unique field
                     });
+
+                    if (data) {
+                        data = data.concat(newData);
+                    } else {
+                        data = newData;
+                    }
 
                     // Populate column definitions in the modal
                     populateModalColumnDefinitions();
@@ -1329,7 +1350,6 @@
                     document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
 
                     // Initialize variables
-                    selectedPoints = [];
                     plotCounter = 0;
 
                     // Now, add the first plot
@@ -1342,6 +1362,42 @@
                     if (callback) callback();
                 }
             });
+        }
+
+
+        function loadUserData(userDataArray) {
+            data = [];
+            integrateUserData(userDataArray);
+
+            // Select user data points
+            selectedPoints = userDataArray.slice();
+
+            // Now set up the dashboard
+            plotsContainer = document.getElementById('plots-container');
+            tableContainer = document.getElementById('table-container');
+            exportTableButton = document.getElementById('export-table');
+            clearSelectionsButton = document.getElementById('clear-selections');
+            addViewButton = document.getElementById('add-view');
+
+            exportTableButton.addEventListener('click', exportTableToTSV);
+            clearSelectionsButton.addEventListener('click', clearSelections);
+            addViewButton.addEventListener('click', addNewPlot);
+            document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
+            document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
+
+            // Initialize variables
+            plotCounter = 0;
+
+            // Now, add the first plot
+            addNewPlot();
+
+            // Initialize and start the tour after data is loaded
+            initOnboardingTour();
+            startTour();
+
+            // Update the table and highlight selected points
+            updateTable();
+            highlightSelectedPoints();
         }
 
 
@@ -2217,55 +2273,7 @@
         // ========================================
 
         function exportSession() {
-            const sessionData = {
-                metadata: {
-                    exportDate: new Date().toISOString(),
-                    dataFilePath: dataFilePath, // Assuming dataFilePath is globally accessible
-                },
-                selectedSpecies: document.getElementById('species-select').value,
-                selectedReference: document.getElementById('reference-select').value,
-                selectedAmplicon: document.getElementById('amplicon-select').value,
-                plots: [],
-                selectedPoints: selectedPoints.map(p => p._uniqueId),
-            };
-
-            // Collect data for each plot
-            for (let i = 1; i <= plotCounter; i++) {
-                const plotId = `plot-${i}`;
-                const plotType = document.getElementById(`plot-type-${plotId}`).value;
-                const plotConfig = {
-                    plotId: plotId,
-                    plotType: plotType,
-                    controls: {},
-                    title: document.getElementById(`title-${plotId}`).value,
-                    notes: document.getElementById(`notes-${plotId}`).value,
-                };
-
-                // Collect control values based on plot type
-                if (plotType === 'scatter') {
-                    plotConfig.controls.xAxis = document.getElementById(`x-axis-${plotId}`).value;
-                    plotConfig.controls.yAxis = document.getElementById(`y-axis-${plotId}`).value;
-                    plotConfig.controls.hue = document.getElementById(`hue-${plotId}`).value;
-                    plotConfig.controls.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
-                    plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
-                } else if (plotType === 'histogram' || plotType === 'boxplot') {
-                    plotConfig.controls.numColumns = Array.from(
-                        document.querySelectorAll(
-                            `#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`
-                        )
-                    ).map(checkbox => checkbox.value);
-                    plotConfig.controls.groupBy = document.getElementById(`group-by-${plotId}`).value;
-                }
-
-                // Collect selected assay types
-                plotConfig.controls.selectedAssayTypes = Array.from(
-                    document.querySelectorAll(
-                        `#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`
-                    )
-                ).map(checkbox => checkbox.value);
-
-                sessionData.plots.push(plotConfig);
-            }
+            const sessionData = collectSessionData();
 
             // Convert session data to JSON string
             const jsonData = JSON.stringify(sessionData, null, 2);
@@ -2278,10 +2286,8 @@
             link.click();
         }
 
-
         // Function to import a session from JSON
-        // Function to import a session from JSON
-        function importSession(jsonData) {
+        function importSession(jsonData, userData = null) {
             try {
                 const sessionData = JSON.parse(jsonData);
 
@@ -2304,6 +2310,16 @@
                 // Load data file
                 const filePath = sessionData.metadata.dataFilePath;
                 loadData(filePath, () => {
+                    // After data is loaded, integrate session userData if present
+                    if (sessionData.userData) {
+                        integrateUserData(sessionData.userData);
+                    }
+
+                    // Integrate user data from URL if present
+                    if (userData) {
+                        integrateUserData(userData);
+                    }
+
                     // Restore plots
                     sessionData.plots.forEach(plotConfig => {
                         addNewPlot();
@@ -2345,8 +2361,29 @@
                         updatePlot(plotConfig.plotId);
                     });
 
-                    // Restore selected points
-                    selectedPoints = data.filter(row => sessionData.selectedPoints.includes(row._uniqueId));
+                    // After all data is loaded and plots are restored, set selectedPoints
+                    // Collect IDs of all selected points from the session
+                    const sessionSelectedIds = sessionData.selectedPoints;
+
+                    // If userData is present, and you want to select it, collect their IDs
+                    let userDataIds = [];
+                    if (userData) {
+                        userDataIds = userData.map(row => {
+                            if (row['SRA Experiment accession']) {
+                                return 'user_' + row['SRA Experiment accession'];
+                            } else {
+                                return 'user_' + row._uniqueId; // Use the generated unique ID
+                            }
+                        });
+                    }
+
+                    // Combine all selected IDs
+                    const allSelectedIds = sessionSelectedIds.concat(userDataIds);
+
+                    // Set selectedPoints based on combined IDs
+                    selectedPoints = data.filter(row => allSelectedIds.includes(row._uniqueId));
+
+                    // Update the table and highlight selected points
                     updateTable();
                     highlightSelectedPoints();
                 });
@@ -2355,6 +2392,24 @@
             }
         }
 
+
+
+        function integrateUserData(userDataArray) {
+            userDataArray.forEach(row => {
+                // Assign a unique ID with a 'user_' prefix
+                if (row['SRA Experiment accession']) {
+                    row._uniqueId = 'user_' + row['SRA Experiment accession'];
+                } else {
+                    // Generate a unique ID for user data if the field is missing
+                    row._uniqueId = 'user_' + Math.random().toString(36).substr(2, 9);
+                }
+                row._isUserData = true;
+            });
+            data = data.concat(userDataArray);
+
+            // Do not overwrite selectedPoints here
+            // selectedPoints = userDataArray.slice();
+        }
 
         // Function to export the session data to the URL
         function exportSessionToURL() {
@@ -2425,9 +2480,21 @@
                 sessionData.plots.push(plotConfig);
             }
 
+            // Include user data if present
+            const userDataPoints = data.filter(row => row._isUserData);
+            if (userDataPoints.length > 0) {
+                sessionData.userData = userDataPoints.map(row => {
+                    const newRow = {};
+                    for (let key in row) {
+                        if (!key.startsWith('_')) {
+                            newRow[key] = row[key];
+                        }
+                    }
+                    return newRow;
+                });
+            }
+
             return sessionData;
         }
-
-
 
     </script>
