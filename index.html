@@ -934,6 +934,16 @@
             margin-top: 25px;
         }
 
+        /* Styles for Import/Export Floating Buttons */
+        #import-session,
+        #export-session {
+            background-color: #16a085;
+        }
+
+        #import-session:hover,
+        #export-session:hover {
+            background-color: #138d75;
+        }
     </style>
 </head>
 
@@ -954,161 +964,213 @@
         <h1>Snipe SRA Exploration Dashboard</h1>
 
         <!-- Updated Species and Reference Selection with Amplicon -->
-        <div class="species-selection">
-            <div class="control-group">
-                <label for="species-select">Species:</label>
-                <select id="species-select">
-                    <option value="">Select Species</option>
-                    <!-- Options will be populated dynamically -->
-                </select>
+        <div class="container">
+            <!-- ... existing container content ... -->
+            <h1>Snipe SRA Exploration Dashboard</h1>
+
+            <!-- Updated Species and Reference Selection with Amplicon -->
+            <div class="species-selection">
+                <!-- ... species selection controls ... -->
+                <div class="control-group">
+                    <label for="species-select">Species:</label>
+                    <select id="species-select">
+                        <option value="">Select Species</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="reference-select">Reference Genome:</label>
+                    <select id="reference-select" disabled>
+                        <option value="">Select Reference Genome</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="amplicon-select">Amplicon (Optional):</label>
+                    <select id="amplicon-select" disabled>
+                        <option value="">Select Amplicon (Optional)</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="control-group">
+                    <button id="load-data-button" disabled>Load Data</button>
+                </div>
             </div>
-            <div class="control-group">
-                <label for="reference-select">Reference Genome:</label>
-                <select id="reference-select" disabled>
-                    <option value="">Select Reference Genome</option>
-                    <!-- Options will be populated dynamically -->
-                </select>
-            </div>
-            <div class="control-group">
-                <label for="amplicon-select">Amplicon (Optional):</label>
-                <select id="amplicon-select" disabled>
-                    <option value="">Select Amplicon (Optional)</option>
-                    <!-- Options will be populated dynamically -->
-                </select>
-            </div>
-            <div class="control-group">
-                <button id="load-data-button" disabled>Load Data</button>
-            </div>
-        </div>
 
 
-        <div id="plots-container"></div>
-        <div class="export-buttons">
-            <button id="add-view" class="button">Add View</button>
-        </div>
-        <!-- <div class="export-buttons">
+            <div id="plots-container"></div>
+            <div class="export-buttons">
+                <button id="add-view" class="button">Add View</button>
+            </div>
+            <!-- <div class="export-buttons">
             <button id="add-view" class="button">Add View</button>
             <button id="clear-selections" class="button">Clear Selections</button>
             <button id="export-table" class="button">Export Table (TSV)</button>
         </div>
     -->
-        <div id="data-selection-section">
-            <h2>Selected Data Points</h2>
-            <!-- <button id="export-pdf">Export Snipe Report</button> -->
-            <div id="table-container" class="table-container"></div>
+            <div id="data-selection-section">
+                <h2>Selected Data Points</h2>
+                <!-- <button id="export-pdf">Export Snipe Report</button> -->
+                <div id="table-container" class="table-container"></div>
+            </div>
         </div>
-    </div>
 
 
-    <div class="floating-buttons">
-        <button id="clear-selections" class="floating-button">
-            <i class="fa fa-eraser"></i>
-            <span>Clear Selections</span>
-        </button>
-        <button id="export-table" class="floating-button">
-            <i class="fa fa-file-export"></i>
-            <span>Export Table (TSV)</span>
-        </button>
-        <button id="export-pdf" class="floating-button">
-            <i class="fa fa-file-pdf"></i>
-            <span>Export Snipe Report</span>
-        </button>
-        <button id="scroll-to-table" class="floating-button">
-            <i class="fa fa-arrow-down"></i>
-            <span>Scroll to Table</span>
-        </button>
+        <div class="floating-buttons">
+            <!-- ... existing floating buttons ... -->
+            <button id="clear-selections" class="floating-button">
+                <i class="fa fa-eraser"></i>
+                <span>Clear Selections</span>
+            </button>
+            <button id="export-table" class="floating-button">
+                <i class="fa fa-file-export"></i>
+                <span>Export Table (TSV)</span>
+            </button>
+            <button id="export-pdf" class="floating-button">
+                <i class="fa fa-file-pdf"></i>
+                <span>Export Snipe Report</span>
+            </button>
+            <button id="scroll-to-table" class="floating-button">
+                <i class="fa fa-arrow-down"></i>
+                <span>Scroll to Table</span>
+            </button>
 
-        <button id="help-button" class="floating-button">
-            <i class="fa-solid fa-circle-question"></i>
-            <span>Snipe metrics definitions</span>
-        </button>
+            <button id="help-button" class="floating-button">
+                <i class="fa-solid fa-circle-question"></i>
+                <span>Snipe metrics definitions</span>
+            </button>
 
-        <!-- driverJS -->
-        <button id="start-tour" class="floating-button">
-            <i class="fa fa-book"></i>
-            <span>Start Tour</span>
-        </button>
+            <!-- driverJS -->
+            <button id="start-tour" class="floating-button">
+                <i class="fa fa-book"></i>
+                <span>Start Tour</span>
+            </button>
+            <!-- New Import/Export Session Buttons -->
+            <button id="export-session" class="floating-button">
+                <i class="fa fa-download"></i>
+                <span>Export Session</span>
+            </button>
+            <button id="import-session" class="floating-button">
+                <i class="fa fa-upload"></i>
+                <span>Import Session</span>
+            </button>
+        </div>
 
+        <script>
+            let data;
+            let currentPlotData;
+            let selectedPoints = [];
+            let plotsContainer, tableContainer, exportTableButton, clearSelectionsButton, addViewButton;
+            let plotCounter = 0;
 
-    </div>
-
-    <script>
-        let data;
-        let currentPlotData;
-        let selectedPoints = [];
-        let plotsContainer, tableContainer, exportTableButton, clearSelectionsButton, addViewButton;
-        let plotCounter = 0;
-
-        const species_genome_amplicon_path = {
-            'Canine': {
-                'CanFam3.1': {
-                    '': 'data/snipe_metadata.tsv',
-                    'Exome': 'data/snipe_metadata.tsv'
-                }
-            },
-            'Human': {
-                'GRCh38': {
-                    '': ''
+            const species_genome_amplicon_path = {
+                'Canine': {
+                    'CanFam3.1': {
+                        '': 'data/snipe_metadata.tsv',
+                        'Exome': 'data/snipe_metadata.tsv'
+                    }
                 },
-                'CHM13V2.0': {
-                    '': ''
+                'Human': {
+                    'GRCh38': {
+                        '': ''
+                    },
+                    'CHM13V2.0': {
+                        '': ''
+                    }
+                },
+                'Zebrafish': {
+                    'GRCz11': {
+                        '': ''
+                    }
                 }
-            },
-            'Zebrafish': {
-                'GRCz11': {
-                    '': ''
-                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function () {
+                plotsContainer = document.getElementById('plots-container');
+                tableContainer = document.getElementById('table-container');
+                exportTableButton = document.getElementById('export-table');
+                clearSelectionsButton = document.getElementById('clear-selections');
+                addViewButton = document.getElementById('add-view');
+
+                exportTableButton.addEventListener('click', exportTableToTSV);
+                clearSelectionsButton.addEventListener('click', clearSelections);
+                addViewButton.addEventListener('click', addNewPlot);
+                document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
+                document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
+
+
+                // Event listeners for the new buttons
+                document.getElementById('export-session').addEventListener('click', exportSession);
+
+                document.getElementById('import-session').addEventListener('click', () => {
+                    // Create a modal or prompt to accept file upload or pasted JSON
+                    const modal = document.createElement('div');
+                    modal.style.position = 'fixed';
+                    modal.style.top = '0';
+                    modal.style.left = '0';
+                    modal.style.width = '100%';
+                    modal.style.height = '100%';
+                    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                    modal.style.display = 'flex';
+                    modal.style.alignItems = 'center';
+                    modal.style.justifyContent = 'center';
+                    modal.style.zIndex = '10000';
+
+                    const content = document.createElement('div');
+                    content.style.backgroundColor = '#fff';
+                    content.style.padding = '20px';
+                    content.style.borderRadius = '8px';
+                    content.style.maxWidth = '500px';
+                    content.style.width = '100%';
+
+                    content.innerHTML = `
+                <h3>Import Session</h3>
+                <textarea id="session-json-input" placeholder="Paste JSON here..." style="width: 100%; height: 150px;"></textarea>
+                <br><br>
+                <input type="file" id="session-file-input" accept=".json">
+                <br><br>
+                <button id="import-session-btn">Import</button>
+                <button id="cancel-import-btn">Cancel</button>
+            `;
+
+                    modal.appendChild(content);
+                    document.body.appendChild(modal);
+
+                    // Event listener for import button
+                    document.getElementById('import-session-btn').addEventListener('click', () => {
+                        const jsonText = document.getElementById('session-json-input').value.trim();
+                        if (jsonText) {
+                            importSession(jsonText);
+                            document.body.removeChild(modal);
+                        } else {
+                            const fileInput = document.getElementById('session-file-input');
+                            if (fileInput.files.length > 0) {
+                                const file = fileInput.files[0];
+                                const reader = new FileReader();
+                                reader.onload = function (e) {
+                                    importSession(e.target.result);
+                                    document.body.removeChild(modal);
+                                };
+                                reader.readAsText(file);
+                            } else {
+                                alert('Please paste JSON or select a file.');
+                            }
+                        }
+                    });
+
+                    // Event listener for cancel button
+                    document.getElementById('cancel-import-btn').addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                    });
+                });
+
+
+            });
+
+            function scrollToTable() {
+                const tableSection = document.getElementById('data-selection-section');
+                tableSection.scrollIntoView({ behavior: 'smooth' });
             }
-        };
-
-        document.addEventListener('DOMContentLoaded', function () {
-            plotsContainer = document.getElementById('plots-container');
-            tableContainer = document.getElementById('table-container');
-            exportTableButton = document.getElementById('export-table');
-            clearSelectionsButton = document.getElementById('clear-selections');
-            addViewButton = document.getElementById('add-view');
-
-            loadData();
-
-            exportTableButton.addEventListener('click', exportTableToTSV);
-            clearSelectionsButton.addEventListener('click', clearSelections);
-            addViewButton.addEventListener('click', addNewPlot);
-            document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
-            document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
-        });
-
-        function scrollToTable() {
-            const tableSection = document.getElementById('data-selection-section');
-            tableSection.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        const hoverColumns = [
-            'SRA Experiment accession', 'BioProject accession', 'SRA Assay type', 'Genome coverage index',
-            'Exome coverage index', 'Genomic k-mers mean abundance', 'Exome k-mers mean abundance',
-            'Mapping index', 'Predicted contamination index', 'Empirical contamination index',
-            'Sequencing errors index', 'Autosomal k-mer mean abundance CV', 'Exome enrichment score',
-            'Predicted Assay type', 'chrX Ploidy score', 'chrY Coverage score'
-        ];
-
-
-        // Updated event listeners for species, reference, and amplicon selection
-        document.addEventListener('DOMContentLoaded', function () {
-            // Get references to the elements
-            const speciesSelect = document.getElementById('species-select');
-            const referenceSelect = document.getElementById('reference-select');
-            const ampliconSelect = document.getElementById('amplicon-select');
-            const loadDataButton = document.getElementById('load-data-button');
-
-            // Populate species options
-            for (const species in species_genome_amplicon_path) {
-                const option = document.createElement('option');
-                option.value = species;
-                option.textContent = species;
-                speciesSelect.appendChild(option);
-            }
-
-            // Set default selected species
-            speciesSelect.value = 'Canine';
 
             // Function to clear plots and data
             function clearAllData() {
@@ -1120,216 +1182,247 @@
                 plotCounter = 0;
             }
 
-            // Event listener for species select
-            speciesSelect.addEventListener('change', function () {
-                const selectedSpecies = speciesSelect.value;
+            const hoverColumns = [
+                'SRA Experiment accession', 'BioProject accession', 'SRA Assay type', 'Genome coverage index',
+                'Exome coverage index', 'Genomic k-mers mean abundance', 'Exome k-mers mean abundance',
+                'Mapping index', 'Predicted contamination index', 'Empirical contamination index',
+                'Sequencing errors index', 'Autosomal k-mer mean abundance CV', 'Exome enrichment score',
+                'Predicted Assay type', 'chrX Ploidy score', 'chrY Coverage score'
+            ];
 
-                // Clear previous reference options
-                referenceSelect.innerHTML = '<option value="">Select Reference Genome</option>';
-                referenceSelect.disabled = true;
 
-                // Clear amplicon options
-                ampliconSelect.innerHTML = '<option value="">Select Amplicon (Optional)</option>';
-                ampliconSelect.disabled = true;
+            // Updated event listeners for species, reference, and amplicon selection
+            document.addEventListener('DOMContentLoaded', function () {
+                // Get references to the elements
+                const speciesSelect = document.getElementById('species-select');
+                const referenceSelect = document.getElementById('reference-select');
+                const ampliconSelect = document.getElementById('amplicon-select');
+                const loadDataButton = document.getElementById('load-data-button');
 
-                loadDataButton.disabled = true;
-
-                // Clear data and plots
-                clearAllData();
-
-                if (selectedSpecies) {
-                    const references = species_genome_amplicon_path[selectedSpecies];
-                    for (const reference in references) {
-                        const option = document.createElement('option');
-                        option.value = reference;
-                        option.textContent = reference;
-                        referenceSelect.appendChild(option);
-                    }
-                    referenceSelect.disabled = false;
-
-                    // Set default selected reference
-                    referenceSelect.value = 'CanFam3.1';
-
-                    // Trigger change event to populate amplicon
-                    referenceSelect.dispatchEvent(new Event('change'));
+                // Populate species options
+                for (const species in species_genome_amplicon_path) {
+                    const option = document.createElement('option');
+                    option.value = species;
+                    option.textContent = species;
+                    speciesSelect.appendChild(option);
                 }
-            });
 
-            // Event listener for reference select
-            referenceSelect.addEventListener('change', function () {
-                const selectedSpecies = speciesSelect.value;
-                const selectedReference = referenceSelect.value;
+                // Set default selected species
+                speciesSelect.value = 'Canine';
 
-                // Clear previous amplicon options
-                ampliconSelect.innerHTML = '<option value="">Select Amplicon (Optional)</option>';
-                ampliconSelect.disabled = true;
+                // Event listener for species select
+                speciesSelect.addEventListener('change', function () {
+                    const selectedSpecies = speciesSelect.value;
 
-                loadDataButton.disabled = true;
+                    // Clear previous reference options
+                    referenceSelect.innerHTML = '<option value="">Select Reference Genome</option>';
+                    referenceSelect.disabled = true;
 
-                // Clear data and plots
-                clearAllData();
+                    // Clear amplicon options
+                    ampliconSelect.innerHTML = '<option value="">Select Amplicon (Optional)</option>';
+                    ampliconSelect.disabled = true;
 
-                if (selectedReference) {
-                    const amplicons = species_genome_amplicon_path[selectedSpecies][selectedReference];
-                    for (const amplicon in amplicons) {
-                        const option = document.createElement('option');
-                        option.value = amplicon;
-                        option.textContent = amplicon === '' ? 'No Amplicon' : amplicon;
-                        ampliconSelect.appendChild(option);
-                    }
-                    ampliconSelect.disabled = false;
-
-                    // Set default selected amplicon
-                    ampliconSelect.value = 'Exome';
-
-                    // Trigger change event to enable load data button
-                    ampliconSelect.dispatchEvent(new Event('change'));
-                }
-            });
-
-            // Event listener for amplicon select
-            ampliconSelect.addEventListener('change', function () {
-                const selectedSpecies = speciesSelect.value;
-                const selectedReference = referenceSelect.value;
-                const selectedAmplicon = ampliconSelect.value;
-
-                const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][selectedAmplicon];
-
-                // Clear data and plots
-                clearAllData();
-
-                if (dataFilePath) {
-                    loadDataButton.disabled = false;
-                } else {
                     loadDataButton.disabled = true;
-                }
+
+                    // Clear data and plots
+                    clearAllData();
+
+                    if (selectedSpecies) {
+                        const references = species_genome_amplicon_path[selectedSpecies];
+                        for (const reference in references) {
+                            const option = document.createElement('option');
+                            option.value = reference;
+                            option.textContent = reference;
+                            referenceSelect.appendChild(option);
+                        }
+                        referenceSelect.disabled = false;
+
+                        // Set default selected reference
+                        referenceSelect.value = 'CanFam3.1';
+
+                        // Trigger change event to populate amplicon
+                        referenceSelect.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                // Event listener for reference select
+                referenceSelect.addEventListener('change', function () {
+                    const selectedSpecies = speciesSelect.value;
+                    const selectedReference = referenceSelect.value;
+
+                    // Clear previous amplicon options
+                    ampliconSelect.innerHTML = '<option value="">Select Amplicon (Optional)</option>';
+                    ampliconSelect.disabled = true;
+
+                    loadDataButton.disabled = true;
+
+                    // Clear data and plots
+                    clearAllData();
+
+                    if (selectedReference) {
+                        const amplicons = species_genome_amplicon_path[selectedSpecies][selectedReference];
+                        for (const amplicon in amplicons) {
+                            const option = document.createElement('option');
+                            option.value = amplicon;
+                            option.textContent = amplicon === '' ? 'No Amplicon' : amplicon;
+                            ampliconSelect.appendChild(option);
+                        }
+                        ampliconSelect.disabled = false;
+
+                        // Set default selected amplicon
+                        ampliconSelect.value = 'Exome';
+
+                        // Trigger change event to enable load data button
+                        ampliconSelect.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                // Event listener for amplicon select
+                ampliconSelect.addEventListener('change', function () {
+                    const selectedSpecies = speciesSelect.value;
+                    const selectedReference = referenceSelect.value;
+                    const selectedAmplicon = ampliconSelect.value;
+
+                    const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][selectedAmplicon];
+
+                    // Clear data and plots
+                    clearAllData();
+
+                    if (dataFilePath) {
+                        loadDataButton.disabled = false;
+                    } else {
+                        loadDataButton.disabled = true;
+                    }
+                });
+
+                // Event listener for load data button
+                loadDataButton.addEventListener('click', function () {
+                    const selectedSpecies = speciesSelect.value;
+                    const selectedReference = referenceSelect.value;
+                    const selectedAmplicon = ampliconSelect.value;
+
+                    const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][selectedAmplicon];
+
+                    if (dataFilePath) {
+                        loadData(dataFilePath);
+                    } else {
+                        alert('Data not available for selected species, reference genome, and amplicon.');
+                    }
+                });
+
+                // Trigger initial species change to set defaults
+                speciesSelect.dispatchEvent(new Event('change'));
             });
 
-            // Event listener for load data button
-            loadDataButton.addEventListener('click', function () {
-                const selectedSpecies = speciesSelect.value;
-                const selectedReference = referenceSelect.value;
-                const selectedAmplicon = ampliconSelect.value;
 
-                const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][selectedAmplicon];
+            // Updated loadData function to avoid triggering the tour again
+            function loadData(filePath, callback) {
+                dataFilePath = filePath;
+                Papa.parse(dataFilePath, {
+                    download: true,
+                    header: true,
+                    delimiter: "\t",
+                    complete: function (results) {
+                        data = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
 
-                if (dataFilePath) {
-                    loadData(dataFilePath);
-                } else {
-                    alert('Data not available for selected species, reference genome, and amplicon.');
-                }
-            });
+                        // Assign a unique ID to each data point
+                        data.forEach((row, index) => {
+                            row._uniqueId = index.toString(); // Ensure ID is a string
+                        });
 
-            // Trigger initial species change to set defaults
-            speciesSelect.dispatchEvent(new Event('change'));
-        });
+                        // Populate column definitions in the modal
+                        populateModalColumnDefinitions();
 
+                        // Now that data is loaded, set up the rest of the UI
+                        plotsContainer = document.getElementById('plots-container');
+                        tableContainer = document.getElementById('table-container');
+                        exportTableButton = document.getElementById('export-table');
+                        clearSelectionsButton = document.getElementById('clear-selections');
+                        addViewButton = document.getElementById('add-view');
 
-        // Updated loadData function to avoid triggering the tour again
-        function loadData(dataFilePath) {
-            Papa.parse(dataFilePath, {
-                download: true,
-                header: true,
-                delimiter: "\t",
-                complete: function (results) {
-                    data = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
+                        exportTableButton.addEventListener('click', exportTableToTSV);
+                        clearSelectionsButton.addEventListener('click', clearSelections);
+                        addViewButton.addEventListener('click', addNewPlot);
+                        document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
+                        document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
 
-                    // Assign a unique ID to each data point
-                    data.forEach((row, index) => {
-                        row._uniqueId = index.toString(); // Ensure ID is a string
-                    });
+                        // Initialize variables
+                        selectedPoints = [];
+                        plotCounter = 0;
 
-                    // Populate column definitions in the modal
-                    populateModalColumnDefinitions();
+                        // Now, add the first plot
+                        addNewPlot();
 
-                    // Now that data is loaded, set up the rest of the UI
-                    plotsContainer = document.getElementById('plots-container');
-                    tableContainer = document.getElementById('table-container');
-                    exportTableButton = document.getElementById('export-table');
-                    clearSelectionsButton = document.getElementById('clear-selections');
-                    addViewButton = document.getElementById('add-view');
+                        // Initialize and start the tour after data is loaded
+                        initOnboardingTour();
+                        startTour();
 
-                    exportTableButton.addEventListener('click', exportTableToTSV);
-                    clearSelectionsButton.addEventListener('click', clearSelections);
-                    addViewButton.addEventListener('click', addNewPlot);
-                    document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
-                    document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
-
-                    // Initialize variables
-                    selectedPoints = [];
-                    plotCounter = 0;
-
-                    // Now, add the first plot
-                    addNewPlot();
-
-                    // Initialize and start the tour after data is loaded
-                    initOnboardingTour();
-                    startTour();
-                }
-            });
-        }
+                        if (callback) callback();
+                    }
+                });
+            }
 
 
 
-        // Column Definitions
-        const columnDefinitions = {
-            "Total unique k-mers": "It represents the unique genetic content in the sample",
-            "Genomic unique k-mers": "It represents the unique genetic content in the sample that matches the reference genome",
-            "Exome unique k-mers": "It represents the unique genetic content in the sample that matches the exome",
-            "Genome coverage index": "It shows how much of the genome bases are covered",
-            "Exome coverage index": "It shows how much of the exome bases are covered",
-            "k-mer total abundance": "It correlates with the total amount of sequencing",
-            "Genomic k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the reference genome",
-            "Exome k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the exome",
-            "Mapping index": "Genomic k-mers total Abundance as a fraction of all k-mer total abundance. It correlates with the mapped sequencing bases to the genomes",
-            "Predicted contamination index": "The fraction abundance of non-genomic k-mers if the k-mer count > 1. It represent genetic variance and increase if there is sequence contamination",
-            "Empirical contamination index": "The fraction of k-mers matching microbial sequences. It is calcuted by Sourmash software and expected to correlate with Snipe's predicted contamination index",
-            "Sequencing errors index": "The fraction abundance of non-genomic k-mers if the k-mer count = 1 (i.e., singletons). It represents sequecning errors",
-            "Autosomal k-mer mean abundance CV": "The coefficient of variation (CV) for the mean abundance of k-mers specific to each autosome. A high CV suggests variability, potentially pointing to uneven sequencing",
-            "Exome enrichment score": "A composite metric for quantifying amplicon enrichment in a sequencing experiment",
-            "chrX Ploidy score": "The ratio of the mean abundance of chrX-specific k-mers to autosomal-specific k-mers. It correlates with X chromosome ploidy",
-            "chrY Coverage score": "The ratio of sequence coverage for chrY and autosomal chromosomes.",
-            "Coverage of 1fold more sequencing": "Expected coverage with 1 fold more sequecning"
-        };
+            // Column Definitions
+            const columnDefinitions = {
+                "Total unique k-mers": "It represents the unique genetic content in the sample",
+                "Genomic unique k-mers": "It represents the unique genetic content in the sample that matches the reference genome",
+                "Exome unique k-mers": "It represents the unique genetic content in the sample that matches the exome",
+                "Genome coverage index": "It shows how much of the genome bases are covered",
+                "Exome coverage index": "It shows how much of the exome bases are covered",
+                "k-mer total abundance": "It correlates with the total amount of sequencing",
+                "Genomic k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the reference genome",
+                "Exome k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the exome",
+                "Mapping index": "Genomic k-mers total Abundance as a fraction of all k-mer total abundance. It correlates with the mapped sequencing bases to the genomes",
+                "Predicted contamination index": "The fraction abundance of non-genomic k-mers if the k-mer count > 1. It represent genetic variance and increase if there is sequence contamination",
+                "Empirical contamination index": "The fraction of k-mers matching microbial sequences. It is calcuted by Sourmash software and expected to correlate with Snipe's predicted contamination index",
+                "Sequencing errors index": "The fraction abundance of non-genomic k-mers if the k-mer count = 1 (i.e., singletons). It represents sequecning errors",
+                "Autosomal k-mer mean abundance CV": "The coefficient of variation (CV) for the mean abundance of k-mers specific to each autosome. A high CV suggests variability, potentially pointing to uneven sequencing",
+                "Exome enrichment score": "A composite metric for quantifying amplicon enrichment in a sequencing experiment",
+                "chrX Ploidy score": "The ratio of the mean abundance of chrX-specific k-mers to autosomal-specific k-mers. It correlates with X chromosome ploidy",
+                "chrY Coverage score": "The ratio of sequence coverage for chrY and autosomal chromosomes.",
+                "Coverage of 1fold more sequencing": "Expected coverage with 1 fold more sequecning"
+            };
 
-        // Function to populate the modal with column definitions
-        function populateModalColumnDefinitions() {
-            const columnDefinitionsDiv = document.getElementById('modal-column-definitions');
-            if (!columnDefinitionsDiv) return;
+            // Function to populate the modal with column definitions
+            function populateModalColumnDefinitions() {
+                const columnDefinitionsDiv = document.getElementById('modal-column-definitions');
+                if (!columnDefinitionsDiv) return;
 
-            let htmlContent = '<dl>';
+                let htmlContent = '<dl>';
 
-            const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
+                const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
 
-            // This will show metrics w/o definitions as "No definition available."
-            {
-                {/*  columns.forEach(col => {
+                // This will show metrics w/o definitions as "No definition available."
+                {
+                    {/*  columns.forEach(col => {
                 const definition = columnDefinitions[col] || "No definition available.";
                 htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
             });  */}
+                }
+
+                // for only columns in columnDefinitions
+                columns.forEach(col => {
+                    if (col in columnDefinitions) {
+                        const definition = columnDefinitions[col] || "No definition available.";
+                        htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
+                    }
+                });
+
+                htmlContent += '</dl>';
+                columnDefinitionsDiv.innerHTML = htmlContent;
             }
 
-            // for only columns in columnDefinitions
-            columns.forEach(col => {
-                if (col in columnDefinitions) {
-                    const definition = columnDefinitions[col] || "No definition available.";
-                    htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
-                }
-            });
-
-            htmlContent += '</dl>';
-            columnDefinitionsDiv.innerHTML = htmlContent;
-        }
 
 
+            // Updated addNewPlot function
+            function addNewPlot() {
+                plotCounter++;
+                const plotId = `plot-${plotCounter}`;
+                let plotHTML = '';
 
-        // Updated addNewPlot function
-        function addNewPlot() {
-            plotCounter++;
-            const plotId = `plot-${plotCounter}`;
-            let plotHTML = '';
-
-            plotHTML += `
+                plotHTML += `
         <div class="plot-container">
             <div class="controls">
                 <!-- Plot Type Control -->
@@ -1364,41 +1457,41 @@
         </div>
     `;
 
-            plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
+                plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
 
-            const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
-            const exportPlotButton = document.getElementById(`export-plot-${plotId}`);
+                const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
+                const exportPlotButton = document.getElementById(`export-plot-${plotId}`);
 
-            plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId));
+                plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId));
 
-            // Render controls initially
-            renderDynamicControls(plotId);
+                // Render controls initially
+                renderDynamicControls(plotId);
 
-            exportPlotButton.addEventListener('click', () => exportPlot(plotId));
+                exportPlotButton.addEventListener('click', () => exportPlot(plotId));
 
-            // Attach event listener to the search button
-            document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints());
+                // Attach event listener to the search button
+                document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints());
 
-            // For better UX, automatically update the plot when controls are rendered
-            updatePlot(plotId);
-        }
+                // For better UX, automatically update the plot when controls are rendered
+                updatePlot(plotId);
+            }
 
-        function renderDynamicControls(plotId) {
-            const plotType = document.getElementById(`plot-type-${plotId}`).value;
-            const dynamicControlsDiv = document.getElementById(`dynamic-controls-${plotId}`);
+            function renderDynamicControls(plotId) {
+                const plotType = document.getElementById(`plot-type-${plotId}`).value;
+                const dynamicControlsDiv = document.getElementById(`dynamic-controls-${plotId}`);
 
-            // Exclude columns starting with '_' from the dropdowns
-            const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
-            const numericalColumns = columns.filter(col => data.some(row => isNumeric(row[col])));
-            const categoricalColumns = columns.filter(col => !numericalColumns.includes(col));
+                // Exclude columns starting with '_' from the dropdowns
+                const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
+                const numericalColumns = columns.filter(col => data.some(row => isNumeric(row[col])));
+                const categoricalColumns = columns.filter(col => !numericalColumns.includes(col));
 
-            _cols_to_exclude_from_color = ['SRA Experiment accession'];
-            const cols_for_colorby = columns.filter(col => !_cols_to_exclude_from_color.includes(col));
+                _cols_to_exclude_from_color = ['SRA Experiment accession'];
+                const cols_for_colorby = columns.filter(col => !_cols_to_exclude_from_color.includes(col));
 
-            let controlsHTML = '';
+                let controlsHTML = '';
 
-            if (plotType === 'scatter') {
-                controlsHTML = `
+                if (plotType === 'scatter') {
+                    controlsHTML = `
                 <!-- X-Axis Control with Log Scale -->
                 <div class="control-group">
                     <label for="x-axis-${plotId}">X-Axis:</label>
@@ -1431,9 +1524,9 @@
                 </div>
             `;
 
-            } else if (plotType === 'boxplot' || plotType === 'histogram') {
-                // Use checkboxes for selecting numerical columns, wrapped in a scrollable box
-                controlsHTML = `
+                } else if (plotType === 'boxplot' || plotType === 'histogram') {
+                    // Use checkboxes for selecting numerical columns, wrapped in a scrollable box
+                    controlsHTML = `
                     <div class="control-group">
                         <label>Select Numerical Columns:</label>
                         <div id="checkbox-group-${plotId}" class="checkbox-group scrollable-checkboxes">
@@ -1453,10 +1546,10 @@
                         </select>
                     </div>
                 `;
-            }
+                }
 
-            // Common control for SRA Assay type
-            controlsHTML += `
+                // Common control for SRA Assay type
+                controlsHTML += `
                 <div class="control-group" id="assay-type-area">
                     <label>SRA Assay type:</label>
                     <div id="assay-type-checkboxes-${plotId}" class="checkbox-group scrollable-checkboxes two-column-checkboxes">
@@ -1470,8 +1563,8 @@
                 </div>
             `;
 
-            // Add help button
-            controlsHTML += `
+                // Add help button
+                controlsHTML += `
                 <div class="control-group">
                     <button id="help-button-${plotId}" class="help-button">
                         <i class="fa fa-question-circle"></i>
@@ -1479,696 +1572,840 @@
                 </div>
             `;
 
-            dynamicControlsDiv.innerHTML = controlsHTML;
+                dynamicControlsDiv.innerHTML = controlsHTML;
 
-            // Attach event listeners to new controls
-            const controls = dynamicControlsDiv.querySelectorAll('select, input[type=checkbox]');
-            controls.forEach(control => {
-                control.addEventListener('change', () => updatePlot(plotId));
-            });
-
-            // Attach event listener to the help button
-            const helpButton = document.getElementById(`help-button-${plotId}`);
-            if (helpButton) {
-                helpButton.addEventListener('click', function () {
-                    const helpModal = document.getElementById('help-modal');
-                    helpModal.style.display = 'flex';
+                // Attach event listeners to new controls
+                const controls = dynamicControlsDiv.querySelectorAll('select, input[type=checkbox]');
+                controls.forEach(control => {
+                    control.addEventListener('change', () => updatePlot(plotId));
                 });
-            }
 
-            // For better UX, automatically update the plot when controls are rendered
-            updatePlot(plotId);
-        }
-
-
-
-
-        function searchAndSelectPoints() {
-            // Use a common search input for all plots
-            const searchInputs = document.querySelectorAll('.search-container input[type="text"]');
-            let searchText = '';
-            searchInputs.forEach(input => {
-                if (input.value.trim() !== '') {
-                    searchText = input.value.trim().toLowerCase();
+                // Attach event listener to the help button
+                const helpButton = document.getElementById(`help-button-${plotId}`);
+                if (helpButton) {
+                    helpButton.addEventListener('click', function () {
+                        const helpModal = document.getElementById('help-modal');
+                        helpModal.style.display = 'flex';
+                    });
                 }
-            });
 
-            if (searchText === '') {
-                return;
+                // For better UX, automatically update the plot when controls are rendered
+                updatePlot(plotId);
             }
 
-            const matchingPoints = data.filter(row => {
-                return ['BioProject accession', 'BioSample accession', 'SRA Experiment accession'].some(col => {
-                    return row[col] && row[col].toString().toLowerCase().includes(searchText);
+
+
+
+            function searchAndSelectPoints() {
+                // Use a common search input for all plots
+                const searchInputs = document.querySelectorAll('.search-container input[type="text"]');
+                let searchText = '';
+                searchInputs.forEach(input => {
+                    if (input.value.trim() !== '') {
+                        searchText = input.value.trim().toLowerCase();
+                    }
                 });
-            });
 
-            if (matchingPoints.length === 0) {
-                return;
-            }
-
-            matchingPoints.forEach(point => {
-                if (!selectedPoints.some(p => p._uniqueId === point._uniqueId)) {
-                    selectedPoints.push(point);
-                }
-            });
-
-            updateTable();
-            highlightSelectedPoints();
-        }
-
-
-
-
-        function isNumeric(n) {
-            return !isNaN(parseFloat(n)) && isFinite(n);
-        }
-
-
-
-        function updatePlot(plotId) {
-            const plotDiv = document.getElementById(plotId);
-            const plotType = document.getElementById(`plot-type-${plotId}`).value;
-            // const selectedAssayType = document.getElementById(`assay-type-${plotId}`).value;
-
-            const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
-            const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
-
-
-            // currentPlotData = selectedAssayType ? data.filter(row => row["SRA Assay type"] === selectedAssayType) : data;
-            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["SRA Assay type"])) : data;
-
-            if (plotType === 'scatter') {
-                const xAxis = document.getElementById(`x-axis-${plotId}`).value;
-                const yAxis = document.getElementById(`y-axis-${plotId}`).value;
-                const hueColumn = document.getElementById(`hue-${plotId}`).value;
-
-                // Get the state of the log scale checkboxes
-                const xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
-                const yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
-
-                // if (!xAxis || !yAxis || !hueColumn) {
-                if (!xAxis || !yAxis) {
-                    plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select values for X-Axis, Y-Axis.</p>';
+                if (searchText === '') {
                     return;
                 }
 
-                const isHueNumeric = currentPlotData.some(row => isNumeric(row[hueColumn]));
+                const matchingPoints = data.filter(row => {
+                    return ['BioProject accession', 'BioSample accession', 'SRA Experiment accession'].some(col => {
+                        return row[col] && row[col].toString().toLowerCase().includes(searchText);
+                    });
+                });
 
-                let traces;
-                if (isHueNumeric) {
-                    traces = [{
-                        x: currentPlotData.map(row => row[xAxis]),
-                        y: currentPlotData.map(row => row[yAxis]),
-                        // text: currentPlotData.map(row => hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>') ),
-                        text: currentPlotData.map(row =>
-                            // Add selected X and Y columns to the hover text
-                            `X (${xAxis}): ${row[xAxis]}<br>Y (${yAxis}): ${row[yAxis]}<br>` +
-                            hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>')
-                        ),
-                        customdata: currentPlotData.map(row => row._uniqueId),
-                        ids: currentPlotData.map(row => row._uniqueId),
-                        mode: 'markers',
-                        type: 'scatter',
-                        marker: {
-                            color: currentPlotData.map(row => parseFloat(row[hueColumn])),
-                            colorscale: 'Spectral',
-                            colorbar: { title: hueColumn },
-                            size: 6
-                        },
-                        showlegend: false,
-                        hoverinfo: 'text',
-                        selected: {
-                            marker: {
-                                color: 'black',
-                                size: 12,
-                            }
-                        }
-                    }];
-                } else {
-                    const categories = [...new Set(currentPlotData.map(row => row[hueColumn]))];
-                    traces = categories.map(category => {
-                        const filteredData = currentPlotData.filter(row => row[hueColumn] === category);
-                        return {
-                            x: filteredData.map(row => row[xAxis]),
-                            y: filteredData.map(row => row[yAxis]),
-                            text: filteredData.map(row =>
+                if (matchingPoints.length === 0) {
+                    return;
+                }
+
+                matchingPoints.forEach(point => {
+                    if (!selectedPoints.some(p => p._uniqueId === point._uniqueId)) {
+                        selectedPoints.push(point);
+                    }
+                });
+
+                updateTable();
+                highlightSelectedPoints();
+            }
+
+
+
+
+            function isNumeric(n) {
+                return !isNaN(parseFloat(n)) && isFinite(n);
+            }
+
+
+
+            function updatePlot(plotId) {
+                const plotDiv = document.getElementById(plotId);
+                const plotType = document.getElementById(`plot-type-${plotId}`).value;
+                // const selectedAssayType = document.getElementById(`assay-type-${plotId}`).value;
+
+                const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
+                const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
+
+
+                // currentPlotData = selectedAssayType ? data.filter(row => row["SRA Assay type"] === selectedAssayType) : data;
+                currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["SRA Assay type"])) : data;
+
+                if (plotType === 'scatter') {
+                    const xAxis = document.getElementById(`x-axis-${plotId}`).value;
+                    const yAxis = document.getElementById(`y-axis-${plotId}`).value;
+                    const hueColumn = document.getElementById(`hue-${plotId}`).value;
+
+                    // Get the state of the log scale checkboxes
+                    const xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
+                    const yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
+
+                    // if (!xAxis || !yAxis || !hueColumn) {
+                    if (!xAxis || !yAxis) {
+                        plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select values for X-Axis, Y-Axis.</p>';
+                        return;
+                    }
+
+                    const isHueNumeric = currentPlotData.some(row => isNumeric(row[hueColumn]));
+
+                    let traces;
+                    if (isHueNumeric) {
+                        traces = [{
+                            x: currentPlotData.map(row => row[xAxis]),
+                            y: currentPlotData.map(row => row[yAxis]),
+                            // text: currentPlotData.map(row => hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>') ),
+                            text: currentPlotData.map(row =>
+                                // Add selected X and Y columns to the hover text
+                                `X (${xAxis}): ${row[xAxis]}<br>Y (${yAxis}): ${row[yAxis]}<br>` +
                                 hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>')
                             ),
-                            customdata: filteredData.map(row => row._uniqueId),
-                            ids: filteredData.map(row => row._uniqueId),
+                            customdata: currentPlotData.map(row => row._uniqueId),
+                            ids: currentPlotData.map(row => row._uniqueId),
                             mode: 'markers',
                             type: 'scatter',
-                            name: category,
                             marker: {
+                                color: currentPlotData.map(row => parseFloat(row[hueColumn])),
+                                colorscale: 'Spectral',
+                                colorbar: { title: hueColumn },
                                 size: 6
                             },
+                            showlegend: false,
                             hoverinfo: 'text',
                             selected: {
                                 marker: {
                                     color: 'black',
-                                    size: 12
+                                    size: 12,
                                 }
                             }
-                        };
+                        }];
+                    } else {
+                        const categories = [...new Set(currentPlotData.map(row => row[hueColumn]))];
+                        traces = categories.map(category => {
+                            const filteredData = currentPlotData.filter(row => row[hueColumn] === category);
+                            return {
+                                x: filteredData.map(row => row[xAxis]),
+                                y: filteredData.map(row => row[yAxis]),
+                                text: filteredData.map(row =>
+                                    hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>')
+                                ),
+                                customdata: filteredData.map(row => row._uniqueId),
+                                ids: filteredData.map(row => row._uniqueId),
+                                mode: 'markers',
+                                type: 'scatter',
+                                name: category,
+                                marker: {
+                                    size: 6
+                                },
+                                hoverinfo: 'text',
+                                selected: {
+                                    marker: {
+                                        color: 'black',
+                                        size: 12
+                                    }
+                                }
+                            };
+                        });
+                    }
+
+                    const layout = {
+                        xaxis: { title: xAxis, type: xLogScale ? 'log' : 'linear' },
+                        yaxis: { title: yAxis, type: yLogScale ? 'log' : 'linear' },
+                        hovermode: 'closest',
+                        showlegend: true,
+                        margin: { t: 50 },
+                        plot_bgcolor: '#f8f9fa',
+                        paper_bgcolor: '#f8f9fa'
+                    };
+
+                    Plotly.newPlot(plotDiv, traces, layout).then(() => {
+                        plotDiv.on('plotly_click', (eventData) => onPointClick(eventData, plotId));
+                        highlightSelectedPoints();
                     });
-                }
 
-                const layout = {
-                    xaxis: { title: xAxis, type: xLogScale ? 'log' : 'linear' },
-                    yaxis: { title: yAxis, type: yLogScale ? 'log' : 'linear' },
-                    hovermode: 'closest',
-                    showlegend: true,
-                    margin: { t: 50 },
-                    plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: '#f8f9fa'
-                };
+                } else if (plotType === 'histogram') {
+                    // Updated retrieval of selected numerical columns
+                    const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value);
+                    const groupBy = document.getElementById(`group-by-${plotId}`).value;
 
-                Plotly.newPlot(plotDiv, traces, layout).then(() => {
-                    plotDiv.on('plotly_click', (eventData) => onPointClick(eventData, plotId));
-                    highlightSelectedPoints();
-                });
+                    if (numColumns.length === 0) {
+                        plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select at least one numerical column to generate the histogram.</p>';
+                        return;
+                    }
 
-            } else if (plotType === 'histogram') {
-                // Updated retrieval of selected numerical columns
-                const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value);
-                const groupBy = document.getElementById(`group-by-${plotId}`).value;
+                    let traces = [];
 
-                if (numColumns.length === 0) {
-                    plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select at least one numerical column to generate the histogram.</p>';
-                    return;
-                }
+                    numColumns.forEach(numCol => {
+                        if (groupBy) {
+                            const categories = [...new Set(currentPlotData.map(row => row[groupBy]))];
 
-                let traces = [];
-
-                numColumns.forEach(numCol => {
-                    if (groupBy) {
-                        const categories = [...new Set(currentPlotData.map(row => row[groupBy]))];
-
-                        categories.forEach(category => {
-                            const filteredData = currentPlotData.filter(row => row[groupBy] === category);
+                            categories.forEach(category => {
+                                const filteredData = currentPlotData.filter(row => row[groupBy] === category);
+                                traces.push({
+                                    x: filteredData.map(row => parseFloat(row[numCol])),
+                                    type: 'histogram',
+                                    name: `${numCol} - ${category}`,
+                                    opacity: 0.75,
+                                    marker: { opacity: 0.75 },
+                                    hoverinfo: 'x+y',
+                                });
+                            });
+                        } else {
                             traces.push({
-                                x: filteredData.map(row => parseFloat(row[numCol])),
+                                x: currentPlotData.map(row => parseFloat(row[numCol])),
                                 type: 'histogram',
-                                name: `${numCol} - ${category}`,
+                                name: numCol,
                                 opacity: 0.75,
                                 marker: { opacity: 0.75 },
                                 hoverinfo: 'x+y',
                             });
-                        });
-                    } else {
-                        traces.push({
-                            x: currentPlotData.map(row => parseFloat(row[numCol])),
-                            type: 'histogram',
-                            name: numCol,
-                            opacity: 0.75,
-                            marker: { opacity: 0.75 },
-                            hoverinfo: 'x+y',
-                        });
+                        }
+                    });
+
+                    const layout = {
+                        xaxis: { title: 'Value' },
+                        yaxis: { title: 'Count' },
+                        barmode: groupBy ? 'group' : 'overlay',
+                        margin: { t: 50 },
+                        plot_bgcolor: '#f8f9fa',
+                        paper_bgcolor: '#f8f9fa'
+                    };
+
+                    Plotly.newPlot(plotDiv, traces, layout);
+
+                } else if (plotType === 'boxplot') {
+                    // Updated retrieval of selected numerical columns
+                    const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value);
+                    const groupBy = document.getElementById(`group-by-${plotId}`).value;
+
+                    if (numColumns.length === 0) {
+                        plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select at least one numerical column to generate the boxplot.</p>';
+                        return;
                     }
-                });
 
-                const layout = {
-                    xaxis: { title: 'Value' },
-                    yaxis: { title: 'Count' },
-                    barmode: groupBy ? 'group' : 'overlay',
-                    margin: { t: 50 },
-                    plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: '#f8f9fa'
-                };
+                    let traces = [];
 
-                Plotly.newPlot(plotDiv, traces, layout);
+                    numColumns.forEach(numCol => {
+                        if (groupBy) {
+                            const categories = [...new Set(currentPlotData.map(row => row[groupBy]))];
 
-            } else if (plotType === 'boxplot') {
-                // Updated retrieval of selected numerical columns
-                const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value);
-                const groupBy = document.getElementById(`group-by-${plotId}`).value;
+                            categories.forEach(category => {
+                                const filteredData = currentPlotData.filter(row => row[groupBy] === category);
 
-                if (numColumns.length === 0) {
-                    plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select at least one numerical column to generate the boxplot.</p>';
-                    return;
-                }
-
-                let traces = [];
-
-                numColumns.forEach(numCol => {
-                    if (groupBy) {
-                        const categories = [...new Set(currentPlotData.map(row => row[groupBy]))];
-
-                        categories.forEach(category => {
-                            const filteredData = currentPlotData.filter(row => row[groupBy] === category);
-
+                                traces.push({
+                                    y: filteredData.map(row => parseFloat(row[numCol])),
+                                    type: 'box',
+                                    name: `${numCol} - ${category}`,
+                                    boxpoints: 'outliers',
+                                    hoverinfo: 'y',
+                                });
+                            });
+                        } else {
                             traces.push({
-                                y: filteredData.map(row => parseFloat(row[numCol])),
+                                y: currentPlotData.map(row => parseFloat(row[numCol])),
                                 type: 'box',
-                                name: `${numCol} - ${category}`,
+                                name: numCol,
                                 boxpoints: 'outliers',
                                 hoverinfo: 'y',
                             });
-                        });
-                    } else {
-                        traces.push({
-                            y: currentPlotData.map(row => parseFloat(row[numCol])),
-                            type: 'box',
-                            name: numCol,
-                            boxpoints: 'outliers',
-                            hoverinfo: 'y',
-                        });
-                    }
-                });
+                        }
+                    });
 
-                const layout = {
-                    yaxis: { title: 'Value' },
-                    xaxis: { title: 'Variables' },
-                    margin: { t: 50 },
-                    plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: '#f8f9fa'
-                };
+                    const layout = {
+                        yaxis: { title: 'Value' },
+                        xaxis: { title: 'Variables' },
+                        margin: { t: 50 },
+                        plot_bgcolor: '#f8f9fa',
+                        paper_bgcolor: '#f8f9fa'
+                    };
 
-                Plotly.newPlot(plotDiv, traces, layout);
+                    Plotly.newPlot(plotDiv, traces, layout);
 
-            } else {
-                plotDiv.innerHTML = '<p style="text-align: center; color: #e74c3c;">Invalid plot type selected.</p>';
-            }
-        }
-
-
-        function onPointClick(eventData, plotId) {
-            const pt = eventData.points[0];
-            const clickedId = pt.customdata;
-
-            const clickedPoint = data.find(row => row._uniqueId === clickedId);
-
-            if (!clickedPoint) return;
-
-            const index = selectedPoints.findIndex(p => p._uniqueId === clickedId);
-
-            if (index === -1) {
-                selectedPoints.push(clickedPoint);
-            } else {
-                selectedPoints.splice(index, 1);
-            }
-            updateTable();
-            highlightSelectedPoints();
-        }
-
-        function highlightSelectedPoints() {
-            const selectedIds = new Set(selectedPoints.map(p => p._uniqueId));
-
-            // Use requestAnimationFrame for better performance
-            requestAnimationFrame(() => {
-                for (let i = 1; i <= plotCounter; i++) {
-                    const plotId = `plot-${i}`;
-                    const plotDiv = document.getElementById(plotId);
-                    if (plotDiv && plotDiv.data) {
-                        const update = { selectedpoints: [] };
-                        plotDiv.data.forEach((trace) => {
-                            const selectedIndices = [];
-                            if (trace.ids) {
-                                trace.ids.forEach((id, index) => {
-                                    if (selectedIds.has(id)) {
-                                        selectedIndices.push(index);
-                                    }
-                                });
-                                update.selectedpoints.push(selectedIndices);
-                            } else {
-                                update.selectedpoints.push(null);
-                            }
-                        });
-                        Plotly.restyle(plotDiv, update);
-                    }
+                } else {
+                    plotDiv.innerHTML = '<p style="text-align: center; color: #e74c3c;">Invalid plot type selected.</p>';
                 }
-            });
-        }
-
-
-        function updateTable() {
-            if (selectedPoints.length === 0) {
-                tableContainer.innerHTML = '<p>No points selected. Click on points in the plot to add them to the table.</p>';
-                return;
             }
 
-            const columns = Object.keys(selectedPoints[0]).filter(col => !col.startsWith('_'));
-            let tableHTML = '<table><tr>';
-            columns.forEach(col => {
-                tableHTML += `<th>${col}</th>`;
-            });
-            tableHTML += '</tr>';
 
-            selectedPoints.forEach(point => {
-                tableHTML += '<tr>';
-                columns.forEach(col => {
-                    tableHTML += `<td>${point[col]}</td>`;
-                });
-                tableHTML += '</tr>';
-            });
+            function onPointClick(eventData, plotId) {
+                const pt = eventData.points[0];
+                const clickedId = pt.customdata;
 
-            tableHTML += '</table>';
-            tableContainer.innerHTML = tableHTML;
-        }
+                const clickedPoint = data.find(row => row._uniqueId === clickedId);
 
-        function clearSelections() {
-            selectedPoints = [];
-            updateTable();
-            highlightSelectedPoints();
-        }
+                if (!clickedPoint) return;
 
-        function exportTableToTSV() {
-            if (selectedPoints.length === 0) {
-                alert('No data to export. Please select some points first.');
-                return;
+                const index = selectedPoints.findIndex(p => p._uniqueId === clickedId);
+
+                if (index === -1) {
+                    selectedPoints.push(clickedPoint);
+                } else {
+                    selectedPoints.splice(index, 1);
+                }
+                updateTable();
+                highlightSelectedPoints();
             }
 
-            const columns = Object.keys(selectedPoints[0]).filter(col => !col.startsWith('_'));
-            let csvContent = columns.join('\t') + '\n';
+            function highlightSelectedPoints() {
+                const selectedIds = new Set(selectedPoints.map(p => p._uniqueId));
 
-            selectedPoints.forEach(point => {
-                const row = columns.map(col => point[col]).join('\t');
-                csvContent += row + '\n';
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'selected_points.tsv';
-            link.click();
-        }
-
-        function exportPlot(plotId) {
-            const plotDiv = document.getElementById(plotId);
-            Plotly.toImage(plotDiv, { format: 'png', width: 1200, height: 800 }).then(function (dataUrl) {
-                const link = document.createElement('a');
-                link.download = `${plotId}.png`;
-                link.href = dataUrl;
-                link.click();
-            });
-        }
-
-        function exportAllDataAsPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('portrait', 'pt', 'a4');
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-
-            // Add Company Logo (Replace 'logo.png' with your logo file path)
-            const logoImg = new Image();
-            logoImg.src = 'https://avatars.githubusercontent.com/u/163611200?s=400&u=d20c621ec8b0ebe1bb072c19b26726e95712d971&v=4'; // Ensure the logo is accessible
-            logoImg.onload = () => {
-                doc.addImage(logoImg, 'PNG', 40, 40, 100, 50);
-
-                // Cover Page
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(24);
-                doc.text("Snipe SRA Exploration Dashboard?", pageWidth / 2, 120, null, null, 'center');
-
-                // Date and Time
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(12);
-                doc.text(`Export Date: ${new Date().toLocaleString()}`, pageWidth / 2, 140, null, null, 'center');
-
-                // Move to next page for TOC
-                doc.addPage();
-
-                // Table of Contents
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(18);
-                doc.text("Table of Contents", 40, 80);
-
-                let tocYPosition = 110;
-                const plotPageNumbers = [];
-
-                // Collect promises for images and build TOC
-                const promises = [];
-                for (let i = 1; i <= plotCounter; i++) {
-                    const plotId = `plot-${i}`;
-                    const plotDiv = document.getElementById(plotId);
-                    const plotTitleInput = document.getElementById(`title-${plotId}`);
-                    const plotTitle = plotTitleInput && plotTitleInput.value.trim() !== '' ? plotTitleInput.value : `Plot ${i}`;
-                    const pageNum = doc.internal.getNumberOfPages() + promises.length + 1;
-                    plotPageNumbers.push(pageNum);
-
-                    // Add entry to TOC
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-                    doc.text(plotTitle, 60, tocYPosition);
-                    doc.text(`Page ${pageNum}`, pageWidth - 60, tocYPosition, null, null, 'right');
-                    tocYPosition += 20;
-
-                    if (tocYPosition > pageHeight - 80) {
-                        doc.addPage();
-                        tocYPosition = 80;
-                    }
-
-                    if (plotDiv) {
-                        const promise = Plotly.toImage(plotDiv, { format: 'png', width: 1200, height: 800 })
-                            .then(function (dataUrl) {
-                                // Add a new page for the plot
-                                doc.addPage();
-
-                                // Add plot title
-                                doc.setFont('helvetica', 'bold');
-                                doc.setFontSize(16);
-                                doc.text(plotTitle, pageWidth / 2, 50, null, null, 'center');
-
-                                // Add plot image
-                                const imgWidth = pageWidth - 80;
-                                const imgHeight = (imgWidth * 800) / 1200; // Maintain aspect ratio
-                                doc.addImage(dataUrl, 'PNG', 40, 70, imgWidth, imgHeight);
-
-                                // Add plot details
-                                doc.setFont('helvetica', 'normal');
-                                doc.setFontSize(12);
-                                const plotType = document.getElementById(`plot-type-${plotId}`).value;
-                                let detailsYPosition = 80 + imgHeight + 20;
-
-                                // Add plot type
-                                doc.text(`Plot Type: ${plotType}`, 60, detailsYPosition);
-
-                                if (plotType === 'scatter') {
-                                    const xAxisValue = document.getElementById(`x-axis-${plotId}`).value;
-                                    const yAxisValue = document.getElementById(`y-axis-${plotId}`).value;
-                                    const hueValue = document.getElementById(`hue-${plotId}`).value;
-                                    const xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked ? 'Yes' : 'No';
-                                    const yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked ? 'Yes' : 'No';
-
-                                    doc.text(`X-Axis: ${xAxisValue} (Log Scale: ${xLogScale})`, 60, detailsYPosition + 20);
-                                    doc.text(`Y-Axis: ${yAxisValue} (Log Scale: ${yLogScale})`, 60, detailsYPosition + 40);
-                                    doc.text(`Color By: ${hueValue}`, 60, detailsYPosition + 60);
-                                }
-                                else if (plotType === 'histogram' || plotType === 'boxplot') {
-                                    // Updated retrieval of selected numerical columns
-                                    const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value).join(', ');
-                                    const groupBy = document.getElementById(`group-by-${plotId}`).value || 'None';
-                                    doc.text(`Numerical Columns: ${numColumns}`, 60, detailsYPosition + 20);
-                                    doc.text(`Group By: ${groupBy}`, 60, detailsYPosition + 40);
-                                }
-
-                                const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
-                                const assayTypeValue = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value).join(', ') || 'All';
-
-                                doc.text(`SRA Assay type: ${assayTypeValue}`, 60, detailsYPosition + 80);
-
-                                // Add user's notes
-                                const notesValue = document.getElementById(`notes-${plotId}`).value;
-                                if (notesValue.trim() !== '') {
-                                    doc.setFont('helvetica', 'bolditalic');
-                                    doc.text("Notes:", 60, detailsYPosition + 90);
-                                    doc.setFont('helvetica', 'normal');
-                                    // Handle multi-line notes
-                                    const lines = doc.splitTextToSize(notesValue, pageWidth - 120);
-                                    doc.text(lines, 60, detailsYPosition + 110);
+                // Use requestAnimationFrame for better performance
+                requestAnimationFrame(() => {
+                    for (let i = 1; i <= plotCounter; i++) {
+                        const plotId = `plot-${i}`;
+                        const plotDiv = document.getElementById(plotId);
+                        if (plotDiv && plotDiv.data) {
+                            const update = { selectedpoints: [] };
+                            plotDiv.data.forEach((trace) => {
+                                const selectedIndices = [];
+                                if (trace.ids) {
+                                    trace.ids.forEach((id, index) => {
+                                        if (selectedIds.has(id)) {
+                                            selectedIndices.push(index);
+                                        }
+                                    });
+                                    update.selectedpoints.push(selectedIndices);
+                                } else {
+                                    update.selectedpoints.push(null);
                                 }
                             });
-                        promises.push(promise);
+                            Plotly.restyle(plotDiv, update);
+                        }
                     }
-                }
-
-                // Add Selected Data Table if any points are selected
-                /*
-                if (selectedPoints.length > 0) {
-                    const pageNum = doc.internal.getNumberOfPages() + promises.length + 1;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-                    doc.text("Selected Data Points", 60, tocYPosition);
-                    doc.text(`Page ${pageNum}`, pageWidth - 60, tocYPosition, null, null, 'right');
-
-                    const promise = new Promise((resolve) => {
-                        doc.addPage();
-                        addSelectedDataTable(doc);
-                        resolve();
-                    });
-                    promises.push(promise);
-                }*/
-
-                Promise.all(promises).then(() => {
-                    // Add page numbers
-                    const pageCount = doc.internal.getNumberOfPages();
-                    for (let i = 1; i <= pageCount; i++) {
-                        doc.setPage(i);
-                        doc.setFontSize(10);
-                        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 30, null, null, 'center');
-                    }
-
-                    // Save the PDF
-                    doc.save("snipe_visualization_report.pdf");
                 });
-            };
-        }
-
-
-
-
-        function addSelectedDataTable(doc) {
-            doc.addPage();
-            doc.setFontSize(16);
-            doc.text("Selected Data Points", 20, 20);
-
-            const columns = Object.keys(selectedPoints[0]);
-            let yOffset = 30;
-            const pageWidth = doc.internal.pageSize.width;
-
-            // Calculate column widths
-            const columnWidths = columns.map(col =>
-                Math.min(40, Math.max(...selectedPoints.map(row => doc.getTextWidth(String(row[col])))))
-            );
-            const totalWidth = columnWidths.reduce((a, b) => a + b, 0);
-            const scaleFactor = (pageWidth - 40) / totalWidth;
-            const scaledWidths = columnWidths.map(w => w * scaleFactor);
-
-            // Add headers
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            columns.forEach((col, index) => {
-                doc.text(col, 20 + scaledWidths.slice(0, index).reduce((a, b) => a + b, 0), yOffset);
-            });
-            yOffset += 10;
-
-            // Add data rows
-            doc.setTextColor(0);
-            selectedPoints.forEach((point, rowIndex) => {
-                if (yOffset > 280) {
-                    doc.addPage();
-                    yOffset = 20;
-                }
-                columns.forEach((col, colIndex) => {
-                    doc.text(String(point[col]), 20 + scaledWidths.slice(0, colIndex).reduce((a, b) => a + b, 0), yOffset);
-                });
-                yOffset += 7;
-            });
-
-            // Save the PDF
-            doc.save("snipe_visualization_report.pdf");
-        }
-
-        // ========================================
-        // STEP BY STEP TOUR
-        // ========================================
-
-        document.addEventListener('DOMContentLoaded', function () {
-            // Initialize the tour after the page has loaded
-            // initOnboardingTour();
-
-            // Check if the tour has been shown before
-            if (localStorage.getItem('tourShown') !== 'true') {
-                startTour();
             }
 
-            // Attach event listener to the "Start Tour" button
-            const startTourButton = document.getElementById('start-tour');
-            startTourButton.addEventListener('click', function () {
-                startTour();
-            });
 
-            const helpButton = document.getElementById('help-button');
-            const helpModal = document.getElementById('help-modal');
-            const closeModalButton = document.getElementById('close-modal');
-
-            helpButton.addEventListener('click', function () {
-                helpModal.style.display = 'flex'; // Show the modal using flex layout
-            });
-
-            closeModalButton.addEventListener('click', function () {
-                helpModal.style.display = 'none'; // Hide the modal
-            });
-
-            window.addEventListener('click', function (event) {
-                if (event.target === helpModal) {
-                    helpModal.style.display = 'none'; // Hide modal when clicking outside the content
+            function updateTable() {
+                if (selectedPoints.length === 0) {
+                    tableContainer.innerHTML = '<p>No points selected. Click on points in the plot to add them to the table.</p>';
+                    return;
                 }
-            });
 
-        });
+                const columns = Object.keys(selectedPoints[0]).filter(col => !col.startsWith('_'));
+                let tableHTML = '<table><tr>';
+                columns.forEach(col => {
+                    tableHTML += `<th>${col}</th>`;
+                });
+                tableHTML += '</tr>';
 
-        let driverInstance;
+                selectedPoints.forEach(point => {
+                    tableHTML += '<tr>';
+                    columns.forEach(col => {
+                        tableHTML += `<td>${point[col]}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
 
-        function initOnboardingTour() {
-            // Access the Driver class from the window object
-            const driver = window.driver.js.driver; // For Driver.js version 1.0.1
+                tableHTML += '</table>';
+                tableContainer.innerHTML = tableHTML;
+            }
 
-            const steps = [
-                {
-                    element: '.container h1',
-                    popover: {
-                        title: 'Welcome to Snipe SRA Exploration Dashboard',
-                        description: 'This dashboard helps you visualize and analyze the SRA experiments.',
-                        position: 'bottom'
-                    }
-                },
-                {
-                    element: '.floating-buttons',
-                    popover: {
-                        title: 'Control Buttons',
-                        description: 'Use these buttons to clear selections, export data, and access help.',
-                        position: 'left'
-                    }
-                },
-                {
-                    element: '.search-container',
-                    popover: {
-                        title: 'Search Bar',
-                        description: 'Search for specific data points by BioProject, BioSample, or Experiment.',
-                        position: 'bottom'
-                    }
-                },
-                {
-                    element: '.controls',
-                    popover: {
-                        title: 'Plot Controls',
-                        description: 'Use these controls to customize your plot.',
-                        position: 'bottom'
-                    }
-                },
-                {
-                    element: '.additional-inputs',
-                    popover: {
-                        title: 'Plot Details',
-                        description: 'Add a title and notes for your plot here.',
-                        position: 'bottom'
-                    }
+            function clearSelections() {
+                selectedPoints = [];
+                updateTable();
+                highlightSelectedPoints();
+            }
+
+            function exportTableToTSV() {
+                if (selectedPoints.length === 0) {
+                    alert('No data to export. Please select some points first.');
+                    return;
                 }
-            ];
 
-            driverInstance = driver({
-                animate: true,
-                opacity: 0.75,
-                padding: 10,
-                allowClose: true,
-                overlayClickNext: false,
-                doneBtnText: 'Finish',
-                closeBtnText: 'Close',
-                nextBtnText: '→',
-                prevBtnText: '←',
-                showButtons: false,
-                keyboardControl: true,
-                showProgress: true,
-                steps: steps,
+                const columns = Object.keys(selectedPoints[0]).filter(col => !col.startsWith('_'));
+                let csvContent = columns.join('\t') + '\n';
+
+                selectedPoints.forEach(point => {
+                    const row = columns.map(col => point[col]).join('\t');
+                    csvContent += row + '\n';
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'selected_points.tsv';
+                link.click();
+            }
+
+            function exportPlot(plotId) {
+                const plotDiv = document.getElementById(plotId);
+                Plotly.toImage(plotDiv, { format: 'png', width: 1200, height: 800 }).then(function (dataUrl) {
+                    const link = document.createElement('a');
+                    link.download = `${plotId}.png`;
+                    link.href = dataUrl;
+                    link.click();
+                });
+            }
+
+            function exportAllDataAsPDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('portrait', 'pt', 'a4');
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+
+                // Add Company Logo (Replace 'logo.png' with your logo file path)
+                const logoImg = new Image();
+                logoImg.src = 'https://avatars.githubusercontent.com/u/163611200?s=400&u=d20c621ec8b0ebe1bb072c19b26726e95712d971&v=4'; // Ensure the logo is accessible
+                logoImg.onload = () => {
+                    doc.addImage(logoImg, 'PNG', 40, 40, 100, 50);
+
+                    // Cover Page
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(24);
+                    doc.text("Snipe SRA Exploration Dashboard?", pageWidth / 2, 120, null, null, 'center');
+
+                    // Date and Time
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(12);
+                    doc.text(`Export Date: ${new Date().toLocaleString()}`, pageWidth / 2, 140, null, null, 'center');
+
+                    // Move to next page for TOC
+                    doc.addPage();
+
+                    // Table of Contents
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(18);
+                    doc.text("Table of Contents", 40, 80);
+
+                    let tocYPosition = 110;
+                    const plotPageNumbers = [];
+
+                    // Collect promises for images and build TOC
+                    const promises = [];
+                    for (let i = 1; i <= plotCounter; i++) {
+                        const plotId = `plot-${i}`;
+                        const plotDiv = document.getElementById(plotId);
+                        const plotTitleInput = document.getElementById(`title-${plotId}`);
+                        const plotTitle = plotTitleInput && plotTitleInput.value.trim() !== '' ? plotTitleInput.value : `Plot ${i}`;
+                        const pageNum = doc.internal.getNumberOfPages() + promises.length + 1;
+                        plotPageNumbers.push(pageNum);
+
+                        // Add entry to TOC
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(12);
+                        doc.text(plotTitle, 60, tocYPosition);
+                        doc.text(`Page ${pageNum}`, pageWidth - 60, tocYPosition, null, null, 'right');
+                        tocYPosition += 20;
+
+                        if (tocYPosition > pageHeight - 80) {
+                            doc.addPage();
+                            tocYPosition = 80;
+                        }
+
+                        if (plotDiv) {
+                            const promise = Plotly.toImage(plotDiv, { format: 'png', width: 1200, height: 800 })
+                                .then(function (dataUrl) {
+                                    // Add a new page for the plot
+                                    doc.addPage();
+
+                                    // Add plot title
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.setFontSize(16);
+                                    doc.text(plotTitle, pageWidth / 2, 50, null, null, 'center');
+
+                                    // Add plot image
+                                    const imgWidth = pageWidth - 80;
+                                    const imgHeight = (imgWidth * 800) / 1200; // Maintain aspect ratio
+                                    doc.addImage(dataUrl, 'PNG', 40, 70, imgWidth, imgHeight);
+
+                                    // Add plot details
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setFontSize(12);
+                                    const plotType = document.getElementById(`plot-type-${plotId}`).value;
+                                    let detailsYPosition = 80 + imgHeight + 20;
+
+                                    // Add plot type
+                                    doc.text(`Plot Type: ${plotType}`, 60, detailsYPosition);
+
+                                    if (plotType === 'scatter') {
+                                        const xAxisValue = document.getElementById(`x-axis-${plotId}`).value;
+                                        const yAxisValue = document.getElementById(`y-axis-${plotId}`).value;
+                                        const hueValue = document.getElementById(`hue-${plotId}`).value;
+                                        const xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked ? 'Yes' : 'No';
+                                        const yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked ? 'Yes' : 'No';
+
+                                        doc.text(`X-Axis: ${xAxisValue} (Log Scale: ${xLogScale})`, 60, detailsYPosition + 20);
+                                        doc.text(`Y-Axis: ${yAxisValue} (Log Scale: ${yLogScale})`, 60, detailsYPosition + 40);
+                                        doc.text(`Color By: ${hueValue}`, 60, detailsYPosition + 60);
+                                    }
+                                    else if (plotType === 'histogram' || plotType === 'boxplot') {
+                                        // Updated retrieval of selected numerical columns
+                                        const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value).join(', ');
+                                        const groupBy = document.getElementById(`group-by-${plotId}`).value || 'None';
+                                        doc.text(`Numerical Columns: ${numColumns}`, 60, detailsYPosition + 20);
+                                        doc.text(`Group By: ${groupBy}`, 60, detailsYPosition + 40);
+                                    }
+
+                                    const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
+                                    const assayTypeValue = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value).join(', ') || 'All';
+
+                                    doc.text(`SRA Assay type: ${assayTypeValue}`, 60, detailsYPosition + 80);
+
+                                    // Add user's notes
+                                    const notesValue = document.getElementById(`notes-${plotId}`).value;
+                                    if (notesValue.trim() !== '') {
+                                        doc.setFont('helvetica', 'bolditalic');
+                                        doc.text("Notes:", 60, detailsYPosition + 90);
+                                        doc.setFont('helvetica', 'normal');
+                                        // Handle multi-line notes
+                                        const lines = doc.splitTextToSize(notesValue, pageWidth - 120);
+                                        doc.text(lines, 60, detailsYPosition + 110);
+                                    }
+                                });
+                            promises.push(promise);
+                        }
+                    }
+
+                    // Add Selected Data Table if any points are selected
+                    /*
+                    if (selectedPoints.length > 0) {
+                        const pageNum = doc.internal.getNumberOfPages() + promises.length + 1;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(12);
+                        doc.text("Selected Data Points", 60, tocYPosition);
+                        doc.text(`Page ${pageNum}`, pageWidth - 60, tocYPosition, null, null, 'right');
+    
+                        const promise = new Promise((resolve) => {
+                            doc.addPage();
+                            addSelectedDataTable(doc);
+                            resolve();
+                        });
+                        promises.push(promise);
+                    }*/
+
+                    Promise.all(promises).then(() => {
+                        // Add page numbers
+                        const pageCount = doc.internal.getNumberOfPages();
+                        for (let i = 1; i <= pageCount; i++) {
+                            doc.setPage(i);
+                            doc.setFontSize(10);
+                            doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 30, null, null, 'center');
+                        }
+
+                        // Save the PDF
+                        doc.save("snipe_visualization_report.pdf");
+                    });
+                };
+            }
+
+
+
+
+            function addSelectedDataTable(doc) {
+                doc.addPage();
+                doc.setFontSize(16);
+                doc.text("Selected Data Points", 20, 20);
+
+                const columns = Object.keys(selectedPoints[0]);
+                let yOffset = 30;
+                const pageWidth = doc.internal.pageSize.width;
+
+                // Calculate column widths
+                const columnWidths = columns.map(col =>
+                    Math.min(40, Math.max(...selectedPoints.map(row => doc.getTextWidth(String(row[col])))))
+                );
+                const totalWidth = columnWidths.reduce((a, b) => a + b, 0);
+                const scaleFactor = (pageWidth - 40) / totalWidth;
+                const scaledWidths = columnWidths.map(w => w * scaleFactor);
+
+                // Add headers
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                columns.forEach((col, index) => {
+                    doc.text(col, 20 + scaledWidths.slice(0, index).reduce((a, b) => a + b, 0), yOffset);
+                });
+                yOffset += 10;
+
+                // Add data rows
+                doc.setTextColor(0);
+                selectedPoints.forEach((point, rowIndex) => {
+                    if (yOffset > 280) {
+                        doc.addPage();
+                        yOffset = 20;
+                    }
+                    columns.forEach((col, colIndex) => {
+                        doc.text(String(point[col]), 20 + scaledWidths.slice(0, colIndex).reduce((a, b) => a + b, 0), yOffset);
+                    });
+                    yOffset += 7;
+                });
+
+                // Save the PDF
+                doc.save("snipe_visualization_report.pdf");
+            }
+
+            // ========================================
+            // STEP BY STEP TOUR
+            // ========================================
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // Initialize the tour after the page has loaded
+                // initOnboardingTour();
+
+                // Check if the tour has been shown before
+                if (localStorage.getItem('tourShown') !== 'true') {
+                    startTour();
+                }
+
+                // Attach event listener to the "Start Tour" button
+                const startTourButton = document.getElementById('start-tour');
+                startTourButton.addEventListener('click', function () {
+                    startTour();
+                });
+
+                const helpButton = document.getElementById('help-button');
+                const helpModal = document.getElementById('help-modal');
+                const closeModalButton = document.getElementById('close-modal');
+
+                helpButton.addEventListener('click', function () {
+                    helpModal.style.display = 'flex'; // Show the modal using flex layout
+                });
+
+                closeModalButton.addEventListener('click', function () {
+                    helpModal.style.display = 'none'; // Hide the modal
+                });
+
+                window.addEventListener('click', function (event) {
+                    if (event.target === helpModal) {
+                        helpModal.style.display = 'none'; // Hide modal when clicking outside the content
+                    }
+                });
+
             });
 
-        }
+            let driverInstance;
 
-        function startTour() {
-            driverInstance.drive();
-        }
+            function initOnboardingTour() {
+                // Access the Driver class from the window object
+                const driver = window.driver.js.driver; // For Driver.js version 1.0.1
+
+                const steps = [
+                    {
+                        element: '.container h1',
+                        popover: {
+                            title: 'Welcome to Snipe SRA Exploration Dashboard',
+                            description: 'This dashboard helps you visualize and analyze the SRA experiments.',
+                            position: 'bottom'
+                        }
+                    },
+                    {
+                        element: '.floating-buttons',
+                        popover: {
+                            title: 'Control Buttons',
+                            description: 'Use these buttons to clear selections, export data, and access help.',
+                            position: 'left'
+                        }
+                    },
+                    {
+                        element: '.search-container',
+                        popover: {
+                            title: 'Search Bar',
+                            description: 'Search for specific data points by BioProject, BioSample, or Experiment.',
+                            position: 'bottom'
+                        }
+                    },
+                    {
+                        element: '.controls',
+                        popover: {
+                            title: 'Plot Controls',
+                            description: 'Use these controls to customize your plot.',
+                            position: 'bottom'
+                        }
+                    },
+                    {
+                        element: '.additional-inputs',
+                        popover: {
+                            title: 'Plot Details',
+                            description: 'Add a title and notes for your plot here.',
+                            position: 'bottom'
+                        }
+                    }
+                ];
+
+                driverInstance = driver({
+                    animate: true,
+                    opacity: 0.75,
+                    padding: 10,
+                    allowClose: true,
+                    overlayClickNext: false,
+                    doneBtnText: 'Finish',
+                    closeBtnText: 'Close',
+                    nextBtnText: '→',
+                    prevBtnText: '←',
+                    showButtons: false,
+                    keyboardControl: true,
+                    showProgress: true,
+                    steps: steps,
+                });
+
+            }
+
+            function startTour() {
+                driverInstance.drive();
+            }
+
+            // ========================================
+            // END OF STEP BY STEP TOUR
+            // ========================================
+
+            // ========================================
+            // IMPORT/EXPORT SESSIONS
+            // ========================================
+
+            function exportSession() {
+                const sessionData = {
+                    metadata: {
+                        exportDate: new Date().toISOString(),
+                        dataFilePath: dataFilePath, // Assuming dataFilePath is globally accessible
+                    },
+                    selectedSpecies: document.getElementById('species-select').value,
+                    selectedReference: document.getElementById('reference-select').value,
+                    selectedAmplicon: document.getElementById('amplicon-select').value,
+                    plots: [],
+                    selectedPoints: selectedPoints.map(p => p._uniqueId),
+                };
+
+                // Collect data for each plot
+                for (let i = 1; i <= plotCounter; i++) {
+                    const plotId = `plot-${i}`;
+                    const plotType = document.getElementById(`plot-type-${plotId}`).value;
+                    const plotConfig = {
+                        plotId: plotId,
+                        plotType: plotType,
+                        controls: {},
+                        title: document.getElementById(`title-${plotId}`).value,
+                        notes: document.getElementById(`notes-${plotId}`).value,
+                    };
+
+                    // Collect control values based on plot type
+                    if (plotType === 'scatter') {
+                        plotConfig.controls.xAxis = document.getElementById(`x-axis-${plotId}`).value;
+                        plotConfig.controls.yAxis = document.getElementById(`y-axis-${plotId}`).value;
+                        plotConfig.controls.hue = document.getElementById(`hue-${plotId}`).value;
+                        plotConfig.controls.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
+                        plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
+                    } else if (plotType === 'histogram' || plotType === 'boxplot') {
+                        plotConfig.controls.numColumns = Array.from(
+                            document.querySelectorAll(
+                                `#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`
+                            )
+                        ).map(checkbox => checkbox.value);
+                        plotConfig.controls.groupBy = document.getElementById(`group-by-${plotId}`).value;
+                    }
+
+                    // Collect selected assay types
+                    plotConfig.controls.selectedAssayTypes = Array.from(
+                        document.querySelectorAll(
+                            `#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`
+                        )
+                    ).map(checkbox => checkbox.value);
+
+                    sessionData.plots.push(plotConfig);
+                }
+
+                // Convert session data to JSON string
+                const jsonData = JSON.stringify(sessionData, null, 2);
+
+                // Create a blob and trigger download
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'session_data.json';
+                link.click();
+            }
 
 
-    </script>
+            // Function to import a session from JSON
+            function importSession(jsonData) {
+                try {
+                    const sessionData = JSON.parse(jsonData);
+
+                    // Clear existing data and plots
+                    clearAllData();
+                    plotsContainer.innerHTML = '';
+                    plotCounter = 0;
+                    selectedPoints = [];
+
+                    // Restore species, reference, and amplicon selections
+                    document.getElementById('species-select').value = sessionData.selectedSpecies;
+                    document.getElementById('species-select').dispatchEvent(new Event('change'));
+
+                    document.getElementById('reference-select').value = sessionData.selectedReference;
+                    document.getElementById('reference-select').dispatchEvent(new Event('change'));
+
+                    document.getElementById('amplicon-select').value = sessionData.selectedAmplicon;
+                    document.getElementById('amplicon-select').dispatchEvent(new Event('change'));
+
+                    // Load data file
+                    const dataFilePath = sessionData.metadata.dataFilePath;
+                    loadData(dataFilePath, () => {
+                        // Restore plots
+                        sessionData.plots.forEach(plotConfig => {
+                            addNewPlot();
+
+                            // Restore plot type
+                            document.getElementById(`plot-type-${plotConfig.plotId}`).value = plotConfig.plotType;
+                            renderDynamicControls(plotConfig.plotId);
+
+                            // Restore controls
+                            if (plotConfig.plotType === 'scatter') {
+                                document.getElementById(`x-axis-${plotConfig.plotId}`).value = plotConfig.controls.xAxis;
+                                document.getElementById(`y-axis-${plotConfig.plotId}`).value = plotConfig.controls.yAxis;
+                                document.getElementById(`hue-${plotConfig.plotId}`).value = plotConfig.controls.hue;
+                                document.getElementById(`x-log-scale-${plotConfig.plotId}`).checked = plotConfig.controls.xLogScale;
+                                document.getElementById(`y-log-scale-${plotConfig.plotId}`).checked = plotConfig.controls.yLogScale;
+                            } else if (plotConfig.plotType === 'histogram' || plotConfig.plotType === 'boxplot') {
+                                plotConfig.controls.numColumns.forEach(col => {
+                                    document.getElementById(`num-column-${col}-${plotConfig.plotId}`).checked = true;
+                                });
+                                document.getElementById(`group-by-${plotConfig.plotId}`).value = plotConfig.controls.groupBy;
+                            }
+
+                            // Restore selected assay types
+                            const assayTypeCheckboxes = document.querySelectorAll(
+                                `#assay-type-checkboxes-${plotConfig.plotId} input[name="assay-type-${plotConfig.plotId}"]`
+                            );
+                            assayTypeCheckboxes.forEach(checkbox => {
+                                checkbox.checked = plotConfig.controls.selectedAssayTypes.includes(checkbox.value);
+                            });
+
+                            // Restore title and notes
+                            document.getElementById(`title-${plotConfig.plotId}`).value = plotConfig.title;
+                            document.getElementById(`notes-${plotConfig.plotId}`).value = plotConfig.notes;
+
+                            // Update the plot
+                            updatePlot(plotConfig.plotId);
+                        });
+
+                        // Restore selected points
+                        selectedPoints = data.filter(row => sessionData.selectedPoints.includes(row._uniqueId));
+                        updateTable();
+                        highlightSelectedPoints();
+                    });
+                } catch (error) {
+                    alert('Failed to import session: ' + error.message);
+                }
+            }
+
+
+
+        </script>
