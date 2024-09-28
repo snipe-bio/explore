@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.18.0/plotly.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
     <!-- Driver.js CSS and JS -->
@@ -936,12 +937,14 @@
 
         /* Styles for Import/Export Floating Buttons */
         #import-session,
-        #export-session {
+        #export-session,
+        #export-session-url {
             background-color: #16a085;
         }
 
         #import-session:hover,
-        #export-session:hover {
+        #export-session:hover,
+        #export-session-url:hover {
             background-color: #138d75;
         }
     </style>
@@ -1051,6 +1054,12 @@
             <i class="fa fa-upload"></i>
             <span>Import Session</span>
         </button>
+
+        <button id="export-session-url" class="floating-button">
+            <i class="fa fa-link"></i>
+            <span>Export Session to URL</span>
+        </button>
+
     </div>
 
     <script>
@@ -1160,6 +1169,22 @@
                     document.body.removeChild(modal);
                 });
             });
+
+            // Event listener for the Export Session to URL button
+            document.getElementById('export-session-url').addEventListener('click', exportSessionToURL);
+
+            // Check if there's session data in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionDataEncoded = urlParams.get('session');
+            if (sessionDataEncoded) {
+                const sessionDataJSON = LZString.decompressFromEncodedURIComponent(sessionDataEncoded);
+                if (sessionDataJSON) {
+                    importSession(sessionDataJSON);
+                } else {
+                    alert('Failed to load session from URL.');
+                }
+            }
+
 
 
         });
@@ -1784,7 +1809,9 @@
                     barmode: groupBy ? 'group' : 'overlay',
                     margin: { t: 50 },
                     plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: '#f8f9fa'
+                    paper_bgcolor: '#f8f9fa',
+                    // bar width
+                    bargap: 0.1,
                 };
 
                 Plotly.newPlot(plotDiv, traces, layout);
@@ -2332,6 +2359,7 @@
 
 
         // Function to import a session from JSON
+        // Function to import a session from JSON
         function importSession(jsonData) {
             try {
                 const sessionData = JSON.parse(jsonData);
@@ -2353,8 +2381,8 @@
                 document.getElementById('amplicon-select').dispatchEvent(new Event('change'));
 
                 // Load data file
-                const dataFilePath = sessionData.metadata.dataFilePath;
-                loadData(dataFilePath, () => {
+                const filePath = sessionData.metadata.dataFilePath;
+                loadData(filePath, () => {
                     // Restore plots
                     sessionData.plots.forEach(plotConfig => {
                         addNewPlot();
@@ -2372,7 +2400,10 @@
                             document.getElementById(`y-log-scale-${plotConfig.plotId}`).checked = plotConfig.controls.yLogScale;
                         } else if (plotConfig.plotType === 'histogram' || plotConfig.plotType === 'boxplot') {
                             plotConfig.controls.numColumns.forEach(col => {
-                                document.getElementById(`num-column-${col}-${plotConfig.plotId}`).checked = true;
+                                const checkbox = document.getElementById(`num-column-${col}-${plotConfig.plotId}`);
+                                if (checkbox) {
+                                    checkbox.checked = true;
+                                }
                             });
                             document.getElementById(`group-by-${plotConfig.plotId}`).value = plotConfig.controls.groupBy;
                         }
@@ -2401,6 +2432,79 @@
             } catch (error) {
                 alert('Failed to import session: ' + error.message);
             }
+        }
+
+
+        // Function to export the session data to the URL
+        function exportSessionToURL() {
+            const sessionData = collectSessionData();
+
+            // Convert session data to JSON string
+            const jsonData = JSON.stringify(sessionData);
+
+            // Compress and encode the JSON string
+            const compressedData = LZString.compressToEncodedURIComponent(jsonData);
+
+            // Update the URL with the session data
+            const newURL = window.location.protocol + "//" + window.location.host + window.location.pathname + '?session=' + compressedData;
+            window.history.replaceState({ path: newURL }, '', newURL);
+
+            alert('Session has been saved to the URL. You can bookmark or share this URL to restore the session.');
+        }
+
+        // Helper function to collect session data
+        function collectSessionData() {
+            const sessionData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    dataFilePath: dataFilePath,
+                },
+                selectedSpecies: document.getElementById('species-select').value,
+                selectedReference: document.getElementById('reference-select').value,
+                selectedAmplicon: document.getElementById('amplicon-select').value,
+                plots: [],
+                selectedPoints: selectedPoints.map(p => p._uniqueId),
+            };
+
+            // Collect data for each plot
+            for (let i = 1; i <= plotCounter; i++) {
+                const plotId = `plot-${i}`;
+                const plotType = document.getElementById(`plot-type-${plotId}`).value;
+                const plotConfig = {
+                    plotId: plotId,
+                    plotType: plotType,
+                    controls: {},
+                    title: document.getElementById(`title-${plotId}`).value,
+                    notes: document.getElementById(`notes-${plotId}`).value,
+                };
+
+                // Collect control values based on plot type
+                if (plotType === 'scatter') {
+                    plotConfig.controls.xAxis = document.getElementById(`x-axis-${plotId}`).value;
+                    plotConfig.controls.yAxis = document.getElementById(`y-axis-${plotId}`).value;
+                    plotConfig.controls.hue = document.getElementById(`hue-${plotId}`).value;
+                    plotConfig.controls.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
+                    plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
+                } else if (plotType === 'histogram' || plotType === 'boxplot') {
+                    plotConfig.controls.numColumns = Array.from(
+                        document.querySelectorAll(
+                            `#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`
+                        )
+                    ).map(checkbox => checkbox.value);
+                    plotConfig.controls.groupBy = document.getElementById(`group-by-${plotId}`).value;
+                }
+
+                // Collect selected assay types
+                plotConfig.controls.selectedAssayTypes = Array.from(
+                    document.querySelectorAll(
+                        `#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`
+                    )
+                ).map(checkbox => checkbox.value);
+
+                sessionData.plots.push(plotConfig);
+            }
+
+            return sessionData;
         }
 
 
