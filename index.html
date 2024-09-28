@@ -947,6 +947,53 @@
         #export-session-url:hover {
             background-color: #138d75;
         }
+
+        #add-view-container {
+            margin: 2rem 0;
+            position: relative;
+            text-align: center;
+        }
+
+        .add-view-button {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+
+        .add-view-button::before,
+        .add-view-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #ccc;
+        }
+
+        .add-view-button::before {
+            left: 0;
+        }
+
+        .add-view-button::after {
+            right: 0;
+        }
+
+        /* Notification Styles */
+        .notification {
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            opacity: 0.9;
+            transition: opacity 0.5s ease-in-out;
+        }
     </style>
 </head>
 
@@ -996,9 +1043,11 @@
 
 
         <div id="plots-container"></div>
-        <div class="export-buttons">
-            <button id="add-view" class="button">Add View</button>
+        <!--<div class="export-buttons"><button id="add-view" class="button">Add View</button></div> -->
+        <div id="add-view-container" style="display: none;">
+            <button id="add-view" class="add-view-button">Add View</button>
         </div>
+
         <!-- <div class="export-buttons">
             <button id="add-view" class="button">Add View</button>
             <button id="clear-selections" class="button">Clear Selections</button>
@@ -1286,6 +1335,91 @@
                     helpModal.style.display = 'none'; // Hide modal when clicking outside the content
                 }
             });
+
+
+
+
+            // Event listener for the Import Session button
+            document.getElementById('import-session').addEventListener('click', function () {
+                const importSessionModal = document.getElementById('import-session-modal');
+                importSessionModal.style.display = 'flex';
+            });
+
+            // Event listener for the close button in the modal
+            document.getElementById('import-session-close').addEventListener('click', function () {
+                const importSessionModal = document.getElementById('import-session-modal');
+                importSessionModal.style.display = 'none';
+            });
+
+            // Event listener for the Import Session confirm button
+            document.getElementById('import-session-confirm').addEventListener('click', function () {
+                const fileInput = document.getElementById('session-file-input');
+                const textarea = document.getElementById('session-textarea');
+                if (fileInput.files.length > 0) {
+                    // Read the file
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const jsonData = e.target.result;
+                        importSession(jsonData);
+                        // Close the modal
+                        document.getElementById('import-session-modal').style.display = 'none';
+
+                        // Show notification
+                        showNotification('Session imported successfully.');
+                    };
+                    reader.readAsText(file);
+                } else if (textarea.value.trim() !== '') {
+                    // Use the pasted data
+                    const jsonData = textarea.value.trim();
+                    importSession(jsonData);
+                    // Close the modal
+                    document.getElementById('import-session-modal').style.display = 'none';
+
+                    // Show notification
+                    showNotification('Session imported successfully.');
+                } else {
+                    alert('Please upload a session file or paste session data.');
+                }
+            });
+
+            // Close modal when clicking outside of it
+            window.addEventListener('click', function (event) {
+                const importSessionModal = document.getElementById('import-session-modal');
+                if (event.target === importSessionModal) {
+                    importSessionModal.style.display = 'none';
+                }
+            });
+
+            // Event listener for the Export Session to URL button
+            document.getElementById('export-session-url').addEventListener('click', exportSessionToURL);
+
+            // Event listener for the close button in the modal
+            document.getElementById('export-session-url-close').addEventListener('click', function () {
+                const exportSessionUrlModal = document.getElementById('export-session-url-modal');
+                exportSessionUrlModal.style.display = 'none';
+            });
+
+            // Event listener for the copy to clipboard button
+            document.getElementById('copy-session-url').addEventListener('click', function () {
+                const sessionUrlInput = document.getElementById('session-url-input');
+                sessionUrlInput.select();
+                sessionUrlInput.setSelectionRange(0, 99999); // For mobile devices
+
+                document.execCommand('copy');
+
+                // Show a notification
+                showNotification('Session URL copied to clipboard.');
+            });
+
+            // Close modal when clicking outside of it
+            window.addEventListener('click', function (event) {
+                const exportSessionUrlModal = document.getElementById('export-session-url-modal');
+                if (event.target === exportSessionUrlModal) {
+                    exportSessionUrlModal.style.display = 'none';
+                }
+            });
+
         });
 
 
@@ -1302,6 +1436,9 @@
             plotsContainer.innerHTML = '';
             tableContainer.innerHTML = '';
             plotCounter = 0;
+
+            // Hide the add-view button
+            document.getElementById('add-view-container').style.display = 'none';
         }
 
         const hoverColumns = [
@@ -1315,6 +1452,10 @@
         // Updated loadData function to avoid triggering the tour again
         function loadData(filePath, callback) {
             dataFilePath = filePath; // Set the global dataFilePath
+
+            // Show loading modal
+            document.getElementById('loading-modal').style.display = 'flex';
+
             Papa.parse(dataFilePath, {
                 download: true,
                 header: true,
@@ -1355,9 +1496,20 @@
                     // Now, add the first plot
                     addNewPlot();
 
+                    // Show the add-view button
+                    document.getElementById('add-view-container').style.display = 'block';
+
                     // Initialize and start the tour after data is loaded
                     initOnboardingTour();
-                    startTour();
+
+                    //!! DISABLE TOUR BY DEFAULT
+                    // startTour();
+
+                    // Hide loading modal
+                    document.getElementById('loading-modal').style.display = 'none';
+
+                    // Show notification
+                    showNotification('Data loaded successfully.');
 
                     if (callback) callback();
                 }
@@ -1391,6 +1543,9 @@
             // Now, add the first plot
             addNewPlot();
 
+            // Show the add-view button
+            document.getElementById('add-view-container').style.display = 'block';
+
             // Initialize and start the tour after data is loaded
             initOnboardingTour();
             startTour();
@@ -1398,6 +1553,9 @@
             // Update the table and highlight selected points
             updateTable();
             highlightSelectedPoints();
+
+            // Show notification
+            showNotification('User data loaded successfully.');
         }
 
 
@@ -1964,6 +2122,9 @@
             selectedPoints = [];
             updateTable();
             highlightSelectedPoints();
+
+            // Show notification
+            showNotification('Selections cleared.');
         }
 
         function exportTableToTSV() {
@@ -1985,6 +2146,9 @@
             link.href = URL.createObjectURL(blob);
             link.download = 'selected_points.tsv';
             link.click();
+
+            // Show notification
+            showNotification('Table exported successfully.');
         }
 
         function exportPlot(plotId) {
@@ -2284,11 +2448,19 @@
             link.href = URL.createObjectURL(blob);
             link.download = 'session_data.json';
             link.click();
+
+            // Show notification
+            showNotification('Session exported successfully.');
         }
 
         // Function to import a session from JSON
+
+        // Updated importSession function
         function importSession(jsonData, userData = null) {
             try {
+                // Show loading modal
+                document.getElementById('loading-modal').style.display = 'flex';
+
                 const sessionData = JSON.parse(jsonData);
 
                 // Clear existing data and plots
@@ -2386,9 +2558,15 @@
                     // Update the table and highlight selected points
                     updateTable();
                     highlightSelectedPoints();
+
+                    // Show notification
+                    showNotification('Session imported successfully.');
                 });
             } catch (error) {
                 alert('Failed to import session: ' + error.message);
+            } finally {
+                // Hide loading modal
+                document.getElementById('loading-modal').style.display = 'none';
             }
         }
 
@@ -2421,11 +2599,16 @@
             // Compress and encode the JSON string
             const compressedData = LZString.compressToEncodedURIComponent(jsonData);
 
-            // Update the URL with the session data
+            // Create the shareable URL
             const newURL = window.location.protocol + "//" + window.location.host + window.location.pathname + '?session=' + compressedData;
-            window.history.replaceState({ path: newURL }, '', newURL);
 
-            alert('Session has been saved to the URL. You can bookmark or share this URL to restore the session.');
+            // Display the URL in the modal
+            const sessionUrlInput = document.getElementById('session-url-input');
+            sessionUrlInput.value = newURL;
+
+            // Show the modal
+            const exportSessionUrlModal = document.getElementById('export-session-url-modal');
+            exportSessionUrlModal.style.display = 'flex';
         }
 
         // Helper function to collect session data
@@ -2497,4 +2680,64 @@
             return sessionData;
         }
 
+        function showNotification(message, type = 'success') {
+            const notificationContainer = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            if (type === 'error') {
+                notification.style.backgroundColor = '#e74c3c';
+            } else if (type === 'warning') {
+                notification.style.backgroundColor = '#f39c12';
+            } else {
+                notification.style.backgroundColor = '#2ecc71';
+            }
+            notification.textContent = message;
+
+            notificationContainer.appendChild(notification);
+
+            // Auto-fade and remove the notification after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notificationContainer.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
     </script>
+
+    <!-- Import Session Modal -->
+    <div id="import-session-modal" class="modal">
+        <div class="modal-content">
+            <span id="import-session-close" class="close-button">&times;</span>
+            <h2>Import Session</h2>
+            <p>You can upload a session JSON file or paste the session data below.</p>
+            <input type="file" id="session-file-input" accept=".json">
+            <textarea id="session-textarea" placeholder="Paste session JSON data here..." rows="10"
+                style="width: 100%;"></textarea>
+            <button id="import-session-confirm" class="button">Import Session</button>
+        </div>
+    </div>
+
+    <!-- Export Session URL Modal -->
+    <div id="export-session-url-modal" class="modal">
+        <div class="modal-content">
+            <span id="export-session-url-close" class="close-button">&times;</span>
+            <h2>Shareable Session URL</h2>
+            <p>You can copy the URL below to share your session.</p>
+            <input type="text" id="session-url-input" readonly style="width: 100%; font-size: 14px; padding: 10px;">
+            <button id="copy-session-url" class="button">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h2>Loading...</h2>
+            <p>Please wait while the data is being processed.</p>
+        </div>
+    </div>
+
+    <div id="notification-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
+
+</body>
