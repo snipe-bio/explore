@@ -1960,7 +1960,46 @@ Unique Experiments: ${uniqueExperiments}
                     </div>
                 `;
             } else if (plotType === 'histogram' || plotType === 'boxplot') {
-                // ... existing code ...
+                controlsHTML = `
+                    <div class="row">
+                        <!-- Numerical Columns -->
+                        <div class="col-md-6">
+                            <label>Select Numerical Columns:</label>
+                            <div id="checkbox-group-${plotId}" class="form-group" style="height: 150px; overflow-y: auto;">
+                                ${numericalColumns.map((col, index) => `
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="num-column-${col}-${plotId}" name="num-columns-${plotId}" value="${col}">
+                                        <label class="form-check-label" for="num-column-${col}-${plotId}">
+                                            ${col}
+                                        </label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <!-- Group By Control -->
+                        <div class="col-md-3">
+                            <label for="group-by-${plotId}">Group By (Optional):</label>
+                            <select id="group-by-${plotId}" class="form-control">
+                                <option value="">No Grouping</option>
+                                ${categoricalColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                            </select>
+                        </div>
+                        <!-- SRA Assay Type -->
+                        <div class="col-md-3 align-items-center">
+                            <label class="mb-0">SRA Assay type:</label>
+                            <div id="assay-type-checkboxes-${plotId}" class="form-inline">
+                                ${[...new Set(data.map(row => row["SRA Assay type"]).filter(type => type))].map((type, index) => `
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="assay-type-${plotId}-${index}" name="assay-type-${plotId}" value="${type}" checked>
+                                        <label class="form-check-label" for="assay-type-${plotId}-${index}">
+                                            ${type}
+                                        </label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
 
             dynamicControlsDiv.innerHTML = controlsHTML;
@@ -2291,7 +2330,60 @@ Unique Experiments: ${uniqueExperiments}
 
                 Plotly.newPlot(plotDiv, traces, layout);
 
-            } else {
+            } else if (plotType === 'histogram') {
+                // Updated retrieval of selected numerical columns
+                const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value);
+                const groupBy = document.getElementById(`group-by-${plotId}`).value;
+
+                if (numColumns.length === 0) {
+                    plotDiv.innerHTML = '<p style="text-align: center; color: #7f8c8d;">Please select at least one numerical column to generate the histogram.</p>';
+                    return;
+                }
+
+                let traces = [];
+
+                numColumns.forEach(numCol => {
+                    if (groupBy) {
+                        const categories = [...new Set(currentPlotData.map(row => row[groupBy]))];
+
+                        categories.forEach(category => {
+                            const filteredData = currentPlotData.filter(row => row[groupBy] === category);
+                            traces.push({
+                                x: filteredData.map(row => parseFloat(row[numCol])),
+                                type: 'histogram',
+                                name: `${numCol} - ${category}`,
+                                opacity: 0.75,
+                                marker: { opacity: 0.75 },
+                                hoverinfo: 'x+y',
+                            });
+                        });
+                    } else {
+                        traces.push({
+                            x: currentPlotData.map(row => parseFloat(row[numCol])),
+                            type: 'histogram',
+                            name: numCol,
+                            opacity: 0.75,
+                            marker: { opacity: 0.75 },
+                            hoverinfo: 'x+y',
+                        });
+                    }
+                });
+
+                const layout = {
+                    xaxis: { title: 'Value' },
+                    yaxis: { title: 'Count' },
+                    barmode: groupBy ? 'group' : 'overlay',
+                    margin: { t: 50 },
+                    plot_bgcolor: '#f8f9fa',
+                    paper_bgcolor: '#f8f9fa',
+                    // bar width
+                    bargap: 0.1,
+                };
+
+                Plotly.newPlot(plotDiv, traces, layout);
+
+            }
+            else {
                 plotDiv.innerHTML = '<p style="text-align: center; color: #e74c3c;">Invalid plot type selected.</p>';
             }
         }
