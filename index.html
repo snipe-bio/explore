@@ -1993,6 +1993,9 @@ Unique Experiments: ${uniqueExperiments}
 
             const cols_for_colorby = columns.filter(col => col !== 'SRA Experiment accession');
 
+            // for the boxplot and histogram = categoricalColumns not in  (SRA Experiment accession, BioSample accession)
+            const cols_for_groupby = categoricalColumns.filter(col => col !== 'SRA Experiment accession' && col !== 'BioSample accession');
+
             let controlsHTML = '';
 
             if (plotType === 'scatter') {
@@ -2123,7 +2126,7 @@ Unique Experiments: ${uniqueExperiments}
                             <label for="group-by-${plotId}">Group By (Optional):</label>
                             <select id="group-by-${plotId}" class="form-control">
                                 <option value="">No Grouping</option>
-                                ${categoricalColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                                ${cols_for_groupby.map(col => `<option value="${col}">${col}</option>`).join('')}
                             </select>
                         </div>
                         <!-- SRA Assay Type -->
@@ -2199,6 +2202,14 @@ Unique Experiments: ${uniqueExperiments}
             if (paletteSelect) {
                 paletteSelect.addEventListener('change', () => updatePlot(plotId));
             }
+
+            // Help button event listener
+            const helpButton = document.getElementById(`help-button-${plotId}`);
+            helpButton.addEventListener('click', function () {
+                const helpModal = document.getElementById('help-modal');
+                helpModal.style.display = 'flex';
+            });
+
         }
 
         function initializeXAxisSlider(plotId) {
