@@ -2853,6 +2853,22 @@ Unique Experiments: ${uniqueExperiments}
                             document.getElementById(`hue-${plotConfig.plotId}`).value = plotConfig.controls.hue;
                             document.getElementById(`x-log-scale-${plotConfig.plotId}`).checked = plotConfig.controls.xLogScale;
                             document.getElementById(`y-log-scale-${plotConfig.plotId}`).checked = plotConfig.controls.yLogScale;
+
+                            // Initialize sliders
+                            initializeXAxisSlider(plotConfig.plotId);
+                            initializeYAxisSlider(plotConfig.plotId);
+
+                            // Restore slider positions
+                            const xSlider = document.getElementById(`x-range-slider-${plotConfig.plotId}`);
+                            const ySlider = document.getElementById(`y-range-slider-${plotConfig.plotId}`);
+
+                            if (xSlider.noUiSlider && plotConfig.controls.xRange) {
+                                xSlider.noUiSlider.set(plotConfig.controls.xRange);
+                            }
+
+                            if (ySlider.noUiSlider && plotConfig.controls.yRange) {
+                                ySlider.noUiSlider.set(plotConfig.controls.yRange);
+                            }
                         } else if (plotConfig.plotType === 'histogram' || plotConfig.plotType === 'boxplot') {
                             plotConfig.controls.numColumns.forEach(col => {
                                 const checkbox = document.getElementById(`num-column-${col}-${plotConfig.plotId}`);
@@ -2873,6 +2889,7 @@ Unique Experiments: ${uniqueExperiments}
 
                         // Restore title and notes
                         document.getElementById(`title-${plotConfig.plotId}`).value = plotConfig.title;
+                        document.getElementById(`plot-title-display-${plotConfig.plotId}`).textContent = plotConfig.title || `Plot ${plotConfig.plotId.split('-')[1]}`;
                         document.getElementById(`notes-${plotConfig.plotId}`).value = plotConfig.notes;
 
                         // Update the plot
@@ -2880,25 +2897,21 @@ Unique Experiments: ${uniqueExperiments}
                     });
 
                     // After all data is loaded and plots are restored, set selectedPoints
-                    // Collect IDs of all selected points from the session
                     const sessionSelectedIds = sessionData.selectedPoints;
 
-                    // If userData is present, and you want to select it, collect their IDs
                     let userDataIds = [];
                     if (userData) {
                         userDataIds = userData.map(row => {
                             if (row['SRA Experiment accession']) {
                                 return 'user_' + row['SRA Experiment accession'];
                             } else {
-                                return 'user_' + row._uniqueId; // Use the generated unique ID
+                                return 'user_' + row._uniqueId;
                             }
                         });
                     }
 
-                    // Combine all selected IDs
                     const allSelectedIds = sessionSelectedIds.concat(userDataIds);
 
-                    // Set selectedPoints based on combined IDs
                     selectedPoints = data.filter(row => allSelectedIds.includes(row._uniqueId));
 
                     // Update the table and highlight selected points
@@ -2907,11 +2920,13 @@ Unique Experiments: ${uniqueExperiments}
 
                     // Show notification
                     showNotification('Session imported successfully.');
-                }, false); // skip adding the initial plot
+
+                    // Hide loading modal
+                    document.getElementById('loading-modal').style.display = 'none';
+                }, false);
             } catch (error) {
                 alert('Failed to import session: ' + error.message);
-            } finally {
-                // Hide loading modal
+                // Hide loading modal in case of error
                 document.getElementById('loading-modal').style.display = 'none';
             }
         }
