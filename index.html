@@ -230,7 +230,7 @@
             padding: 10px 20px;
             font-size: 16px;
             color: white;
-            background-color: #3498db;
+            background-color: #0beac5;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -1077,7 +1077,7 @@
         }
 
         .search-button {
-            background-color: #3498db;
+            background-color: #2b2377;
             color: white;
             border: none;
             padding: 8px;
@@ -1455,14 +1455,6 @@
                     helpModal.style.display = 'none'; // Hide modal when clicking outside the content
                 }
             });
-
-            // Event listener for the search input to submit on Enter key
-            document.getElementById(`search-input-${plotId}`).addEventListener('keyup', function (event) {
-                if (event.key === 'Enter') {
-                    searchAndSelectPoints(plotId);
-                }
-            });
-
 
             // Event listener for the Import Session button
             document.getElementById('import-session').addEventListener('click', function () {
@@ -1928,7 +1920,7 @@ Unique Experiments: ${uniqueExperiments}
                                 <!-- Floating Search Button -->
                                 <div class="floating-search-button" id="floating-search-button-${plotId}">
                                     <button class="search-button" id="search-button-${plotId}">
-                                        <i class="fa fa-search"></i>
+                                        <i class="fa fa-search"></i> search by accession
                                     </button>
                                     <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
                                 </div>
@@ -2191,8 +2183,6 @@ Unique Experiments: ${uniqueExperiments}
             }
         }
 
-
-
         function initializeXAxisSlider(plotId) {
             const xAxis = document.getElementById(`x-axis-${plotId}`).value;
             const xSlider = document.getElementById(`x-range-slider-${plotId}`);
@@ -2447,7 +2437,12 @@ Unique Experiments: ${uniqueExperiments}
                         const xValue = parseFloat(row[xAxis]);
                         const yValue = parseFloat(row[yAxis]);
 
-                        if (hueValue >= hueMin && hueValue <= hueMax) {
+                        // **Apply x and y range filters along with hue range**
+                        if (
+                            hueValue >= hueMin && hueValue <= hueMax &&
+                            xValue >= xMin && xValue <= xMax &&
+                            yValue >= yMin && yValue <= yMax
+                        ) {
                             inRangeData.x.push(xValue);
                             inRangeData.y.push(yValue);
                             inRangeData.text.push(
@@ -2467,7 +2462,7 @@ Unique Experiments: ${uniqueExperiments}
                         }
                     });
 
-                    // Trace for points within hue range
+                    // Trace for points within hue and x/y ranges
                     const traceInRange = {
                         x: inRangeData.x,
                         y: inRangeData.y,
@@ -2495,7 +2490,7 @@ Unique Experiments: ${uniqueExperiments}
                         }
                     };
 
-                    // Trace for points outside hue range (faded)
+                    // Trace for points outside hue and x/y ranges (faded)
                     const traceOutOfRange = {
                         x: outOfRangeData.x,
                         y: outOfRangeData.y,
@@ -2505,8 +2500,8 @@ Unique Experiments: ${uniqueExperiments}
                         mode: 'markers',
                         type: 'scatter',
                         marker: {
-                            color: 'grey',
-                            size: 6,
+                            color: '#d7cef2',
+                            size: 2,
                             opacity: 0.2
                         },
                         showlegend: false,
@@ -2535,12 +2530,18 @@ Unique Experiments: ${uniqueExperiments}
                             const xValue = parseFloat(row[xAxis]);
                             const yValue = parseFloat(row[yAxis]);
 
-                            xData.push(xValue);
-                            yData.push(yValue);
-                            textData.push(
-                                hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>')
-                            );
-                            idsData.push(row._uniqueId);
+                            // **Apply x and y range filters without hue**
+                            if (
+                                xValue >= xMin && xValue <= xMax &&
+                                yValue >= yMin && yValue <= yMax
+                            ) {
+                                xData.push(xValue);
+                                yData.push(yValue);
+                                textData.push(
+                                    hoverColumns.map(col => `${col}: ${row[col]}`).join('<br>')
+                                );
+                                idsData.push(row._uniqueId);
+                            }
                         });
 
                         traces.push({
