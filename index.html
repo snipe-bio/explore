@@ -2228,164 +2228,85 @@ Unique Experiments: ${uniqueExperiments}
 
         }
 
+        // Function to initialize a slider for a given axis
+        function initializeSlider(plotId, axis, axisSliderId, axisMinInputId, axisMaxInputId, axisColumn, callback) {
+            const axisValue = document.getElementById(`${axis}-${plotId}`).value;
+            const axisSlider = document.getElementById(`${axisSliderId}-${plotId}`);
+            const axisMinInput = document.getElementById(`${axisMinInputId}-${plotId}`);
+            const axisMaxInput = document.getElementById(`${axisMaxInputId}-${plotId}`);
+
+            if (axisValue && axisSlider) {
+                const axisValues = data.map(row => parseFloat(row[axisValue])).filter(val => !isNaN(val));
+                const axisMin = Math.min(...axisValues);
+                const axisMax = Math.max(...axisValues);
+
+                if (axisSlider.noUiSlider) {
+                    axisSlider.noUiSlider.updateOptions({
+                        range: {
+                            'min': axisMin,
+                            'max': axisMax
+                        },
+                        start: [axisMin, axisMax]
+                    });
+                } else {
+                    noUiSlider.create(axisSlider, {
+                        start: [axisMin, axisMax],
+                        connect: true,
+                        range: {
+                            'min': axisMin,
+                            'max': axisMax
+                        }
+                    });
+
+                    axisSlider.noUiSlider.on('update', function (values, handle) {
+                        axisMinInput.value = parseFloat(values[0]).toFixed(2);
+                        axisMaxInput.value = parseFloat(values[1]).toFixed(2);
+
+                        // Debounce plot update
+                        clearTimeout(axisSlider.updateTimeout);
+                        axisSlider.updateTimeout = setTimeout(function () {
+                            callback(plotId);
+                        }, 500);
+                    });
+
+                    // Synchronize input boxes with slider
+                    axisMinInput.addEventListener('change', function () {
+                        axisSlider.noUiSlider.set([this.value, null]);
+                    });
+                    axisMaxInput.addEventListener('change', function () {
+                        axisSlider.noUiSlider.set([null, this.value]);
+                    });
+                }
+            }
+        }
+
+        // Wrapper for X-axis slider initialization
         function initializeXAxisSlider(plotId) {
-            const xAxis = document.getElementById(`x-axis-${plotId}`).value;
-            const xSlider = document.getElementById(`x-range-slider-${plotId}`);
-            const xMinInput = document.getElementById(`x-range-min-input-${plotId}`);
-            const xMaxInput = document.getElementById(`x-range-max-input-${plotId}`);
-            if (xAxis && xSlider) {
-                const xValues = data.map(row => parseFloat(row[xAxis])).filter(val => !isNaN(val));
-                const xMin = Math.min(...xValues);
-                const xMax = Math.max(...xValues);
-                if (xSlider.noUiSlider) {
-                    xSlider.noUiSlider.updateOptions({
-                        range: {
-                            'min': xMin,
-                            'max': xMax
-                        },
-                        start: [xMin, xMax]
-                    });
-                } else {
-                    noUiSlider.create(xSlider, {
-                        start: [xMin, xMax],
-                        connect: true,
-                        range: {
-                            'min': xMin,
-                            'max': xMax
-                        }
-                    });
-                    xSlider.noUiSlider.on('update', function (values, handle) {
-                        xMinInput.value = parseFloat(values[0]).toFixed(2);
-                        xMaxInput.value = parseFloat(values[1]).toFixed(2);
-
-                        // Debounce plot update
-                        clearTimeout(xSlider.updateTimeout);
-                        xSlider.updateTimeout = setTimeout(function () {
-                            updatePlot(plotId);
-                        }, 500);
-                    });
-                    // Synchronize input boxes with slider
-                    xMinInput.addEventListener('change', function () {
-                        xSlider.noUiSlider.set([this.value, null]);
-                    });
-                    xMaxInput.addEventListener('change', function () {
-                        xSlider.noUiSlider.set([null, this.value]);
-                    });
-                }
-            }
+            initializeSlider(plotId, 'x-axis', 'x-range-slider', 'x-range-min-input', 'x-range-max-input', 'xAxis', updatePlot);
         }
 
-
+        // Wrapper for Y-axis slider initialization
         function initializeYAxisSlider(plotId) {
-            const yAxis = document.getElementById(`y-axis-${plotId}`).value;
-            const ySlider = document.getElementById(`y-range-slider-${plotId}`);
-            const yMinInput = document.getElementById(`y-range-min-input-${plotId}`);
-            const yMaxInput = document.getElementById(`y-range-max-input-${plotId}`);
-            if (yAxis && ySlider) {
-                const yValues = data.map(row => parseFloat(row[yAxis])).filter(val => !isNaN(val));
-                const yMin = Math.min(...yValues);
-                const yMax = Math.max(...yValues);
-                if (ySlider.noUiSlider) {
-                    ySlider.noUiSlider.updateOptions({
-                        range: {
-                            'min': yMin,
-                            'max': yMax
-                        },
-                        start: [yMin, yMax]
-                    });
-                } else {
-                    noUiSlider.create(ySlider, {
-                        start: [yMin, yMax],
-                        connect: true,
-                        range: {
-                            'min': yMin,
-                            'max': yMax
-                        }
-                    });
-                    ySlider.noUiSlider.on('update', function (values, handle) {
-                        yMinInput.value = parseFloat(values[0]).toFixed(2);
-                        yMaxInput.value = parseFloat(values[1]).toFixed(2);
-
-                        // Debounce plot update
-                        clearTimeout(ySlider.updateTimeout);
-                        ySlider.updateTimeout = setTimeout(function () {
-                            updatePlot(plotId);
-                        }, 500);
-                    });
-                    ySlider.noUiSlider.on('change', function (values, handle) {
-                        // Delay updating the plot
-                        clearTimeout(ySlider.updateTimeout);
-                        ySlider.updateTimeout = setTimeout(function () {
-                            updatePlot(plotId);
-                        }, 500); // 500ms delay
-                    });
-                    // Synchronize input boxes with slider
-                    yMinInput.addEventListener('change', function () {
-                        ySlider.noUiSlider.set([this.value, null]);
-                    });
-                    yMaxInput.addEventListener('change', function () {
-                        ySlider.noUiSlider.set([null, this.value]);
-                    });
-                }
-            }
+            initializeSlider(plotId, 'y-axis', 'y-range-slider', 'y-range-min-input', 'y-range-max-input', 'yAxis', updatePlot);
         }
 
-
+        // Wrapper for Hue slider initialization
         function initializeHueSlider(plotId) {
             const hueColumn = document.getElementById(`hue-${plotId}`).value;
             const hueSliderContainer = document.getElementById(`hue-range-slider-container-${plotId}`);
             const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
             const hueMinInput = document.getElementById(`hue-range-min-input-${plotId}`);
             const hueMaxInput = document.getElementById(`hue-range-max-input-${plotId}`);
+
             if (hueColumn && hueSlider) {
                 const hueValues = data.map(row => parseFloat(row[hueColumn])).filter(val => !isNaN(val));
                 const hueMin = Math.min(...hueValues);
                 const hueMax = Math.max(...hueValues);
                 const isHueNumeric = data.some(row => isNumeric(row[hueColumn]));
+
                 if (isHueNumeric) {
                     hueSliderContainer.style.display = 'flex';
-                    if (hueSlider.noUiSlider) {
-                        hueSlider.noUiSlider.updateOptions({
-                            range: {
-                                'min': hueMin,
-                                'max': hueMax
-                            },
-                            start: [hueMin, hueMax]
-                        });
-                    } else {
-                        noUiSlider.create(hueSlider, {
-                            start: [hueMin, hueMax],
-                            connect: true,
-                            range: {
-                                'min': hueMin,
-                                'max': hueMax
-                            }
-                        });
-                        hueSlider.noUiSlider.on('update', function (values, handle) {
-                            hueMinInput.value = parseFloat(values[0]).toFixed(2);
-                            hueMaxInput.value = parseFloat(values[1]).toFixed(2);
-
-                            // Debounce plot update
-                            clearTimeout(hueSlider.updateTimeout);
-                            hueSlider.updateTimeout = setTimeout(function () {
-                                updatePlot(plotId);
-                            }, 500);
-                        });
-                        hueSlider.noUiSlider.on('change', function (values, handle) {
-                            // Delay updating the plot
-                            clearTimeout(hueSlider.updateTimeout);
-                            hueSlider.updateTimeout = setTimeout(function () {
-                                updatePlot(plotId);
-                            }, 500); // 500ms delay
-                        });
-                        // Synchronize input boxes with slider
-                        hueMinInput.addEventListener('change', function () {
-                            hueSlider.noUiSlider.set([this.value, null]);
-                        });
-                        hueMaxInput.addEventListener('change', function () {
-                            hueSlider.noUiSlider.set([null, this.value]);
-                        });
-                    }
+                    initializeSlider(plotId, 'hue', 'hue-range-slider', 'hue-range-min-input', 'hue-range-max-input', 'hueColumn', updatePlot);
                 } else {
                     hueSliderContainer.style.display = 'none';
                     if (hueSlider.noUiSlider) {
@@ -2399,6 +2320,7 @@ Unique Experiments: ${uniqueExperiments}
                 }
             }
         }
+
 
 
 
