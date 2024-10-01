@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snipe SRA Exploration Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.18.0/plotly.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
@@ -2859,6 +2859,8 @@ Unique Experiments: ${uniqueExperiments}
 
                 Plotly.newPlot(plotDiv, traces, layout).then(() => {
                     plotDiv.on('plotly_click', (eventData) => onPointClick(eventData, plotId));
+                    // Handle multiple points selection (lasso/box selection)
+                    //plotDiv.on('plotly_selected', (eventData) => onPointsSelected(eventData, plotId));
                     highlightSelectedPoints();
                 });
 
@@ -2997,7 +2999,29 @@ Unique Experiments: ${uniqueExperiments}
                     const plotId = `plot-${i}`;
                     const plotDiv = document.getElementById(plotId);
                     if (plotDiv && plotDiv.data) {
-                        const update = { selectedpoints: [] };
+                        const update = {
+                            selectedpoints: [],
+                            selected: {
+                                marker: {
+                                    zorder: 99999999,
+                                    size: 8,
+                                    symbol: 'circle',
+                                    color: 'black',
+                                    opacity: 1,
+                                    line: {
+                                        color: 'red',
+                                        width: 1,
+                                    }
+                                },
+                            },
+                            unselected: {
+                                marker: {
+                                    zorder: 1,
+                                    opacity: 0.9,
+                                }
+                            }
+                        };
+
                         plotDiv.data.forEach((trace) => {
                             const selectedIndices = [];
                             if (trace.ids) {
