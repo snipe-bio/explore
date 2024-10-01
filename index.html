@@ -1888,11 +1888,28 @@ Unique Experiments: ${uniqueExperiments}
             plotCounter++;
             const plotId = `plot-${plotCounter}`;
             let plotHTML = `
-                <div class="plot-container mt-4">
+                <div class="plot-container mt-4" id="container-${plotId}">
                     <!-- Plot Frame -->
                     <div class="card">
+                        <!-- Title Bar -->
+                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                            <!-- Title -->
+                            <h5 id="plot-title-display-${plotId}" class="mb-0">Plot ${plotCounter}</h5>
+                            <!-- Title Bar Buttons -->
+                            <div class="plot-window-controls">
+                                <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm" title="Minimize">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none" title="Maximize">
+                                    <i class="fa fa-window-maximize"></i>
+                                </button>
+                                <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                         <!-- Plot Type Selection -->
-                        <div class="card-header">
+                        <div class="card-body" id="body-${plotId}">
                             <div class="row">
                                 <div class="col-md-10">
                                     <label for="plot-type-${plotId}">Plot Type:</label>
@@ -1906,30 +1923,21 @@ Unique Experiments: ${uniqueExperiments}
                                     <button id="help-button-${plotId}" class="btn btn-info btn-block">Help</button>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Plot Control Panel -->
-                        <div class="card-body">
-                            <div id="dynamic-controls-${plotId}"></div>
-                        </div>
-                        <!-- Plot Area -->
-                        <div class="card-body">
-                            <!-- Plot Title Display -->
-                            <h3 id="plot-title-display-${plotId}" class="plot-title mt-3 text-center">Plot ${plotCounter}</h3>
+                            <!-- Plot Control Panel -->
+                            <div id="dynamic-controls-${plotId}" class="mt-3"></div>
                             <!-- Plot Area -->
                             <div class="plot-area" style="position: relative;">
                                 <div id="${plotId}" class="plot"></div>
                                 <!-- Floating Search Button -->
                                 <div class="floating-search-button" id="floating-search-button-${plotId}">
                                     <button class="search-button" id="search-button-${plotId}">
-                                        <i class="fa fa-search"></i> search by accession
+                                        <i class="fa fa-search"></i> Search by accession
                                     </button>
                                     <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
                                 </div>
                             </div>
-                        </div>
-                        <!-- Plot Title, Notes, and Export Button -->
-                        <div class="card-body">
-                            <div class="row">
+                            <!-- Title, Notes, and Export Button -->
+                            <div class="row mt-3">
                                 <div class="col-md-6">
                                     <label for="title-${plotId}">Plot Title:</label>
                                     <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
@@ -1939,12 +1947,9 @@ Unique Experiments: ${uniqueExperiments}
                                     <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
                                 </div>
                             </div>
-                            <!-- Export Plot Button -->
-                            <div class="mt-3">
-                                <button id="export-plot-${plotId}" class="btn btn-primary">
-                                    <i class="fa fa-download"></i> Export Plot
-                                </button>
-                            </div>
+                            <button id="export-plot-${plotId}" class="btn btn-primary mt-3">
+                                <i class="fa fa-download"></i> Export Plot
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1965,10 +1970,7 @@ Unique Experiments: ${uniqueExperiments}
 
             exportPlotButton.addEventListener('click', () => exportPlot(plotId));
 
-            // Attach event listener to the search button and input
             document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints(plotId));
-
-            // Event listener for the search input to submit on Enter key
             document.getElementById(`search-input-${plotId}`).addEventListener('keyup', function (event) {
                 if (event.key === 'Enter') {
                     searchAndSelectPoints(plotId);
@@ -1977,6 +1979,36 @@ Unique Experiments: ${uniqueExperiments}
 
             // Initialize plot
             updatePlot(plotId);
+
+            // Minimize/Maximize/Close button functionality
+            document.getElementById(`minimize-plot-${plotId}`).addEventListener('click', () => minimizePlot(plotId));
+            document.getElementById(`maximize-plot-${plotId}`).addEventListener('click', () => maximizePlot(plotId));
+            document.getElementById(`close-plot-${plotId}`).addEventListener('click', () => closePlot(plotId));
+        }
+
+        function minimizePlot(plotId) {
+            const body = document.getElementById(`body-${plotId}`);
+            const minimizeButton = document.getElementById(`minimize-plot-${plotId}`);
+            const maximizeButton = document.getElementById(`maximize-plot-${plotId}`);
+
+            body.style.display = 'none';
+            minimizeButton.classList.add('d-none');
+            maximizeButton.classList.remove('d-none');
+        }
+
+        function maximizePlot(plotId) {
+            const body = document.getElementById(`body-${plotId}`);
+            const minimizeButton = document.getElementById(`minimize-plot-${plotId}`);
+            const maximizeButton = document.getElementById(`maximize-plot-${plotId}`);
+
+            body.style.display = 'block';
+            minimizeButton.classList.remove('d-none');
+            maximizeButton.classList.add('d-none');
+        }
+
+        function closePlot(plotId) {
+            const plotContainer = document.getElementById(`container-${plotId}`);
+            plotContainer.remove();
         }
 
 
