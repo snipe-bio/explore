@@ -1893,9 +1893,20 @@ Unique Experiments: ${uniqueExperiments}
                     <div class="card">
                         <!-- Title Bar -->
                         <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-                            <!-- Title -->
-                            <h5 id="plot-title-display-${plotId}" class="mb-0">Plot ${plotCounter}</h5>
-                            <!-- Title Bar Buttons -->
+                            <!-- File Dropdown on the Left -->
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="file-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    File
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="file-menu-${plotId}">
+                                    <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
+                                    <button class="dropdown-item" id="export-tsv-${plotId}">Export TSV for current view</button>
+                                    <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export Selected Points</button>
+                                </div>
+                            </div>
+                            <!-- Plot Title in the Center -->
+                            <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
+                            <!-- Title Bar Buttons (Right-Aligned) -->
                             <div class="plot-window-controls">
                                 <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm" title="Minimize">
                                     <i class="fa fa-minus"></i>
@@ -1947,9 +1958,6 @@ Unique Experiments: ${uniqueExperiments}
                                     <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
                                 </div>
                             </div>
-                            <button id="export-plot-${plotId}" class="btn btn-primary mt-3">
-                                <i class="fa fa-download"></i> Export Plot
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -1957,7 +1965,6 @@ Unique Experiments: ${uniqueExperiments}
             plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
 
             const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
-            const exportPlotButton = document.getElementById(`export-plot-${plotId}`);
             const titleInput = document.getElementById(`title-${plotId}`);
             const plotTitleDisplay = document.getElementById(`plot-title-display-${plotId}`);
 
@@ -1968,7 +1975,10 @@ Unique Experiments: ${uniqueExperiments}
 
             renderDynamicControls(plotId);
 
-            exportPlotButton.addEventListener('click', () => exportPlot(plotId));
+            // Attach event listener to the dropdown items
+            document.getElementById(`save-as-png-${plotId}`).addEventListener('click', () => savePlotAsPNG(plotId));
+            document.getElementById(`export-tsv-${plotId}`).addEventListener('click', () => exportCurrentViewAsTSV(plotId));
+            document.getElementById(`export-selected-tsv-${plotId}`).addEventListener('click', () => exportSelectedPointsAsTSV(plotId));
 
             document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints(plotId));
             document.getElementById(`search-input-${plotId}`).addEventListener('keyup', function (event) {
@@ -1984,6 +1994,96 @@ Unique Experiments: ${uniqueExperiments}
             document.getElementById(`minimize-plot-${plotId}`).addEventListener('click', () => minimizePlot(plotId));
             document.getElementById(`maximize-plot-${plotId}`).addEventListener('click', () => maximizePlot(plotId));
             document.getElementById(`close-plot-${plotId}`).addEventListener('click', () => closePlot(plotId));
+        }
+
+        function savePlotAsPNG(plotId) {
+            const plotDiv = document.getElementById(plotId);
+            Plotly.toImage(plotDiv, { format: 'png', width: 1200, height: 800 }).then(function (dataUrl) {
+                const link = document.createElement('a');
+                link.download = `${plotId}.png`;
+                link.href = dataUrl;
+                link.click();
+            });
+        }
+
+        function exportCurrentViewAsTSV(plotId) {
+            // Retrieve current plot data, which is filtered by axes, range sliders, etc.
+            let currentViewData = getFilteredData(plotId);
+
+            if (currentViewData.length === 0) {
+                alert('No data to export. Please apply filters or selections first.');
+                return;
+            }
+
+            const columns = Object.keys(currentViewData[0]).filter(col => !col.startsWith('_'));
+            let tsvContent = columns.join('\t') + '\n';
+
+            currentViewData.forEach(point => {
+                const row = columns.map(col => point[col]).join('\t');
+                tsvContent += row + '\n';
+            });
+
+            const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `current_view_${plotId}.tsv`;
+            link.click();
+        }
+
+        function exportSelectedPointsAsTSV(plotId) {
+            // Get the current view's filtered data
+            let filteredData = getFilteredData(plotId);
+
+            // Intersect filteredData with selectedPoints
+            let selectedFilteredData = filteredData.filter(row => selectedPoints.some(p => p._uniqueId === row._uniqueId));
+
+            if (selectedFilteredData.length === 0) {
+                alert('No selected points to export for the current view.');
+                return;
+            }
+
+            const columns = Object.keys(selectedFilteredData[0]).filter(col => !col.startsWith('_'));
+            let tsvContent = columns.join('\t') + '\n';
+
+            selectedFilteredData.forEach(point => {
+                const row = columns.map(col => point[col]).join('\t');
+                tsvContent += row + '\n';
+            });
+
+            const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `selected_points_${plotId}.tsv`;
+            link.click();
+        }
+
+        function getFilteredData(plotId) {
+            const xAxis = document.getElementById(`x-axis-${plotId}`).value;
+            const yAxis = document.getElementById(`y-axis-${plotId}`).value;
+
+            const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+            const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+
+            let xMin = null, xMax = null, yMin = null, yMax = null;
+
+            if (xSlider && xSlider.noUiSlider) {
+                const xRange = xSlider.noUiSlider.get();
+                xMin = parseFloat(xRange[0]);
+                xMax = parseFloat(xRange[1]);
+            }
+
+            if (ySlider && ySlider.noUiSlider) {
+                const yRange = ySlider.noUiSlider.get();
+                yMin = parseFloat(yRange[0]);
+                yMax = parseFloat(yRange[1]);
+            }
+
+            // Filter data based on X and Y ranges and selection
+            return currentPlotData.filter(row => {
+                const xValue = parseFloat(row[xAxis]);
+                const yValue = parseFloat(row[yAxis]);
+                return !isNaN(xValue) && xValue >= xMin && xValue <= xMax && !isNaN(yValue) && yValue >= yMin && yValue <= yMax;
+            });
         }
 
         function minimizePlot(plotId) {
