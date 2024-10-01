@@ -1884,7 +1884,7 @@ Unique Experiments: ${uniqueExperiments}
 
 
         // Updated addNewPlot function
-        function addNewPlot() {
+        function addNewPlot(config = {}) {
             plotCounter++;
             const plotId = `plot-${plotCounter}`;
             let plotHTML = `
@@ -1914,6 +1914,9 @@ Unique Experiments: ${uniqueExperiments}
                                 <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none" title="Maximize">
                                     <i class="fa fa-window-maximize"></i>
                                 </button>
+                                <button id="clone-plot-${plotId}" class="btn btn-light btn-sm" title="Clone">
+                                    <i class="fa fa-clone"></i>
+                                </button>
                                 <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
                                     <i class="fa fa-times"></i>
                                 </button>
@@ -1934,7 +1937,7 @@ Unique Experiments: ${uniqueExperiments}
                                     <button id="help-button-${plotId}" class="btn btn-info btn-block">Help</button>
                                 </div>
                             </div>
-                            <!-- Plot Control Panel -->
+                            <!-- Dynamic Controls will be rendered here -->
                             <div id="dynamic-controls-${plotId}" class="mt-3"></div>
                             <!-- Plot Area -->
                             <div class="plot-area" style="position: relative;">
@@ -1968,12 +1971,25 @@ Unique Experiments: ${uniqueExperiments}
             const titleInput = document.getElementById(`title-${plotId}`);
             const plotTitleDisplay = document.getElementById(`plot-title-display-${plotId}`);
 
-            plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId));
+            // Set initial values if config is provided
+            if (config.plotType) {
+                plotTypeSelect.value = config.plotType;
+            }
+
+            // Attach event listeners
+            plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId, config));
             titleInput.addEventListener('input', () => {
                 plotTitleDisplay.textContent = titleInput.value || `Plot ${plotCounter}`;
             });
 
-            renderDynamicControls(plotId);
+            // Set title if provided
+            if (config.title) {
+                titleInput.value = config.title;
+                plotTitleDisplay.textContent = config.title;
+            }
+
+            // Render dynamic controls with or without config
+            renderDynamicControls(plotId, config);
 
             // Attach event listener to the dropdown items
             document.getElementById(`save-as-png-${plotId}`).addEventListener('click', () => savePlotAsPNG(plotId));
@@ -1987,14 +2003,82 @@ Unique Experiments: ${uniqueExperiments}
                 }
             });
 
-            // Initialize plot
-            updatePlot(plotId);
-
-            // Minimize/Maximize/Close button functionality
+            // Event listeners for control buttons
             document.getElementById(`minimize-plot-${plotId}`).addEventListener('click', () => minimizePlot(plotId));
             document.getElementById(`maximize-plot-${plotId}`).addEventListener('click', () => maximizePlot(plotId));
             document.getElementById(`close-plot-${plotId}`).addEventListener('click', () => closePlot(plotId));
+            document.getElementById(`clone-plot-${plotId}`).addEventListener('click', () => clonePlot(plotId));
+
+            // Initialize plot
+            if (!config.plotType) {
+                updatePlot(plotId);
+            }
         }
+
+        function clonePlot(plotId) {
+            // Gather the configuration of the plot with id plotId
+            const plotType = document.getElementById(`plot-type-${plotId}`).value;
+
+            const config = {
+                plotType: plotType,
+                title: document.getElementById(`title-${plotId}`).value,
+                notes: document.getElementById(`notes-${plotId}`).value,
+            };
+
+            if (plotType === 'scatter') {
+                config.xAxis = document.getElementById(`x-axis-${plotId}`).value;
+                config.yAxis = document.getElementById(`y-axis-${plotId}`).value;
+                config.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
+                config.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
+                config.hue = document.getElementById(`hue-${plotId}`).value;
+                config.palette = document.getElementById(`palette-${plotId}`).value;
+
+                // Assay types
+                const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]`);
+                config.assayTypes = Array.from(assayTypeCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
+
+                // Sliders: x-range and y-range
+                const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+                if (xSlider && xSlider.noUiSlider) {
+                    config.xRange = xSlider.noUiSlider.get();
+                }
+
+                const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+                if (ySlider && ySlider.noUiSlider) {
+                    config.yRange = ySlider.noUiSlider.get();
+                }
+
+                // Hue slider
+                const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
+                if (hueSlider && hueSlider.noUiSlider) {
+                    config.hueRange = hueSlider.noUiSlider.get();
+                }
+            }
+            else if (plotType === 'histogram' || plotType === 'boxplot') {
+                // Selected numerical columns
+                const numColumnCheckboxes = document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]`);
+                config.numColumns = Array.from(numColumnCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
+
+                // Group By
+                config.groupBy = document.getElementById(`group-by-${plotId}`).value;
+
+                // Assay types
+                const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]`);
+                config.assayTypes = Array.from(assayTypeCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
+            }
+
+            // Now add new plot with this configuration
+            addNewPlot(config);
+
+            // Scroll to the new plot
+            const newPlotId = `plot-${plotCounter}`; // Assuming plotCounter has been incremented in addNewPlot
+            const newPlotContainer = document.getElementById(`container-${newPlotId}`);
+            if (newPlotContainer) {
+                newPlotContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+
 
         function savePlotAsPNG(plotId) {
             const plotDiv = document.getElementById(plotId);
@@ -2115,7 +2199,7 @@ Unique Experiments: ${uniqueExperiments}
 
 
 
-        function renderDynamicControls(plotId) {
+        function renderDynamicControls(plotId, config = {}) {
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
             const dynamicControlsDiv = document.getElementById(`dynamic-controls-${plotId}`);
 
@@ -2124,8 +2208,6 @@ Unique Experiments: ${uniqueExperiments}
             const categoricalColumns = columns.filter(col => !numericalColumns.includes(col));
 
             const cols_for_colorby = columns.filter(col => col !== 'SRA Experiment accession');
-
-            // for the boxplot and histogram = categoricalColumns not in  (SRA Experiment accession, BioSample accession)
             const cols_for_groupby = categoricalColumns.filter(col => col !== 'SRA Experiment accession' && col !== 'BioSample accession');
 
             let controlsHTML = '';
@@ -2184,7 +2266,6 @@ Unique Experiments: ${uniqueExperiments}
                                 <option value="Jet">Jet</option>
                                 <option value="Rainbow">Rainbow</option>
                                 <option value="Bluered">Bluered</option>
-                                <!-- Add more palettes as desired -->
                             </select>
                         </div>
                     </div>
@@ -2313,7 +2394,6 @@ Unique Experiments: ${uniqueExperiments}
             // Initialize sliders when xAxis and yAxis change
             const xAxisSelect = document.getElementById(`x-axis-${plotId}`);
             const yAxisSelect = document.getElementById(`y-axis-${plotId}`);
-            // Attach event listener to hue select input
             const hueSelect = document.getElementById(`hue-${plotId}`);
 
             if (xAxisSelect) {
@@ -2337,18 +2417,82 @@ Unique Experiments: ${uniqueExperiments}
                 });
             }
 
-            // Show or hide the floating search button based on plot type
-            const floatingSearchButton = document.getElementById(`floating-search-button-${plotId}`);
-            if (plotType === 'scatter') {
-                floatingSearchButton.style.display = 'block';
-            } else {
-                floatingSearchButton.style.display = 'none';
-            }
+            // Set control values based on config
+            if (config) {
+                if (plotType === 'scatter') {
+                    if (config.xAxis) xAxisSelect.value = config.xAxis;
+                    if (config.yAxis) yAxisSelect.value = config.yAxis;
+                    if (config.xLogScale !== undefined) document.getElementById(`x-log-scale-${plotId}`).checked = config.xLogScale;
+                    if (config.yLogScale !== undefined) document.getElementById(`y-log-scale-${plotId}`).checked = config.yLogScale;
+                    if (config.hue) hueSelect.value = config.hue;
+                    if (config.palette) document.getElementById(`palette-${plotId}`).value = config.palette;
 
-            // Ensure the palette selection updates the plot
-            const paletteSelect = document.getElementById(`palette-${plotId}`);
-            if (paletteSelect) {
-                paletteSelect.addEventListener('change', () => updatePlot(plotId));
+                    // Assay types
+                    if (config.assayTypes) {
+                        config.assayTypes.forEach(assayType => {
+                            const checkbox = document.querySelector(`#assay-type-checkboxes-${plotId} input[value="${assayType.value}"]`);
+                            if (checkbox) {
+                                checkbox.checked = assayType.checked;
+                            }
+                        });
+                    }
+
+                    // Initialize sliders
+                    if (config.xAxis) {
+                        xAxisSelect.dispatchEvent(new Event('change'));
+                        if (config.xRange) {
+                            const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+                            if (xSlider && xSlider.noUiSlider) {
+                                xSlider.noUiSlider.set(config.xRange);
+                            }
+                        }
+                    }
+
+                    if (config.yAxis) {
+                        yAxisSelect.dispatchEvent(new Event('change'));
+                        if (config.yRange) {
+                            const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+                            if (ySlider && ySlider.noUiSlider) {
+                                ySlider.noUiSlider.set(config.yRange);
+                            }
+                        }
+                    }
+
+                    if (config.hue) {
+                        hueSelect.dispatchEvent(new Event('change'));
+                        if (config.hueRange) {
+                            const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
+                            if (hueSlider && hueSlider.noUiSlider) {
+                                hueSlider.noUiSlider.set(config.hueRange);
+                            }
+                        }
+                    }
+                } else if (plotType === 'histogram' || plotType === 'boxplot') {
+                    // Numerical columns
+                    if (config.numColumns) {
+                        config.numColumns.forEach(numCol => {
+                            const checkbox = document.querySelector(`#checkbox-group-${plotId} input[value="${numCol.value}"]`);
+                            if (checkbox) {
+                                checkbox.checked = numCol.checked;
+                            }
+                        });
+                    }
+
+                    // Group By
+                    if (config.groupBy) {
+                        document.getElementById(`group-by-${plotId}`).value = config.groupBy;
+                    }
+
+                    // Assay types
+                    if (config.assayTypes) {
+                        config.assayTypes.forEach(assayType => {
+                            const checkbox = document.querySelector(`#assay-type-checkboxes-${plotId} input[value="${assayType.value}"]`);
+                            if (checkbox) {
+                                checkbox.checked = assayType.checked;
+                            }
+                        });
+                    }
+                }
             }
 
             // Help button event listener
@@ -2358,7 +2502,10 @@ Unique Experiments: ${uniqueExperiments}
                 helpModal.style.display = 'flex';
             });
 
+            // Update the plot
+            updatePlot(plotId);
         }
+
 
         // Function to initialize a slider for a given axis
         function initializeSlider(plotId, axis, axisSliderId, axisMinInputId, axisMaxInputId, axisColumn, callback) {
