@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Normalized </title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .controls input, .controls button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #plotContainer {
+            width: 100%;
+            height: 600px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .metadata-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        .metadata-table th, .metadata-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .metadata-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Chromosome Abundance Plotter</h1>
+    
+    <div class="container">
+        <div class="controls">
+            <div>
+                <label for="experimentSearch">Search Experiment:</label>
+                <input type="text" id="experimentSearch" placeholder="Enter experiment ID">
+            </div>
+            <div>
+                <button id="drawButton">Draw</button>
+                <button id="exportButton">Export Plot</button>
+            </div>
+        </div>
+        
+        <div id="plotContainer"></div>
+
+        <table class="metadata-table" id="metadataTable">
+            <thead>
+                <tr>
+                    <th>Biosample</th>
+                    <th>Experiment</th>
+                    <th>Autosomal CV</th>
+                    <th>Genomic Mean Abundance</th>
+                    <th>Xploidy Score</th>
+                    <th>Y Coverage</th>
+                </tr>
+            </thead>
+            <tbody id="metadataBody">
+                <!-- Metadata will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let data;
+
+        // Load TSV file from disk
+        fetch('CV_subset_df_for_visualization.tsv')
+            .then(response => response.text())
+            .then(text => {
+                data = parseTSV(text); // Parse the TSV file
+            });
+
+        // Parse the TSV file into an object
+        function parseTSV(tsvText) {
+            const lines = tsvText.split('\n');
+            const headers = lines[0].split('\t');
+            return lines.slice(1).map(line => {
+                const cols = line.split('\t');
+                let obj = {};
+                headers.forEach((header, index) => {
+                    obj[header] = cols[index];
+                });
+                return obj;
+            });
+        }
+
+        // Draw bar plot for selected experiment
+        document.getElementById('drawButton').addEventListener('click', function() {
+            const experimentSearch = document.getElementById('experimentSearch').value.trim();
+            const selectedData = data.find(d => d.experiment === experimentSearch);
+
+            if (selectedData) {
+                drawPlot(selectedData);
+                displayMetadata(selectedData);
+            } else {
+                alert("Experiment not found");
+            }
+        });
+
+        // Display metadata in a table
+        function displayMetadata(data) {
+            const metadataBody = document.getElementById('metadataBody');
+            metadataBody.innerHTML = `
+                <tr>
+                    <td>${data.biosample}</td>
+                    <td>${data.experiment}</td>
+                    <td>${parseFloat(data.autosomals_CV).toFixed(4)}</td>
+                    <td>${parseFloat(data.genomic_mean_abundance).toFixed(4)}</td>
+                    <td>${parseFloat(data.xploidy_score).toFixed(4)}</td>
+                    <td>${parseFloat(data.y_coverage).toFixed(4)}</td>
+                </tr>
+            `;
+        }
+
+        // Draw the plot using Plotly
+        function drawPlot(data) {
+            const chrs = [...Array(38)].map((_, i) => `CHR${i+1}`).concat(['CHRX', 'CHRY']);
+            
+            const values = chrs.map(chr => {
+                const value = parseFloat(data[chr]);
+                return isNaN(value) ? 0 : value;
+            });
+            
+            // Colors array for each bar
+            const colors = [
+                '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
+                '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#1f77b4', '#ff9896',
+                '#98df8a', '#c5b0d5', '#ffbb78', '#c49c94', '#f7b6d2', '#c7c7c7',
+                '#dbdb8d', '#9edae5', '#ff9896', '#c49c94', '#c7c7c7', '#dbdb8d',
+                '#9edae5', '#bcbd22', '#17becf', '#e377c2', '#9467bd', '#8c564b',
+                '#f7b6d2', '#7f7f7f', '#bcbd22', '#ffbb78', '#c5b0d5', '#e377c2',
+                '#17becf', '#1f77b4', '#ff7f0e', '#2ca02c'
+            ];
+
+            const plotData = [{
+                x: chrs,
+                y: values,
+                type: 'bar',
+                marker: { color: colors }
+            }];
+
+            const layout = {
+                title: `Normalized Chromosome Abundance - ${data.biosample}_${data.experiment}`,
+                autosize: true,
+                width: 1200,
+                height: 600,
+                margin: {
+                    l: 50,
+                    r: 50,
+                    b: 120,
+                    t: 50,
+                    pad: 4
+                },
+                xaxis: { 
+                    title: 'Chromosome',
+                    tickmode: 'array',
+                    tickvals: chrs,
+                    ticktext: chrs.map(chr => chr.replace('CHR', '')),
+                    tickangle: -45,
+                    automargin: true
+                },
+                yaxis: { title: 'Normalized Total Abundance' }
+            };
+
+            Plotly.newPlot('plotContainer', plotData, layout);
+        }
+
+        // Export plot as PNG with 300 dpi
+        document.getElementById('exportButton').addEventListener('click', function() {
+            Plotly.downloadImage('plotContainer', {
+                format: 'png',
+                width: 1200,
+                height: 800,
+                filename: 'chromosome_abundance_plot'
+            });
+        });
+    </script>
+
+
+</body>
+</html>
