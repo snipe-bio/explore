@@ -1637,7 +1637,7 @@
                 delimiter: "\t",
             });
             const userDataArray = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
-
+        
             if (uploadMode === 'replace') {
                 // Clear existing data and plots
                 clearAllData();
@@ -1646,6 +1646,10 @@
             } else if (uploadMode === 'append') {
                 // Integrate user data with existing data
                 integrateUserData(userDataArray);
+        
+                // Add user data points to selectedPoints
+                selectedPoints = selectedPoints.concat(userDataArray);
+        
                 // Update plots and table
                 for (let i = 1; i <= plotCounter; i++) {
                     const plotId = `plot-${i}`;
@@ -1732,6 +1736,7 @@
                     // I Disabled this to prevent adding a plot when loading user data
                     // TODO: fix to more professional solution
                     //if (addInitialPlot) {addNewPlot(); }
+                    
 
                     // Show the add-view button
                     document.getElementById('add-view-container').style.display = 'block';
@@ -1760,7 +1765,7 @@
             logInfoDiv.style.display = 'block';
 
             const totalPoints = data.length;
-            const assayTypes = [...new Set(data.map(row => row["SRA Assay type"]))];
+            const assayTypes = [...new Set(data.map(row => row["SRA Assay type"] || 'Unknown').filter(type => type))];
             const assayTypeCounts = assayTypes.map(type => {
                 const count = data.filter(row => row["SRA Assay type"] === type).length;
                 return `    ${type}: ${count}`;
@@ -2606,33 +2611,33 @@ Unique Experiments: ${uniqueExperiments}
 
         function searchAndSelectPoints(plotId) {
             const searchInput = document.getElementById(`search-input-${plotId}`);
-            let searchText = searchInput.value.trim();
-
+            let searchText = searchInput.value.trim().toLowerCase();
+        
             if (searchText === '') {
                 return;
             }
-
+        
             const matchingPoints = data.filter(row => {
-                return ['BioProject accession', 'BioSample accession', 'SRA Experiment accession'].some(col => {
-                    // Exact search
-                    return row[col] && row[col].toString().toLowerCase() === searchText.toLowerCase();
+                return ['BioProject accession', 'BioSample accession', 'SRA Experiment accession', '_uniqueId'].some(col => {
+                    return row[col] && row[col].toString().toLowerCase() === searchText;
                 });
             });
-
+        
             if (matchingPoints.length === 0) {
                 alert('No matching data points found.');
                 return;
             }
-
+        
             matchingPoints.forEach(point => {
                 if (!selectedPoints.some(p => p._uniqueId === point._uniqueId)) {
                     selectedPoints.push(point);
                 }
             });
-
+        
             updateTable();
             highlightSelectedPoints();
         }
+        
 
 
 
@@ -2650,6 +2655,10 @@ Unique Experiments: ${uniqueExperiments}
 
             const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
             const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
+                currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => {
+                    const assayType = row["SRA Assay type"] || 'Unknown';
+                    return selectedAssayTypes.includes(assayType);
+                }) : data;
 
             currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["SRA Assay type"])) : data;
 
@@ -3213,6 +3222,11 @@ Unique Experiments: ${uniqueExperiments}
                                 const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
                                 const assayTypeValue = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value).join(', ') || 'All';
 
+                                currentPlotData = data.filter(row => {
+                                    const assayType = row["SRA Assay type"] || 'Unknown';
+                                    return selectedAssayTypes.includes(assayType);
+                                });
+
                                 doc.text(`SRA Assay type: ${assayTypeValue}`, 60, detailsYPosition + 80);
 
                                 // Add user's notes
@@ -3551,12 +3565,15 @@ Unique Experiments: ${uniqueExperiments}
                     row._uniqueId = 'user_' + Math.random().toString(36).substr(2, 9);
                 }
                 row._isUserData = true;
+        
+                // Assign 'Unknown' to missing 'SRA Assay type'
+                if (!row['SRA Assay type']) {
+                    row['SRA Assay type'] = 'Unknown';
+                }
             });
             data = data.concat(userDataArray);
-
-            // Do not overwrite selectedPoints here
-            // selectedPoints = userDataArray.slice();
         }
+        
 
         // Function to export the session data to the URL
         function collectSessionData() {
