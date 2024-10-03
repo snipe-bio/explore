@@ -1,23 +1,31 @@
 // main.js
 Dropzone.autoDiscover = false;
 
+// Global Variables
+let pyodide;
+let sampleFiles = [];
+let specificChrsContent = {};
+
+
+// Function to show or hide the loading animation
 function showLoadingAnimation(show) {
     const loader = document.getElementById('loadingAnimation');
-    loader.style.display = show ? 'block' : 'none';
+    loader.style.display = show ? 'flex' : 'none';
 }
 
+// Function to load Pyodide and required Python packages
 async function loadPyodideAndPackages() {
     showLoadingAnimation(true);
     try {
         console.log('Loading Pyodide...');
-        const pyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/",
+        pyodide = await loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/",
             fullStdLib: true
         });
         console.log('Pyodide loaded successfully.');
 
         console.log('Loading Python packages...');
-        await pyodide.loadPackage(['micropip', 'numpy']);
+        await pyodide.loadPackage(['micropip', 'numpy', 'pandas', 'scipy', 'scikit-learn']);
         console.log('Python packages loaded successfully.');
 
         console.log('Loading local Python files...');
@@ -39,21 +47,26 @@ async function loadPyodideAndPackages() {
     }
 }
 
+
 let pyodideReady = loadPyodideAndPackages();
 
-let sampleFiles = [];
 let genomeFile = null;
 let ampliconFile = null;
 
+// Function to handle file data based on type
 async function handleFileData(file, fileType) {
     const fileContent = await file.text();
 
     if (fileType === 'sample') {
-        sampleFiles.push({ name: file.name, content: fileContent });
+        sampleFiles.push({ name: file.name, content: fileContent, type: 'sample' });
     } else if (fileType === 'genome') {
-        genomeFile = fileContent;
+        // Only one genome file is allowed; replace if a new one is uploaded
+        sampleFiles = sampleFiles.filter(f => f.type !== 'genome');
+        sampleFiles.push({ name: file.name, content: fileContent, type: 'genome' });
     } else if (fileType === 'amplicon') {
-        ampliconFile = fileContent;
+        // Only one amplicon file is allowed; replace if a new one is uploaded
+        sampleFiles = sampleFiles.filter(f => f.type !== 'amplicon');
+        sampleFiles.push({ name: file.name, content: fileContent, type: 'amplicon' });
     }
 }
 
@@ -63,8 +76,8 @@ function setupDropzone(elementId, fileType) {
         autoProcessQueue: false, // Don't process queue as we're handling files client-side
         clickable: true,
         previewsContainer: false, // Disable preview
-        init: function() {
-            this.on('addedfile', function(file) {
+        init: function () {
+            this.on('addedfile', function (file) {
                 if (fileType === 'genome' && this.files.length > 1) {
                     this.removeFile(this.files[0]); // Keep only the most recent file if only one is allowed
                 }
@@ -97,7 +110,7 @@ function setupDropzone(elementId, fileType) {
     });
 }
 
-document.getElementById('submitBtn').addEventListener('click', async function() {
+document.getElementById('submitBtn').addEventListener('click', async function () {
     if (sampleFiles.length === 0) {
         alert('At least one sample file is required.');
         return;
@@ -197,7 +210,7 @@ setupDropzone('#samples-dropzone', 'sample');
 setupDropzone('#reference-dropzone', 'genome');
 setupDropzone('#amplicon-dropzone', 'amplicon');
 
-document.getElementById('genomeDropdown').addEventListener('change', function() {
+document.getElementById('genomeDropdown').addEventListener('change', function () {
     const genome = this.value;
     const species = document.getElementById('speciesDropdown').value;
     const plotDropdownContainer = document.getElementById('plotDropdownContainer');
@@ -249,7 +262,7 @@ document.getElementById('genomeDropdown').addEventListener('change', function() 
     }
 });
 
-document.getElementById('speciesDropdown').addEventListener('change', function() {
+document.getElementById('speciesDropdown').addEventListener('change', function () {
     const genomeDropdownContainer = document.getElementById('genomeDropdownContainer');
     const genomeDropdown = document.getElementById('genomeDropdown');
 
@@ -291,7 +304,7 @@ document.getElementById('speciesDropdown').addEventListener('change', function()
 
 
 
-document.getElementById('plotDropdown').addEventListener('change', function() {
+document.getElementById('plotDropdown').addEventListener('change', function () {
     const plot = this.value;
     const species = document.getElementById('speciesDropdown').value;
 

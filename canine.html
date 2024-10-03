@@ -1093,8 +1093,9 @@
                     // Now, add the first plot
                     addNewPlot();
 
-                    // Initialize the tour after data is loaded
+                    // Initialize and start the tour after data is loaded
                     initOnboardingTour();
+                    startTour();
                 }
             });
         }
@@ -1157,16 +1158,6 @@
             const plotId = `plot-${plotCounter}`;
             let plotHTML = '';
 
-            // If this is the first plot, add the search bar at the top
-            if (plotCounter === 1) {
-                plotHTML += `
-                    <div class="search-container">
-                        <input type="text" id="search-input" placeholder="Search using BioProject, Experiment, or BioSample...">
-                        <button id="search-button" class="button">Search</button>
-                    </div>
-                `;
-            }
-
             plotHTML += `
                 <div class="plot-container">
                     <div class="controls">
@@ -1194,6 +1185,11 @@
                             <textarea id="notes-${plotId}" class="notes-textarea" placeholder="Enter your notes here..."></textarea>
                         </div>
                     </div>
+                    <!-- Search Bar After Each Plot -->
+                    <div class="search-container">
+                        <input type="text" id="search-input-${plotId}" placeholder="Search using BioProject, Experiment, or BioSample...">
+                        <button id="search-button-${plotId}" class="button">Search</button>
+                    </div>
                 </div>
             `;
 
@@ -1209,11 +1205,11 @@
 
             exportPlotButton.addEventListener('click', () => exportPlot(plotId));
 
-            // Attach event listener to the search button if this is the first plot
-            if (plotCounter === 1) {
-                document.getElementById('search-button').addEventListener('click', searchAndSelectPoints);
-            }
+            // Attach event listener to the search button
+            document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints());
 
+            // For better UX, automatically update the plot when controls are rendered
+            updatePlot(plotId);
         }
 
         function renderDynamicControls(plotId) {
@@ -1319,8 +1315,14 @@
 
 
         function searchAndSelectPoints() {
-            const searchInput = document.getElementById('search-input');
-            const searchText = searchInput.value.trim().toLowerCase();
+            // Use a common search input for all plots
+            const searchInputs = document.querySelectorAll('.search-container input[type="text"]');
+            let searchText = '';
+            searchInputs.forEach(input => {
+                if (input.value.trim() !== '') {
+                    searchText = input.value.trim().toLowerCase();
+                }
+            });
 
             if (searchText === '') {
                 return;
@@ -1918,157 +1920,44 @@
                 {
                     element: '.container h1',
                     popover: {
-                        title: 'Snipe SRA Exploration Dashboard',
-                        description: 'This dashboard helps you visualize and analyze the Canine SRA experiments.',
+                        title: 'Welcome to Snipe SRA Exploration Dashboard',
+                        description: 'This dashboard helps you visualize and analyze the SRA experiments.',
                         position: 'bottom'
+                    }
+                },
+                {
+                    element: '.floating-buttons',
+                    popover: {
+                        title: 'Control Buttons',
+                        description: 'Use these buttons to clear selections, export data, and access help.',
+                        position: 'left'
                     }
                 },
                 {
                     element: '.search-container',
                     popover: {
-                        title: 'Search',
-                        description: 'Use the search bar to find specific data points by BioProject, BioSample, or Experiment.',
+                        title: 'Search Bar',
+                        description: 'Search for specific data points by BioProject, BioSample, or Experiment.',
                         position: 'bottom'
                     }
                 },
                 {
-                    element: '#add-view',
+                    element: '.controls',
                     popover: {
-                        title: 'Add View',
-                        description: 'Click here to add a new plot view to the dashboard.',
+                        title: 'Plot Controls',
+                        description: 'Use these controls to customize your plot.',
                         position: 'bottom'
                     }
                 },
                 {
-                    element: '#plot-type-plot-1',
+                    element: '.additional-inputs',
                     popover: {
-                        title: 'Plot Type',
-                        description: 'Select the type of plot to visualize your data (e.g., Scatter Plot, Histogram, Boxplot).',
+                        title: 'Plot Details',
+                        description: 'Add a title and notes for your plot here.',
                         position: 'bottom'
-                    }
-                },
-                {
-                    element: '#x-axis-plot-1',
-                    popover: {
-                        title: 'X-Axis',
-                        description: 'Select the variable to be displayed on the X-Axis of the plot.',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#y-axis-plot-1',
-                    popover: {
-                        title: 'Y-Axis',
-                        description: 'Select the variable to be displayed on the Y-Axis of the plot.',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#hue-plot-1',
-                    popover: {
-                        title: 'Color By',
-                        description: 'Choose a column to color the data points by a categorical or scalar value.',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#assay-type-area',
-                    popover: {
-                        title: 'SRA Assay type',
-                        description: 'Filter the plot based on SRA Assay type. You can select one or more SRA Assay types.',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '.plot-container',
-                    popover: {
-                        title: 'Plot Area',
-                        description: 'This is where your plots will appear. Customize the plot using the controls above it.',
-                        position: 'top'
-                    }
-                },
-                {
-                    element: '#export-plot-plot-1',
-                    popover: {
-                        title: 'Export Plot',
-                        description: 'Click here to export the plot as a 300 DPI PNG image.',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#title-plot-1',
-                    popover: {
-                        title: 'Plot Title',
-                        description: 'You can add a title to your plot here.',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#notes-plot-1',
-                    popover: {
-                        title: 'Plot Notes',
-                        description: 'Add any relevant notes to your plot here.',
-                        position: 'right'
-                    }
-                },
-                {
-                    element: '#clear-selections',
-                    popover: {
-                        title: 'Clear Selections',
-                        description: 'Click here to clear all selected data points.',
-                        position: 'left'
-                    }
-                },
-                {
-                    element: '#export-table',
-                    popover: {
-                        title: 'Export Table',
-                        description: 'Use this button to export the selected data points as a TSV file.',
-                        position: 'left'
-                    }
-                },
-                {
-                    element: '#export-pdf',
-                    popover: {
-                        title: 'Export Snipe Report',
-                        description: 'Click here to export a comprehensive report of your data and plots as a PDF.',
-                        position: 'left'
-                    }
-                },
-                {
-                    element: '#scroll-to-table',
-                    popover: {
-                        title: 'Scroll to Table',
-                        description: 'Use this button to quickly navigate to the selected data points table.',
-                        position: 'left'
-                    }
-                },
-                {
-                    element: '#help-button',
-                    popover: {
-                        title: 'Help',
-                        description: 'Click here to view explanation of columns.',
-                        position: 'left'
-                    }
-                },
-                {
-                    element: '#data-selection-section',
-                    popover: {
-                        title: 'Selected Data Points',
-                        description: 'This section displays the data points you have selected from the plots.',
-                        position: 'top'
-                    }
-                },
-                {
-                    element: '#start-tour',
-                    popover: {
-                        title: 'Start Tour',
-                        description: 'Click here to start the tour again at any time.',
-                        position: 'left'
                     }
                 }
             ];
-
 
             driverInstance = driver({
                 animate: true,
@@ -2084,7 +1973,6 @@
                 keyboardControl: true,
                 showProgress: true,
                 steps: steps,
-                // popoverClass: 'driverjs-theme',
             });
 
         }
@@ -2092,5 +1980,6 @@
         function startTour() {
             driverInstance.drive();
         }
+
 
     </script>
