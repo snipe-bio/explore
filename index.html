@@ -1549,30 +1549,6 @@
                 uploadDataModal.style.display = 'none';
             });
 
-            // Event listener for the Upload Data confirm button
-            document.getElementById('upload-data-confirm').addEventListener('click', function () {
-                const fileInput = document.getElementById('upload-data-file-input');
-                const uploadMode = document.querySelector('input[name="upload-data-mode"]:checked').value;
-
-                if (fileInput.files.length > 0) {
-                    // Read the file
-                    const file = fileInput.files[0];
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const tsvData = e.target.result;
-                        parseAndLoadUserData(tsvData, uploadMode);
-                        // Close the modal
-                        document.getElementById('upload-data-modal').style.display = 'none';
-
-                        // Show notification
-                        showNotification('Custom data uploaded successfully.');
-                    };
-                    reader.readAsText(file);
-                } else {
-                    alert('Please select a TSV file to upload.');
-                }
-            });
-
             // Close modal when clicking outside of it
             window.addEventListener('click', function (event) {
                 const uploadDataModal = document.getElementById('upload-data-modal');
@@ -1582,11 +1558,6 @@
             });
 
 
-            // Event listener for the close button in the upload data modal
-            document.getElementById('upload-data-close').addEventListener('click', function () {
-                const uploadDataModal = document.getElementById('upload-data-modal');
-                uploadDataModal.style.display = 'none';
-            });
 
             // Event listener for the Upload Data confirm button
             document.getElementById('upload-data-confirm').addEventListener('click', function () {
