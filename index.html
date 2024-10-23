@@ -2636,7 +2636,7 @@ Unique Experiments: ${uniqueExperiments}
         }
 
 
-
+        
         function updatePlot(plotId) {
             const plotDiv = document.getElementById(plotId);
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
@@ -3208,6 +3208,7 @@ Unique Experiments: ${uniqueExperiments}
                                 }
 
                                 const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
+                                const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
                                 const assayTypeValue = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value).join(', ') || 'All';
 
                                 currentPlotData = data.filter(row => {
