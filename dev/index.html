@@ -1268,19 +1268,11 @@
                     'Exome': 'https://raw.githubusercontent.com/snipe-bio/dbs/refs/heads/main/qc_tables/Dog/canfam31_ychr_exome_rna_gtdb.tsv'
                 }
             },
-            'Human': {
-                'GRCh38': {
-                    '': ''
-                },
-                'CHM13V2.0': {
-                    '': ''
+            'Cattle': {
+                'ARS-UCD2.0': {
+                    'Exome': 'https://raw.githubusercontent.com/snipe-bio/dbs/refs/heads/main/qc_tables/Cattle/cattle_arsucd20_exome_rna_gtdb.tsv'
                 }
             },
-            'Zebrafish': {
-                'GRCz11': {
-                    '': ''
-                }
-            }
         };
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -1452,9 +1444,6 @@
                 dataSelectionContainer.style.display = 'none'; // Hide data selection
                 loadUserData(userData);
             } else {
-                // No session or data parameter, proceed as normal
-                // Show species selection, etc.
-                // Trigger initial species change to set defaults
                 speciesSelect.dispatchEvent(new Event('change'));
             }
 
@@ -1547,7 +1536,7 @@
             document.getElementById('copy-session-url').addEventListener('click', function () {
                 const sessionUrlInput = document.getElementById('session-url-input');
                 sessionUrlInput.select();
-                sessionUrlInput.setSelectionRange(0, 99999); // For mobile devices
+                sessionUrlInput.setSelectionRange(0, 99999);
 
                 document.execCommand('copy');
 
@@ -1583,8 +1572,6 @@
                 }
             });
 
-
-
             // Event listener for the Upload Data confirm button
             document.getElementById('upload-data-confirm').addEventListener('click', function () {
                 const fileInput = document.getElementById('upload-data-file-input');
@@ -1616,8 +1603,6 @@
                     uploadDataModal.style.display = 'none';
                 }
             });
-
-
         });
 
         function parseAndLoadUserData(tsvData, uploadMode) {
@@ -1665,17 +1650,13 @@
             plotsContainer.innerHTML = '';
             tableContainer.innerHTML = '';
             plotCounter = 0;
-
-            // Hide the add-view button
             document.getElementById('add-view-container').style.display = 'none';
         }
 
         const hoverColumns = [
             'Experiment ID', 'BioProject', 'Assay type', 'Genome coverage index',
             'Amplicon coverage index', 'Genomic k-mers mean abundance', 'Amplicon k-mers mean abundance',
-            'Mapping index', 'Predicted contamination index', 'Empirical contamination index',
-            'Sequencing errors index', 'Autosomal k-mer mean abundance CV', 'Amplicon enrichment score',
-            'Predicted Assay type', 'chrX Ploidy score', 'chrY Coverage score'
+            'Mapping index', 'Predicted contamination index', 'Sequencing errors index', 'Autosomal k-mer mean abundance CV'
         ];
 
         // Function to parse the metadata from the header line
