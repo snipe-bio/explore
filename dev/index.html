@@ -81,9 +81,9 @@
                 </select>
             </div>
             <div class="control-group">
-                <label for="amplicon-select">Amplicon (Optional):</label>
+                <label for="amplicon-select">Amplicon:</label>
                 <select id="amplicon-select" disabled>
-                    <option value="">Select Amplicon (Optional)</option>
+                    <option value="">Select Amplicon:</option>
                     <!-- Options will be populated dynamically -->
                 </select>
             </div>
@@ -308,6 +308,7 @@
 
                 if (dataFilePath) {
                     loadData(dataFilePath);
+                    loadDataButton.disabled = true;
                 } else {
                     alert('Data not available for selected species, reference genome, and amplicon.');
                 }
@@ -542,7 +543,7 @@
                     const bioSample = event.target.getAttribute('data-biosample');
                     purgeBioSample(bioSample);
                 }
-                
+
                 if (event.target && event.target.classList.contains('view-sra')) {
                     const uniqueId = event.target.getAttribute('data-unique-id');
                     const selectedData = data.find(row => row._uniqueId === uniqueId);
@@ -907,83 +908,82 @@ Data Statistics: ${logContent}
             plotCounter++;
             const plotId = `plot-${plotCounter}`;
             let plotHTML = `
-                <div class="plot-container mt-4" id="container-${plotId}">
-                    <!-- Plot Frame -->
-                    <div class="card">
-                        <!-- Title Bar -->
-                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-                            <!-- File Dropdown on the Left -->
-                            <div class="dropdown">
-                                <button class="btn btn-light btn-lg dropdown-toggle" type="button" id="file-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Options
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="file-menu-${plotId}">
-                                    <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
-                                    <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
-                                    <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
-                                </div>
-                            </div>
-                            <!-- Plot Title in the Center -->
-                            <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
-                            <!-- Title Bar Buttons (Right-Aligned) -->
-                            <div class="plot-window-controls">
-                                <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm" title="Minimize">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                                <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none" title="Maximize">
-                                    <i class="fa fa-window-maximize"></i>
-                                </button>
-                                <button id="clone-plot-${plotId}" class="btn btn-light btn-sm" title="Clone">
-                                    <i class="fa fa-clone"></i>
-                                </button>
-                                <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
-                                    <i class="fa fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <!-- Plot Type Selection -->
-                        <div class="card-body" id="body-${plotId}">
-                            <div class="row">
-                                <div class="col-md-10">
-                                    <label for="plot-type-${plotId}">Plot Type:</label>
-                                    <select id="plot-type-${plotId}" class="form-control">
-                                        <option value="scatter">Scatter Plot</option>
-                                        <option value="histogram">Histogram</option>
-                                        <option value="boxplot">Boxplot</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <button id="help-button-${plotId}" class="btn btn-info btn-block">Help</button>
-                                </div>
-                            </div>
-                            <!-- Dynamic Controls will be rendered here -->
-                            <div id="dynamic-controls-${plotId}" class="mt-3"></div>
-                            <!-- Plot Area -->
-                            <div class="plot-area" style="position: relative;">
-                                <div id="${plotId}" class="plot"></div>
-                                <!-- Floating Search Button -->
-                                <div class="floating-search-button" id="floating-search-button-${plotId}">
-                                    <button class="search-button" id="search-button-${plotId}">
-                                        <i class="fa fa-search"></i> Search by accession
-                                    </button>
-                                    <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
-                                </div>
-                            </div>
-                            <!-- Title, Notes, and Export Button -->
-                            <div class="row mt-3">
-                                <div class="col-md-6">
-                                    <label for="title-${plotId}">Plot Title:</label>
-                                    <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="notes-${plotId}">Notes:</label>
-                                    <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
-                                </div>
+        <div class="plot-container mt-4" id="container-${plotId}">
+            <!-- Plot Frame -->
+            <div class="card">
+                <!-- Title Bar -->
+                <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-1">
+                    <!-- Left Side (Plot Type and Export) -->
+                    <div class="d-flex align-items-center">
+                        <!-- Plot Type Dropdown -->
+                        <select id="plot-type-${plotId}" class="form-control form-control-sm mr-2" style="width: auto;">
+                            <option value="scatter">Scatter Plot</option>
+                            <option value="histogram">Histogram</option>
+                            <option value="boxplot">Boxplot</option>
+                        </select>
+                        <!-- Export Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="export-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Export
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="export-menu-${plotId}">
+                                <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
+                                <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
+                                <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
                             </div>
                         </div>
                     </div>
+                    <!-- Centered Plot Title -->
+                    <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
+                    <!-- Right-Aligned Control Buttons -->
+                    <div class="plot-window-controls d-flex align-items-center">
+                        <!-- Help Button -->
+                        <button id="help-button-${plotId}" class="btn btn-light btn-sm mr-1" title="Help">?</button>
+                        <!-- Minimize, Maximize, Clone, and Close -->
+                        <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Minimize">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none mr-1" title="Maximize">
+                            <i class="fa fa-window-maximize"></i>
+                        </button>
+                        <button id="clone-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Clone">
+                            <i class="fa fa-clone"></i>
+                        </button>
+                        <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
                 </div>
-            `;
+                <!-- Card Body -->
+                <div class="card-body" id="body-${plotId}">
+                    <!-- Dynamic Controls will be rendered here -->
+                    <div id="dynamic-controls-${plotId}" class="mt-3"></div>
+                    <!-- Plot Area -->
+                    <div class="plot-area" style="position: relative;">
+                        <div id="${plotId}" class="plot"></div>
+                        <!-- Floating Search Button -->
+                        <div class="floating-search-button" id="floating-search-button-${plotId}">
+                            <button class="search-button" id="search-button-${plotId}">
+                                <i class="fa fa-search"></i> Search by accession
+                            </button>
+                            <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
+                        </div>
+                    </div>
+                    <!-- Title, Notes, and Export Button -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="title-${plotId}">Plot Title:</label>
+                            <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="notes-${plotId}">Notes:</label>
+                            <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
             plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
 
             const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
@@ -1288,18 +1288,20 @@ Data Statistics: ${logContent}
                             </select>
                         </div>
                     </div>
-                    <!-- SRA Assay Type -->
+                    <!-- Assay Type Multi-Select -->
                     <div class="row mt-2 align-items-center">
                         <label class="col-auto mb-0">Assay type:</label>
-                        <div id="assay-type-checkboxes-${plotId}" class="col form-inline">
-                            ${[...new Set(data.map(row => row["Assay type"]).filter(type => type))].map((type, index) => `
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="assay-type-${plotId}-${index}" name="assay-type-${plotId}" value="${type}" checked>
-                                    <label class="form-check-label" for="assay-type-${plotId}-${index}">
-                                        ${type}
-                                    </label>
-                                </div>
-                            `).join('')}
+                        <div class="col">
+                            <select id="assay-type-multiselect-${plotId}" class="form-control" multiple>
+                                ${[...new Set(data.map(row => row["Assay type"]).filter(type => type))].map(type => `
+                                    <option value="${type}" selected>${type}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <!-- Select/Deselect All Buttons -->
+                        <div class="col-auto">
+                            <button id="select-all-assay-${plotId}" class="btn btn-sm btn-primary">Select All</button>
+                            <button id="deselect-all-assay-${plotId}" class="btn btn-sm btn-secondary">Deselect All</button>
                         </div>
                     </div>
                     <!-- Range Sliders with Input Boxes in Compact Layout -->
@@ -1351,6 +1353,21 @@ Data Statistics: ${logContent}
                         </div>
                     </div>
                 `;
+            
+                // JavaScript to handle select/deselect all functionality
+                document.getElementById(`select-all-assay-${plotId}`).addEventListener('click', () => {
+                    const multiselect = document.getElementById(`assay-type-multiselect-${plotId}`);
+                    for (let i = 0; i < multiselect.options.length; i++) {
+                        multiselect.options[i].selected = true;
+                    }
+                });
+            
+                document.getElementById(`deselect-all-assay-${plotId}`).addEventListener('click', () => {
+                    const multiselect = document.getElementById(`assay-type-multiselect-${plotId}`);
+                    for (let i = 0; i < multiselect.options.length; i++) {
+                        multiselect.options[i].selected = false;
+                    }
+                });
 
             } else if (plotType === 'histogram' || plotType === 'boxplot') {
                 controlsHTML = `
