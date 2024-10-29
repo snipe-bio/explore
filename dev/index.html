@@ -511,10 +511,11 @@
                 }
             });
 
-            // Event delegation for 'Show depth per chromosome' command
             tableContainer.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default link behavior
+
+                // Show Depth per Chromosome
                 if (event.target && event.target.classList.contains('show-depth')) {
-                    event.preventDefault();
                     const uniqueId = event.target.getAttribute('data-unique-id');
                     const selectedData = data.find(row => row._uniqueId === uniqueId);
                     if (selectedData) {
@@ -522,6 +523,24 @@
                     } else {
                         alert('Data not found for the selected Experiment.');
                     }
+                }
+
+                // Purge Experiment
+                if (event.target && event.target.classList.contains('purge-experiment')) {
+                    const uniqueId = event.target.getAttribute('data-unique-id');
+                    purgeExperiment(uniqueId);
+                }
+
+                // Purge BioProject
+                if (event.target && event.target.classList.contains('purge-bioproject')) {
+                    const bioProject = event.target.getAttribute('data-bioproject');
+                    purgeBioProject(bioProject);
+                }
+
+                // Purge BioSample
+                if (event.target && event.target.classList.contains('purge-biosample')) {
+                    const bioSample = event.target.getAttribute('data-biosample');
+                    purgeBioSample(bioSample);
                 }
             });
 
@@ -574,6 +593,37 @@
             plotCounter = 0;
             document.getElementById('add-view-container').style.display = 'none';
         }
+
+
+        function purgeExperiment(uniqueId) {
+            if (!confirm('Are you sure you want to purge this Experiment? This action cannot be undone.')) {
+                return;
+            }
+            data = data.filter(row => row._uniqueId !== uniqueId);
+            selectedPoints = selectedPoints.filter(point => point._uniqueId !== uniqueId);
+            updateTable();
+            showNotification('Experiment purged successfully.', 'success');
+        }
+
+        function purgeBioProject(bioProject) {
+            if (!confirm(`Are you sure you want to purge all Experiments under BioProject "${bioProject}"? This action cannot be undone.`)) {
+                return;
+            }
+            data = data.filter(row => row['BioProject'] !== bioProject);
+            selectedPoints = selectedPoints.filter(point => point['BioProject'] !== bioProject);
+            updateTable();
+            showNotification(`All Experiments under BioProject "${bioProject}" have been purged successfully.`, 'success');
+        }
+        function purgeBioSample(bioSample) {
+            if (!confirm(`Are you sure you want to purge all Experiments under BioSample "${bioSample}"? This action cannot be undone.`)) {
+                return;
+            }
+            data = data.filter(row => row['BioSample'] !== bioSample);
+            selectedPoints = selectedPoints.filter(point => point['BioSample'] !== bioSample);
+            updateTable();
+            showNotification(`All Experiments under BioSample "${bioSample}" have been purged successfully.`, 'success');
+        }
+
 
         const hoverColumns = [
             'Experiment ID', 'BioProject', 'Assay type', 'Genome coverage index',
@@ -2180,13 +2230,11 @@ Data Statistics: ${logContent}
             // Find the index of 'Experiment ID'
             const experimentIdIndex = columns.indexOf('Experiment ID');
 
+            // Start building the table with the Actions column first
             let tableHTML = '<table class="table table-striped table-bordered"><thead><tr>';
+            tableHTML += `<th>Actions</th>`; // Actions column as the first column
             columns.forEach((col, index) => {
                 tableHTML += `<th>${col}</th>`;
-                // If this is the 'Experiment ID' column, add the 'Actions' header
-                if (index === experimentIdIndex) {
-                    tableHTML += `<th>Actions</th>`;
-                }
             });
             tableHTML += '</tr></thead><tbody>';
 
@@ -2195,23 +2243,27 @@ Data Statistics: ${logContent}
             } else {
                 selectedPoints.forEach(point => {
                     tableHTML += '<tr>';
+
+                    // Actions Dropdown in the first cell
+                    tableHTML += `
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton-${point._uniqueId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-${point._uniqueId}">
+                                    <a class="dropdown-item show-depth" href="#" data-unique-id="${point._uniqueId}">Show depth per chromosome</a>
+                                    <a class="dropdown-item purge-experiment" href="#" data-unique-id="${point._uniqueId}">Purge Experiment</a>
+                                    <a class="dropdown-item purge-bioproject" href="#" data-bioproject="${point['BioProject']}">Purge BioProject</a>
+                                    <a class="dropdown-item purge-biosample" href="#" data-biosample="${point['BioSample']}">Purge BioSample</a>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+
+                    // Add the rest of the columns
                     columns.forEach((col, index) => {
                         tableHTML += `<td>${point[col]}</td>`;
-                        if (index === experimentIdIndex) {
-                            tableHTML += `
-                                <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton-${point._uniqueId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            Actions
-                                        </button>
-                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-${point._uniqueId}">
-                                            <a class="dropdown-item show-depth" href="#" data-unique-id="${point._uniqueId}">Show depth per chromosome</a>
-                                            <!-- You can add more commands here -->
-                                        </div>
-                                    </div>
-                                </td>
-                            `;
-                        }
                     });
                     tableHTML += '</tr>';
                 });
@@ -2220,6 +2272,7 @@ Data Statistics: ${logContent}
             tableHTML += '</tbody></table>';
             tableContainer.innerHTML = tableHTML;
         }
+
 
 
 
@@ -2917,14 +2970,30 @@ Data Statistics: ${logContent}
         function showNotification(message, type = 'success') {
             const notificationContainer = document.getElementById('notification-container');
             const notification = document.createElement('div');
-            notification.className = 'notification';
-            if (type === 'error') {
-                notification.style.backgroundColor = '#e74c3c';
-            } else if (type === 'warning') {
-                notification.style.backgroundColor = '#f39c12';
-            } else {
-                notification.style.backgroundColor = '#2ecc71';
+            notification.className = `notification ${type}`;
+
+            // Style based on type
+            switch (type) {
+                case 'success':
+                    notification.style.backgroundColor = '#2ecc71';
+                    break;
+                case 'error':
+                    notification.style.backgroundColor = '#e74c3c';
+                    break;
+                case 'warning':
+                    notification.style.backgroundColor = '#f39c12';
+                    break;
+                default:
+                    notification.style.backgroundColor = '#2ecc71';
             }
+
+            notification.style.color = '#fff';
+            notification.style.padding = '15px';
+            notification.style.marginBottom = '10px';
+            notification.style.borderRadius = '5px';
+            notification.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            notification.style.opacity = '1';
+            notification.style.transition = 'opacity 0.5s ease-out';
             notification.textContent = message;
 
             notificationContainer.appendChild(notification);
