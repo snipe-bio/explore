@@ -41,6 +41,7 @@
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css" />
     <link rel="stylesheet" href="styles.css">
+    <script src="snipe-explore.js"></script>
 
 </head>
 
@@ -557,6 +558,73 @@
 
             });
 
+            // Event listeners to search for experiments by URL
+            // Check for sra-exp, bioproject, biosample, and species in URL
+            const sraExp = urlParams.get('sra-exp');
+            const bioproject = urlParams.get('bioproject');
+            const biosample = urlParams.get('biosample');
+            const speciesParam = urlParams.get('species');
+
+            if ((sraExp || bioproject || biosample) && speciesParam) {
+                // Set speciesSelect to speciesParam
+                speciesSelect.value = speciesParam;
+                speciesSelect.dispatchEvent(new Event('change'));
+
+                setTimeout(() => {
+                    const selectedSpecies = speciesSelect.value;
+                    const references = species_genome_amplicon_path[selectedSpecies];
+                    const defaultReference = Object.keys(references)[0];
+                    referenceSelect.value = defaultReference;
+                    referenceSelect.dispatchEvent(new Event('change'));
+
+                    setTimeout(() => {
+                        const selectedReference = referenceSelect.value;
+                        const amplicons = species_genome_amplicon_path[selectedSpecies][selectedReference];
+                        const defaultAmplicon = Object.keys(amplicons)[0];
+                        ampliconSelect.value = defaultAmplicon;
+                        ampliconSelect.dispatchEvent(new Event('change'));
+
+                        setTimeout(() => {
+                            const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][defaultAmplicon];
+                            if (dataFilePath) {
+                                loadData(dataFilePath, function () {
+                                    // Data is loaded, now search for the Experiment ID, BioProject, or BioSample
+                                    let searchTerm = null;
+                                    let searchField = null;
+                                    if (sraExp) {
+                                        searchTerm = sraExp;
+                                        searchField = 'Experiment ID';
+                                    } else if (bioproject) {
+                                        searchTerm = bioproject;
+                                        searchField = 'BioProject';
+                                    } else if (biosample) {
+                                        searchTerm = biosample;
+                                        searchField = 'BioSample';
+                                    }
+
+                                    // Perform case-insensitive search
+                                    const matchingData = data.filter(row => row[searchField] && row[searchField].toLowerCase() === searchTerm.toLowerCase());
+                                    const pointType = searchField === 'Experiment ID' ? 'Experiment' : searchField === 'BioProject' ? 'BioProject' : 'BioSample';
+                                    if (matchingData.length > 0) {
+                                        // Found matching data
+                                        selectedPoints = selectedPoints.concat(matchingData);
+                                        updateTable();
+                                        highlightSelectedPoints();
+                                        showModal(`${pointType} Found`, `${pointType} ${searchTerm} found and highlighted in the table. Create a new plot to visualize the data.`);
+                                    } else {
+                                        showModal(`${pointType} Not Found`, `${pointType} ${searchTerm} not found in the data.`);
+                                    }
+                                });
+                                loadDataButton.disabled = true;
+                            } else {
+                                alert('Data not available for selected species, reference genome, and amplicon.');
+                            }
+                        }, 500);
+                    }, 500);
+                }, 500);
+            }
+
+
         });
 
         function parseAndLoadUserData(tsvData, uploadMode) {
@@ -638,11 +706,6 @@
         }
 
 
-        const hoverColumns = [
-            'Experiment ID', 'BioProject', 'Assay type', 'Genome coverage index',
-            'Amplicon coverage index', 'Genomic k-mers mean abundance', 'Amplicon k-mers mean abundance',
-            'Mapping index', 'Predicted contamination index', 'Sequencing errors index', 'Autosomal k-mer mean abundance CV'
-        ];
 
         // Function to parse the metadata from the header line
         function parseMetadata(headerLine) {
@@ -672,9 +735,8 @@
             return LZString.decompressFromBase64(base64String);
         }
 
-        const skip_columns = ["scale", "filename", "ksize"];
-
         function loadData(filePath, callback, addInitialPlot = true) {
+            const skip_columns = ["scale", "filename", "ksize"];
             dataFilePath = filePath; // Set the global dataFilePath
 
             // Show loading modal
@@ -769,46 +831,6 @@
         }
 
 
-        function displayDataStatistics() {
-            const logInfoDiv = document.getElementById('log-info');
-            if (!logInfoDiv) return;
-
-            // Show the log info box
-            logInfoDiv.style.display = 'block';
-
-            const totalPoints = data.length;
-            const assayTypes = [...new Set(data.map(row => row["Assay type"] || 'Unknown').filter(type => type))];
-            const assayTypeCounts = assayTypes.map(type => {
-                const count = data.filter(row => row["Assay type"] === type).length;
-                return `\t- ${type}: ${count}`;
-            }).join('\n'); // Join with newline characters for line breaks
-
-            const uniqueBioProjects = new Set(data.map(row => row["BioProject"])).size;
-            const uniqueExperiments = new Set(data.map(row => row["Experiment ID"])).size;
-
-            // Prepare metadata information
-            let metadataInfo = '';
-            if (snipe_metadata && Object.keys(snipe_metadata).length > 0) {
-                metadataInfo = `<details style="margin-top: 0px;">
-                    <summary><strong>Metadata (click to expand)</strong></summary>
-                    <pre>${JSON.stringify(snipe_metadata.metadata, null, 2)}</pre></details>
-                `;
-            }
-
-            // Prepare the main stats as plain text within a <div>
-            const logContent = `
-- Total Data Points: ${totalPoints}
-- BioProjects: ${uniqueBioProjects}
-- Experiments: ${uniqueExperiments}
-<details style="margin-top: 0px;">
-                    <summary>Assay types (click to expand)</summary>
-                    <pre>${assayTypeCounts}</pre>
-                </details>${metadataInfo}`;
-
-            logInfoDiv.innerHTML = `
-Data Statistics: ${logContent}
-            `.trim();
-        }
 
         function loadUserData(userDataArray) {
             // Show loading modal
@@ -856,51 +878,6 @@ Data Statistics: ${logContent}
             // Show notification
             showNotification('User data loaded successfully.');
         }
-
-
-
-
-        // Column Definitions
-        const columnDefinitions = {
-            "Total unique k-mers": "It represents the unique genetic content in the sample",
-            "Genomic unique k-mers": "It represents the unique genetic content in the sample that matches the reference genome",
-            "Amplicon unique k-mers": "It represents the unique genetic content in the sample that matches the exome",
-            "Genome coverage index": "It shows how much of the genome bases are covered",
-            "Amplicon coverage index": "It shows how much of the exome bases are covered",
-            "k-mer total abundance": "It correlates with the total amount of sequencing",
-            "Genomic k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the reference genome",
-            "Amplicon k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the exome",
-            "Mapping index": "Genomic k-mers total Abundance as a fraction of all k-mer total abundance. It correlates with the mapped sequencing bases to the genomes",
-            "Predicted contamination index": "The fraction abundance of non-genomic k-mers if the k-mer count > 1. It represent genetic variance and increase if there is sequence contamination",
-            "Empirical contamination index": "The fraction of k-mers matching microbial sequences. It is calcuted by Sourmash software and expected to correlate with Snipe's predicted contamination index",
-            "Sequencing errors index": "The fraction abundance of non-genomic k-mers if the k-mer count = 1 (i.e., singletons). It represents sequecning errors",
-            "Autosomal k-mer mean abundance CV": "The coefficient of variation (CV) for the mean abundance of k-mers specific to each autosome. A high CV suggests variability, potentially pointing to uneven sequencing",
-            "Amplicon enrichment score": "A composite metric for quantifying amplicon enrichment in a sequencing experiment",
-            "chrX Ploidy score": "The ratio of the mean abundance of chrX-specific k-mers to autosomal-specific k-mers. It correlates with X chromosome ploidy",
-            "chrY Coverage score": "The ratio of sequence coverage for chrY and autosomal chromosomes.",
-            "Coverage of 1fold more sequencing": "Expected coverage with 1 fold more sequecning"
-        };
-
-        // Function to populate the modal with column definitions
-        function populateModalColumnDefinitions() {
-            const columnDefinitionsDiv = document.getElementById('modal-column-definitions');
-            if (!columnDefinitionsDiv) return;
-
-            let htmlContent = '<dl>';
-
-            const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
-
-            columns.forEach(col => {
-                if (col in columnDefinitions) {
-                    const definition = columnDefinitions[col] || "No definition available.";
-                    htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
-                }
-            });
-
-            htmlContent += '</dl>';
-            columnDefinitionsDiv.innerHTML = htmlContent;
-        }
-
 
 
         // Updated addNewPlot function
@@ -1034,6 +1011,7 @@ Data Statistics: ${logContent}
             }
         }
 
+
         function clonePlot(plotId) {
             // Gather the configuration of the plot with id plotId
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
@@ -1074,19 +1052,13 @@ Data Statistics: ${logContent}
                 }
             }
             else if (plotType === 'histogram' || plotType === 'boxplot') {
-                // Selected numerical columns
                 const numColumnCheckboxes = document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]`);
                 config.numColumns = Array.from(numColumnCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
-
-                // Group By
                 config.groupBy = document.getElementById(`group-by-${plotId}`).value;
-
-                // Assay types
                 const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]`);
                 config.assayTypes = Array.from(assayTypeCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
             }
 
-            // Now add new plot with this configuration
             addNewPlot(config);
 
             // Scroll to the new plot
@@ -1214,10 +1186,6 @@ Data Statistics: ${logContent}
             plotContainer.remove();
         }
 
-
-
-
-
         function renderDynamicControls(plotId, config = {}) {
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
             const dynamicControlsDiv = document.getElementById(`dynamic-controls-${plotId}`);
@@ -1288,20 +1256,18 @@ Data Statistics: ${logContent}
                             </select>
                         </div>
                     </div>
-                    <!-- Assay Type Multi-Select -->
+                    <!-- SRA Assay Type -->
                     <div class="row mt-2 align-items-center">
                         <label class="col-auto mb-0">Assay type:</label>
-                        <div class="col">
-                            <select id="assay-type-multiselect-${plotId}" class="form-control" multiple>
-                                ${[...new Set(data.map(row => row["Assay type"]).filter(type => type))].map(type => `
-                                    <option value="${type}" selected>${type}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <!-- Select/Deselect All Buttons -->
-                        <div class="col-auto">
-                            <button id="select-all-assay-${plotId}" class="btn btn-sm btn-primary">Select All</button>
-                            <button id="deselect-all-assay-${plotId}" class="btn btn-sm btn-secondary">Deselect All</button>
+                        <div id="assay-type-checkboxes-${plotId}" class="col form-inline">
+                            ${[...new Set(data.map(row => row["Assay type"]).filter(type => type))].map((type, index) => `
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="assay-type-${plotId}-${index}" name="assay-type-${plotId}" value="${type}" checked>
+                                    <label class="form-check-label" for="assay-type-${plotId}-${index}">
+                                        ${type}
+                                    </label>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                     <!-- Range Sliders with Input Boxes in Compact Layout -->
@@ -1353,21 +1319,6 @@ Data Statistics: ${logContent}
                         </div>
                     </div>
                 `;
-            
-                // JavaScript to handle select/deselect all functionality
-                document.getElementById(`select-all-assay-${plotId}`).addEventListener('click', () => {
-                    const multiselect = document.getElementById(`assay-type-multiselect-${plotId}`);
-                    for (let i = 0; i < multiselect.options.length; i++) {
-                        multiselect.options[i].selected = true;
-                    }
-                });
-            
-                document.getElementById(`deselect-all-assay-${plotId}`).addEventListener('click', () => {
-                    const multiselect = document.getElementById(`assay-type-multiselect-${plotId}`);
-                    for (let i = 0; i < multiselect.options.length; i++) {
-                        multiselect.options[i].selected = false;
-                    }
-                });
 
             } else if (plotType === 'histogram' || plotType === 'boxplot') {
                 controlsHTML = `
@@ -1668,187 +1619,9 @@ Data Statistics: ${logContent}
 
 
 
-
-
-
         function isNumeric(n) {
             return !isNaN(parseFloat(n)) && isFinite(n);
         }
-
-
-
-        function plot_depth_per_chromosome(selectedData) {
-            console.log('Selected Data:', selectedData);
-
-            // Existing Plotly check
-            if (typeof Plotly === 'undefined') {
-                console.error('Plotly library is not loaded.');
-                alert('Plotly library is not loaded. Please ensure it is included in your project.');
-                return;
-            }
-
-            // Identify chromosome columns
-            const chrColumns = Object.keys(selectedData).filter(key => /^chr[-\dXY]+$/i.test(key));
-            console.log('Detected Chromosome Columns:', chrColumns);
-
-            if (chrColumns.length === 0) {
-                alert('No chromosome data available for this experiment.');
-                return;
-            }
-
-            // Extract chromosome labels and their corresponding values
-            const chromosomes = chrColumns.map(chr => chr.toUpperCase());
-            const values = chrColumns.map(chr => {
-                const val = parseFloat(selectedData[chr]);
-                return isNaN(val) ? 0 : val;
-            });
-
-            console.log('Chromosomes:', chromosomes);
-            console.log('Values:', values);
-
-            // Define colors for each chromosome bar (optional: customize as needed)
-            const colors = [
-                '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
-                '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#1f77b4', '#ff9896',
-                '#98df8a', '#c5b0d5', '#ffbb78', '#c49c94', '#f7b6d2', '#c7c7c7',
-                '#dbdb8d', '#9edae5', '#ff9896', '#c49c94', '#c7c7c7', '#dbdb8d',
-                '#9edae5', '#bcbd22', '#17becf', '#e377c2', '#9467bd', '#8c564b',
-                '#f7b6d2', '#7f7f7f', '#bcbd22', '#ffbb78', '#c5b0d5', '#e377c2',
-                '#17becf', '#1f77b4', '#ff7f0e', '#2ca02c'
-            ];
-
-            // Create modal elements
-            // Check if a modal already exists and remove it to prevent duplicates
-            const existingModal = document.getElementById('chromosome-depth-modal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-
-            // Create overlay
-            const modalOverlay = document.createElement('div');
-            modalOverlay.id = 'chromosome-depth-modal';
-            modalOverlay.style.position = 'fixed';
-            modalOverlay.style.top = '0';
-            modalOverlay.style.left = '0';
-            modalOverlay.style.width = '100%';
-            modalOverlay.style.height = '100%';
-            modalOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            modalOverlay.style.display = 'flex';
-            modalOverlay.style.justifyContent = 'center';
-            modalOverlay.style.alignItems = 'center';
-            modalOverlay.style.zIndex = '1000';
-
-            // Create modal content container
-            const modalContent = document.createElement('div');
-            modalContent.style.backgroundColor = '#fff';
-            modalContent.style.borderRadius = '8px';
-            modalContent.style.width = '80%';
-            modalContent.style.maxWidth = '1200px';
-            modalContent.style.maxHeight = '90%';
-            modalContent.style.overflow = 'auto';
-            modalContent.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
-            modalContent.style.position = 'relative';
-            modalContent.style.padding = '20px';
-
-            // Create header with title and close button
-            const modalHeader = document.createElement('div');
-            modalHeader.style.display = 'flex';
-            modalHeader.style.justifyContent = 'space-between';
-            modalHeader.style.alignItems = 'center';
-            modalHeader.style.marginBottom = '10px';
-
-            const modalTitle = document.createElement('h2');
-            modalTitle.innerText = `Chromosome Depth for Experiment: ${selectedData['Experiment ID'] || 'N/A'}`;
-            modalTitle.style.margin = '0';
-
-            const closeButton = document.createElement('span');
-            closeButton.innerHTML = '&times;';
-            closeButton.style.fontSize = '28px';
-            closeButton.style.cursor = 'pointer';
-            closeButton.style.fontWeight = 'bold';
-            closeButton.style.color = '#aaa';
-            closeButton.onmouseover = () => { closeButton.style.color = '#000'; };
-            closeButton.onmouseout = () => { closeButton.style.color = '#aaa'; };
-            closeButton.onclick = () => {
-                document.body.removeChild(modalOverlay);
-            };
-
-            modalHeader.appendChild(modalTitle);
-            modalHeader.appendChild(closeButton);
-
-            // Create plot container
-            const plotDiv = document.createElement('div');
-            plotDiv.id = 'chromosome-depth-plot';
-            plotDiv.style.width = '100%';
-            plotDiv.style.height = '600px';
-
-            // Create export button
-            const exportButton = document.createElement('button');
-            exportButton.innerText = 'Export Plot as PNG';
-            exportButton.style.marginTop = '20px';
-            exportButton.style.padding = '10px 20px';
-            exportButton.style.backgroundColor = '#4CAF50';
-            exportButton.style.color = '#fff';
-            exportButton.style.border = 'none';
-            exportButton.style.borderRadius = '5px';
-            exportButton.style.cursor = 'pointer';
-            exportButton.style.fontSize = '16px';
-            exportButton.onmouseover = () => { exportButton.style.backgroundColor = '#45a049'; };
-            exportButton.onmouseout = () => { exportButton.style.backgroundColor = '#4CAF50'; };
-
-            // Export functionality
-            exportButton.addEventListener('click', () => {
-                Plotly.downloadImage(plotDiv, {
-                    format: 'png',
-                    filename: `chromosome_depth_${selectedData['Experiment ID'] || 'experiment'}`,
-                    width: 1200,
-                    height: 600,
-                    scale: 2 // To ensure higher resolution
-                });
-            });
-
-            // Assemble modal content
-            modalContent.appendChild(modalHeader);
-            modalContent.appendChild(plotDiv);
-            modalContent.appendChild(exportButton);
-            modalOverlay.appendChild(modalContent);
-            document.body.appendChild(modalOverlay);
-
-            // Define Plotly data and layout
-            const plotData = [{
-                x: chromosomes,
-                y: values,
-                type: 'bar',
-                marker: { color: colors.slice(0, chromosomes.length) }
-            }];
-
-            const layout = {
-                title: `Normalized Chromosome Depth - ${selectedData['BioSample'] || 'N/A'}_${selectedData['Experiment ID'] || 'N/A'}`,
-                autosize: true,
-                width: 1100,
-                height: 600,
-                margin: {
-                    l: 60,
-                    r: 30,
-                    b: 150,
-                    t: 50,
-                    pad: 4
-                },
-                xaxis: {
-                    title: 'Chromosome',
-                    tickangle: -45,
-                    automargin: true
-                },
-                yaxis: { title: 'Normalized Total Abundance' }
-            };
-
-            const config = { responsive: true };
-
-            // Render the plot
-            Plotly.newPlot(plotDiv, plotData, layout, config);
-        }
-
-
 
 
         function updatePlot(plotId) {
@@ -2472,23 +2245,6 @@ Data Statistics: ${logContent}
                     }
                 }
 
-                // Add Selected Data Table if any points are selected
-                /*
-                if (selectedPoints.length > 0) {
-                    const pageNum = doc.internal.getNumberOfPages() + promises.length + 1;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-                    doc.text("Selected Data Points", 60, tocYPosition);
-                    doc.text(`Page ${pageNum}`, pageWidth - 60, tocYPosition, null, null, 'right');
- 
-                    const promise = new Promise((resolve) => {
-                        doc.addPage();
-                        addSelectedDataTable(doc);
-                        resolve();
-                    });
-                    promises.push(promise);
-                }*/
-
                 Promise.all(promises).then(() => {
                     // Add page numbers
                     const pageCount = doc.internal.getNumberOfPages();
@@ -2503,8 +2259,6 @@ Data Statistics: ${logContent}
                 });
             };
         }
-
-
 
 
         function addSelectedDataTable(doc) {
@@ -2550,83 +2304,6 @@ Data Statistics: ${logContent}
         }
 
 
-        let driverInstance;
-        function initOnboardingTour() {
-            // Access the Driver class from the window object
-            const driver = window.driver.js.driver; // For Driver.js version 1.0.1
-
-            const steps = [
-                {
-                    element: '.container h1',
-                    popover: {
-                        title: 'Welcome to Snipe SRA Exploration Dashboard',
-                        description: 'This dashboard helps you visualize and analyze the SRA experiments.',
-                        position: 'bottom'
-                    }
-                },
-                {
-                    element: '.floating-buttons',
-                    popover: {
-                        title: 'Control Buttons',
-                        description: 'Use these buttons to clear selections, export data, and access help.',
-                        position: 'left'
-                    }
-                },
-                {
-                    element: '.search-container',
-                    popover: {
-                        title: 'Search Bar',
-                        description: 'Search for specific data points by BioProject, BioSample, or Experiment.',
-                        position: 'bottom'
-                    }
-                },
-                {
-                    element: '.controls',
-                    popover: {
-                        title: 'Plot Controls',
-                        description: 'Use these controls to customize your plot.',
-                        position: 'bottom'
-                    }
-                },
-                {
-                    element: '.additional-inputs',
-                    popover: {
-                        title: 'Plot Details',
-                        description: 'Add a title and notes for your plot here.',
-                        position: 'bottom'
-                    }
-                }
-            ];
-
-            driverInstance = driver({
-                animate: true,
-                opacity: 0.75,
-                padding: 10,
-                allowClose: true,
-                overlayClickNext: false,
-                doneBtnText: 'Finish',
-                closeBtnText: 'Close',
-                nextBtnText: '→',
-                prevBtnText: '←',
-                showButtons: false,
-                keyboardControl: true,
-                showProgress: true,
-                steps: steps,
-            });
-
-        }
-
-        function startTour() {
-            driverInstance.drive();
-        }
-
-        // ========================================
-        // END OF STEP BY STEP TOUR
-        // ========================================
-
-        // ========================================
-        // IMPORT/EXPORT SESSIONS
-        // ========================================
 
         function exportSession() {
             const sessionData = collectSessionData();
@@ -2644,8 +2321,6 @@ Data Statistics: ${logContent}
             // Show notification
             showNotification('Session exported successfully.');
         }
-
-        // Function to import a session from JSON
 
         // Updated importSession function
         function importSession(jsonData, userData = null) {
@@ -2995,45 +2670,6 @@ Data Statistics: ${logContent}
             return sessionData;
         }
 
-        function showNotification(message, type = 'success') {
-            const notificationContainer = document.getElementById('notification-container');
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-
-            // Style based on type
-            switch (type) {
-                case 'success':
-                    notification.style.backgroundColor = '#2ecc71';
-                    break;
-                case 'error':
-                    notification.style.backgroundColor = '#e74c3c';
-                    break;
-                case 'warning':
-                    notification.style.backgroundColor = '#f39c12';
-                    break;
-                default:
-                    notification.style.backgroundColor = '#2ecc71';
-            }
-
-            notification.style.color = '#fff';
-            notification.style.padding = '15px';
-            notification.style.marginBottom = '10px';
-            notification.style.borderRadius = '5px';
-            notification.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-            notification.style.opacity = '1';
-            notification.style.transition = 'opacity 0.5s ease-out';
-            notification.textContent = message;
-
-            notificationContainer.appendChild(notification);
-
-            // Auto-fade and remove the notification after 3 seconds
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => {
-                    notificationContainer.removeChild(notification);
-                }, 500);
-            }, 3000);
-        }
 
     </script>
 
@@ -3087,6 +2723,14 @@ Data Statistics: ${logContent}
                 </label>
             </p>
             <button id="upload-data-confirm" class="button">Upload Data</button>
+        </div>
+    </div>
+
+    <div id="search-result-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="search-result-close">&times;</span>
+            <h2 id="search-result-title"></h2>
+            <p id="search-result-message"></p>
         </div>
     </div>
 
