@@ -3,27 +3,24 @@
 
 <head>
 
-    <!-- Google tag (gtag.js) -->
+        <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VNXC3S1LH2"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
+        function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-
+    
         gtag('config', 'G-VNXC3S1LH2');
     </script>
-
+        
     <!-- Google Tag Manager -->
-    <script>(function (w, d, s, l, i) {
-            w[l] = w[l] || []; w[l].push({
-                'gtm.start':
-                    new Date().getTime(), event: 'gtm.js'
-            }); var f = d.getElementsByTagName(s)[0],
-                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
-                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
-        })(window, document, 'script', 'dataLayer', 'GTM-N5RW3TB3');</script>
-    <!-- End Google Tag Manager -->
-
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-N5RW3TB3');</script>
+        <!-- End Google Tag Manager -->
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snipe SRA Exploration Dashboard</title>
@@ -40,9 +37,1090 @@
     <!-- Driver.js CSS and JS -->
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css" />
-    <link rel="stylesheet" href="styles.css">
-    <script src="snipe-explore.js"></script>
 
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+
+        h1,
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 2rem;
+        }
+
+
+        select[multiple] {
+            height: auto;
+        }
+
+        /* Adjust the plot container to accommodate the controls */
+        .plot-container {
+            margin-top: 1rem;
+            margin-bottom: 3rem;
+        }
+
+
+
+        /* END: CHECKBOXES in SRA Assay type */
+
+
+
+        label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #34495e;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            background-color: #ecf0f1;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3498db;
+        }
+
+        .plot {
+            width: 100%;
+            height: 600px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        #plots-container {
+            margin-bottom: 2rem;
+        }
+
+        #data-selection-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #3498db;
+        }
+
+        #table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .additional-inputs {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f9fbfd;
+            border: 1px solid #dce1e6;
+            border-radius: 8px;
+        }
+
+        .title-input,
+        .notes-textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .title-input:focus,
+        .notes-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+
+        .notes-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+
+
+
+
+        .notes-container label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        /* Updated styling for the search bar */
+        .search-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .search-container input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .search-container button {
+            /* Existing styles */
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            /* Add pulse animation */
+            animation: pulse 2s infinite;
+        }
+
+        .search-container button:hover {
+            background-color: #2980b9;
+        }
+
+
+        #search-input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        #search-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #0beac5;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #search-button:hover {
+            background-color: #2980b9;
+        }
+
+        .export-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        /* Enhanced button styles */
+        .button {
+            padding: 10px 20px;
+            font-size: 14px;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .button:hover {
+            background-color: #2980b9;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .button::before {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            margin-right: 8px;
+        }
+
+
+        /* START: FLOATING BUTTON*/
+
+        /* Floating Buttons Container */
+        .floating-buttons {
+            position: fixed;
+
+            /* Floating Button Style */
+            .floating-button {
+                background-color: #e74c3c;
+                /* Default color, overridden per button */
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 50%;
+                /* Make it circular */
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                transition: width 0.3s ease, border-radius 0.3s ease;
+                width: 50px;
+                /* Initial width to fit the icon */
+                height: 50px;
+                /* Fixed height */
+                overflow: hidden;
+                /* Hide text initially */
+                position: relative;
+            }
+
+            .floating-button i {
+                font-size: 24px;
+                /* Icon size */
+                /* margin-left: 10px; */
+                margin: 0;
+                /* Center the icon */
+
+            }
+
+            .floating-button span {
+                opacity: 0;
+                /* Hide text initially */
+                margin-left: 10px;
+                transition: opacity 0.3s ease;
+                white-space: nowrap;
+            }
+
+            .floating-button:hover {
+                width: 200px;
+                /* Expand width on hover */
+                border-radius: 25px;
+                /* Rounded rectangle when expanded */
+            }
+
+            .floating-button:hover span {
+                opacity: 1;
+                /* Show text on hover */
+            }
+
+            /* Individual Button Styles */
+            #clear-selections {
+                background-color: #e74c3c;
+            }
+
+            #clear-selections:hover {
+                background-color: #c0392b;
+            }
+
+            #export-table {
+                background-color: #f39c12;
+            }
+
+            #export-table:hover {
+                background-color: #d35400;
+            }
+
+            #export-pdf {
+                background: linear-gradient(-45deg, #405de6, #5851db, #833ab4, #c13584);
+                background-size: 400% 400%;
+                animation: gradientAnimation 15s ease infinite;
+            }
+
+            #export-pdf:hover {
+                background-size: 200% 200%;
+            }
+
+            #scroll-to-table {
+                background-color: #9b59b6;
+            }
+
+            #scroll-to-table:hover {
+                background-color: #8e44ad;
+            }
+
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            align-items: flex-end;
+        }
+
+
+        /* Floating Button Style */
+        .floating-button {
+            background-color: #e74c3c;
+            /* Default color, overridden per button */
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            /* Make it circular */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            transition: width 0.3s ease, border-radius 0.3s ease;
+            width: 50px;
+            /* Initial width to fit the icon */
+            height: 50px;
+            /* Fixed height */
+            overflow: hidden;
+            /* Hide text initially */
+            position: relative;
+        }
+
+        .floating-button i {
+            font-size: 20px;
+            /* Icon size */
+            margin-left: 10px;
+        }
+
+        .floating-button span {
+            opacity: 0;
+            /* Hide text initially */
+            margin-left: 10px;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .floating-button:hover {
+            width: 200px;
+            /* Expand width on hover */
+            border-radius: 25px;
+            /* Rounded rectangle when expanded */
+        }
+
+        .floating-button:hover span {
+            opacity: 1;
+            /* Show text on hover */
+        }
+
+        /* Individual Button Styles */
+        #clear-selections {
+            background-color: #e74c3c;
+        }
+
+        #clear-selections:hover {
+            background-color: #c0392b;
+        }
+
+        #export-table {
+            background-color: #f39c12;
+        }
+
+        #export-table:hover {
+            background-color: #d35400;
+        }
+
+        #export-pdf {
+            background: linear-gradient(-45deg, #405de6, #5851db, #833ab4, #c13584);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+        }
+
+        #export-pdf:hover {
+            background-size: 200% 200%;
+        }
+
+        #scroll-to-table {
+            background-color: #9b59b6;
+        }
+
+        #scroll-to-table:hover {
+            background-color: #8e44ad;
+        }
+
+        #help-button {
+            background-color: #3498db;
+        }
+
+        /* Gradient Animation */
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .floating-buttons {
+                right: 10px;
+            }
+
+            .floating-button:hover {
+                width: 160px;
+                /* Reduce expansion width */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .floating-buttons {
+                right: 5px;
+            }
+
+            .floating-button:hover {
+                width: 140px;
+                /* Further reduce expansion */
+            }
+        }
+
+
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* DRIVERJS */
+
+
+        .driver-popover.driverjs-theme {
+            background-color: #fde047;
+            color: #000;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-title {
+            font-size: 20px;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-title,
+        .driver-popover.driverjs-theme .driver-popover-description,
+        .driver-popover.driverjs-theme .driver-popover-progress-text {
+            color: #000;
+        }
+
+        .driver-popover.driverjs-theme button {
+            flex: 1;
+            text-align: center;
+            background-color: #000;
+            color: #ffffff;
+            border: 2px solid #000;
+            text-shadow: none;
+            font-size: 14px;
+            padding: 5px 8px;
+            border-radius: 6px;
+        }
+
+        .driver-popover.driverjs-theme button:hover {
+            background-color: #000;
+            color: #ffffff;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-navigation-btns {
+            justify-content: space-between;
+            gap: 3px;
+        }
+
+        /* Hide the close button */
+        .driver-popover.driverjs-theme .driver-popover-close-btn {
+            display: none;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-left.driver-popover-arrow {
+            border-left-color: #fde047;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-right.driver-popover-arrow {
+            border-right-color: #fde047;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-top.driver-popover-arrow {
+            border-top-color: #fde047;
+        }
+
+        .driver-popover.driverjs-theme .driver-popover-arrow-side-bottom.driver-popover-arrow {
+            border-bottom-color: #fde047;
+        }
+
+        /* END: DRIVERJS */
+
+        /* START: HELP AREA */
+
+        /* Modal overlay */
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(5px);
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-direction: column;
+            /* Ensure column layout for centering */
+        }
+
+        /* Modal content */
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            text-align: left;
+            /* Center content */
+        }
+
+        /* Close button */
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Modal header */
+        .modal-content h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Styling for the help button */
+        /* Styling for the help button */
+        .help-button {
+            background-color: #426b5f;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 20px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Center the text and icon inside the button */
+            height: 50px;
+            /* Set a fixed height for consistent appearance */
+        }
+
+        .help-button i {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        .help-button:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .help-button:focus {
+            outline: none;
+            box-shadow: 0 0 5px 2px rgba(52, 152, 219, 0.5);
+        }
+
+
+        .control-group .help-button {
+            margin-left: 20px;
+            /* Space it out from the rest of the controls */
+            width: auto;
+            /* Auto width for better flexibility */
+            height: auto;
+        }
+
+
+
+        /* Column definitions inside modal */
+        #modal-column-definitions {
+            margin-top: 2rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Styles for the definitions list */
+        #modal-column-definitions dl {
+            margin: 0;
+        }
+
+        #modal-column-definitions dt {
+            font-weight: bold;
+            color: #34495e;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+
+        #modal-column-definitions dd {
+            margin: 0 0 1rem 0;
+            color: #2c3e50;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Scrollbar styling (for WebKit browsers) */
+        #modal-column-definitions::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #modal-column-definitions::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #modal-column-definitions::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        #modal-column-definitions::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* END: HELP AREA */
+
+        /* Styles for Species Selection */
+        .species-selection {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .species-selection .control-group {
+            flex: 1;
+            margin-right: 1rem;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .species-selection .control-group:last-child {
+            margin-right: 0;
+        }
+
+        .species-selection .control-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .species-selection .control-group select,
+        .species-selection button {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 1rem;
+            color: #495057;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .species-selection button {
+            margin-top: 1rem;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .species-selection button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .species-selection select:focus,
+        .species-selection button:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        /* Gentle pulsing animation for Load Data button */
+        @keyframes gentlePulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 15px 5px rgba(46, 204, 113, 0.3);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        #load-data-button:not(:disabled) {
+            animation: gentlePulse 2.5s infinite;
+            transition: background-color 0.3s ease;
+            background-color: #2ecc71;
+            /* Professional green color */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            /*move the button a bit to down*/
+            margin-top: 25px;
+        }
+
+        #load-data-button:hover {
+            background-color: #27ae60;
+            /* Darken the color slightly on hover */
+        }
+
+        /* if disabled, also margin-top: 25px; */
+        #load-data-button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            margin-top: 25px;
+        }
+
+        /* Styles for Import/Export Floating Buttons */
+        #import-session,
+        #export-session,
+        #export-session-url {
+            background-color: #16a085;
+        }
+
+        #import-session:hover,
+        #export-session:hover,
+        #export-session-url:hover {
+            background-color: #138d75;
+        }
+
+        #add-view-container {
+            margin: 2rem 0;
+            text-align: center;
+            width: 100%;
+            position: relative;
+        }
+
+        .add-view-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            color: #3442db;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            transition: color 0.3s ease;
+            background-color: white;
+            /* Added to avoid text overlap */
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow for button */
+            border-radius: 50px;
+            /* Rounded button for a more elegant look */
+        }
+
+        .add-view-button:hover {
+            color: #2980b9;
+            background-color: #ecf0f1;
+            /* Slight background color change on hover */
+        }
+
+        /* Horizontal divider line extending on both sides */
+        .add-view-button::before,
+        .add-view-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 100px;
+            height: 1px;
+            background-color: #ccc;
+            transform: translateY(-50%);
+        }
+
+        .add-view-button::before {
+            left: -110px;
+            /* Adjust to move before the button */
+        }
+
+        .add-view-button::after {
+            right: -110px;
+            /* Adjust to move after the button */
+        }
+
+        /* Add the icon before the text */
+        .add-view-button i {
+            margin-right: 8px;
+            font-size: 1.5rem;
+        }
+
+
+
+
+        /* Notification Styles */
+        .notification {
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            opacity: 0.9;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .log-info {
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            height: auto;
+            /* Adjusted height */
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+            width: 100%;
+            /* Ensure full width */
+        }
+
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .control-subgrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-label input {
+            margin-right: 0.25rem;
+        }
+
+        .plot-title {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .plot-container {
+            margin-bottom: 2rem;
+        }
+
+        .notes-container {
+            margin-top: 1rem;
+        }
+
+        .title-input,
+        .notes-textarea {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .search-container .button {
+            margin-left: 0.5rem;
+        }
+
+        .button {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Styles for the floating search button */
+
+        /* Styles for the floating search button */
+        .plot-area {
+            position: relative;
+        }
+
+
+        /* Styles for noUiSlider */
+        .range-slider {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .noUi-target {
+            background: #ecf0f1;
+            border-radius: 4px;
+        }
+
+
+        /* Styles for the floating search button */
+        .floating-search-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-button {
+            background-color: #2b2377;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px 0 0 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-input {
+            width: 0;
+            opacity: 0;
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #bdc3c7;
+            border-left: none;
+            border-radius: 0 4px 4px 0;
+            transition: width 0.3s ease, opacity 0.3s ease;
+        }
+
+        .floating-search-button:hover .search-input {
+            width: 200px;
+            opacity: 1;
+        }
+    </style>
 </head>
 
 
@@ -59,9 +1137,9 @@
 
 <body>
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N5RW3TB3" height="0" width="0"
-            style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N5RW3TB3"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
 
     <!-- Updated Species and Reference Selection with Amplicon -->
     <div class="container">
@@ -82,9 +1160,9 @@
                 </select>
             </div>
             <div class="control-group">
-                <label for="amplicon-select">Amplicon:</label>
+                <label for="amplicon-select">Amplicon (Optional):</label>
                 <select id="amplicon-select" disabled>
-                    <option value="">Select Amplicon:</option>
+                    <option value="">Select Amplicon (Optional)</option>
                     <!-- Options will be populated dynamically -->
                 </select>
             </div>
@@ -98,7 +1176,11 @@
 
 
 
+
+
+
         <div id="plots-container"></div>
+        <!--<div class="export-buttons"><button id="add-view" class="button">Add View</button></div> -->
 
         <div id="add-view-container" style="display: none;">
             <button id="add-view" class="add-view-button">
@@ -106,14 +1188,22 @@
             </button>
         </div>
 
+        <!-- <div class="export-buttons">
+            <button id="add-view" class="button">Add View</button>
+            <button id="clear-selections" class="button">Clear Selections</button>
+            <button id="export-table" class="button">Export Table (TSV)</button>
+        </div>
+    -->
         <div id="data-selection-section">
             <h2>Selected Data Points</h2>
+            <!-- <button id="export-pdf">Export Snipe Report</button> -->
             <div id="table-container" class="table-container"></div>
         </div>
     </div>
 
 
     <div class="floating-buttons">
+        <!-- ... existing floating buttons ... -->
         <button id="clear-selections" class="floating-button">
             <i class="fa fa-eraser"></i>
             <span>Clear Selections</span>
@@ -168,27 +1258,25 @@
         let selectedPoints = [];
         let plotsContainer, tableContainer, exportTableButton, clearSelectionsButton, addViewButton;
         let plotCounter = 0;
-        let snipe_metadata = {};
 
         const species_genome_amplicon_path = {
             'Canine': {
                 'CanFam3.1': {
-                    'Exome': 'https://raw.githubusercontent.com/snipe-bio/dbs/refs/heads/main/qc_tables/Dog/canfam31_ychr_exome_rna_gtdb.tsv'
-                }
-            },
-            'Cattle': {
-                'ARS-UCD2.0': {
-                    'Exome': 'https://raw.githubusercontent.com/snipe-bio/dbs/refs/heads/main/qc_tables/Cattle/cattle_arsucd20_exome_rna_gtdb.tsv'
+                    '': 'data/snipe_metadata.tsv',
+                    'Exome': 'data/snipe_metadata.tsv'
                 }
             },
             'Human': {
-                'CHM13v2': {
-                    'Exome': 'https://raw.githubusercontent.com/snipe-bio/dbs/refs/heads/main/qc_tables/Human/human_chm13v2_exome_rna_gtdb.tsv'
+                'GRCh38': {
+                    '': ''
+                },
+                'CHM13V2.0': {
+                    '': ''
                 }
             },
-            "Mouse":{
-                "GRCm39": {
-                    "Exome": "https://raw.githubusercontent.com/snipe-bio/dbs/refs/heads/main/qc_tables/Mouse/mouse_grcm39_exome_rna_gtdb.tsv"
+            'Zebrafish': {
+                'GRCz11': {
+                    '': ''
                 }
             }
         };
@@ -284,7 +1372,7 @@
                     ampliconSelect.disabled = false;
 
                     // Set default selected amplicon
-                    ampliconSelect.value = 'Amplicon';
+                    ampliconSelect.value = 'Exome';
 
                     // Trigger change event to enable load data button
                     ampliconSelect.dispatchEvent(new Event('change'));
@@ -319,7 +1407,6 @@
 
                 if (dataFilePath) {
                     loadData(dataFilePath);
-                    loadDataButton.disabled = true;
                 } else {
                     alert('Data not available for selected species, reference genome, and amplicon.');
                 }
@@ -363,6 +1450,9 @@
                 dataSelectionContainer.style.display = 'none'; // Hide data selection
                 loadUserData(userData);
             } else {
+                // No session or data parameter, proceed as normal
+                // Show species selection, etc.
+                // Trigger initial species change to set defaults
                 speciesSelect.dispatchEvent(new Event('change'));
             }
 
@@ -455,7 +1545,7 @@
             document.getElementById('copy-session-url').addEventListener('click', function () {
                 const sessionUrlInput = document.getElementById('session-url-input');
                 sessionUrlInput.select();
-                sessionUrlInput.setSelectionRange(0, 99999);
+                sessionUrlInput.setSelectionRange(0, 99999); // For mobile devices
 
                 document.execCommand('copy');
 
@@ -491,6 +1581,8 @@
                 }
             });
 
+
+
             // Event listener for the Upload Data confirm button
             document.getElementById('upload-data-confirm').addEventListener('click', function () {
                 const fileInput = document.getElementById('upload-data-file-input');
@@ -523,117 +1615,6 @@
                 }
             });
 
-            tableContainer.addEventListener('click', function (event) {
-                event.preventDefault(); // Prevent default link behavior
-
-                // Show Depth per Chromosome
-                if (event.target && event.target.classList.contains('show-depth')) {
-                    const uniqueId = event.target.getAttribute('data-unique-id');
-                    const selectedData = data.find(row => row._uniqueId === uniqueId);
-                    if (selectedData) {
-                        plot_depth_per_chromosome(selectedData);
-                    } else {
-                        alert('Data not found for the selected Experiment.');
-                    }
-                }
-
-                // Purge Experiment
-                if (event.target && event.target.classList.contains('purge-experiment')) {
-                    const uniqueId = event.target.getAttribute('data-unique-id');
-                    purgeExperiment(uniqueId);
-                }
-
-                // Purge BioProject
-                if (event.target && event.target.classList.contains('purge-bioproject')) {
-                    const bioProject = event.target.getAttribute('data-bioproject');
-                    purgeBioProject(bioProject);
-                }
-
-                // Purge BioSample
-                if (event.target && event.target.classList.contains('purge-biosample')) {
-                    const bioSample = event.target.getAttribute('data-biosample');
-                    purgeBioSample(bioSample);
-                }
-
-                if (event.target && event.target.classList.contains('view-sra')) {
-                    const uniqueId = event.target.getAttribute('data-unique-id');
-                    const selectedData = data.find(row => row._uniqueId === uniqueId);
-                    if (selectedData && selectedData['Experiment ID']) {
-                        const sraUrl = `https://ncbi.nlm.nih.gov/sra/${selectedData['Experiment ID']}`;
-                        window.open(sraUrl, '_blank', 'noopener,noreferrer');
-                    } else {
-                        alert('Experiment ID not found for the selected Experiment.');
-                    }
-                }
-
-            });
-
-            // Event listeners to search for experiments by URL
-            // Check for sra-exp, bioproject, biosample, and species in URL
-            const sraExp = urlParams.get('sra-exp');
-            const bioproject = urlParams.get('bioproject');
-            const biosample = urlParams.get('biosample');
-            const speciesParam = urlParams.get('species');
-
-            if ((sraExp || bioproject || biosample) && speciesParam) {
-                // Set speciesSelect to speciesParam
-                speciesSelect.value = speciesParam;
-                speciesSelect.dispatchEvent(new Event('change'));
-
-                setTimeout(() => {
-                    const selectedSpecies = speciesSelect.value;
-                    const references = species_genome_amplicon_path[selectedSpecies];
-                    const defaultReference = Object.keys(references)[0];
-                    referenceSelect.value = defaultReference;
-                    referenceSelect.dispatchEvent(new Event('change'));
-
-                    setTimeout(() => {
-                        const selectedReference = referenceSelect.value;
-                        const amplicons = species_genome_amplicon_path[selectedSpecies][selectedReference];
-                        const defaultAmplicon = Object.keys(amplicons)[0];
-                        ampliconSelect.value = defaultAmplicon;
-                        ampliconSelect.dispatchEvent(new Event('change'));
-
-                        setTimeout(() => {
-                            const dataFilePath = species_genome_amplicon_path[selectedSpecies][selectedReference][defaultAmplicon];
-                            if (dataFilePath) {
-                                loadData(dataFilePath, function () {
-                                    // Data is loaded, now search for the Experiment ID, BioProject, or BioSample
-                                    let searchTerm = null;
-                                    let searchField = null;
-                                    if (sraExp) {
-                                        searchTerm = sraExp;
-                                        searchField = 'Experiment ID';
-                                    } else if (bioproject) {
-                                        searchTerm = bioproject;
-                                        searchField = 'BioProject';
-                                    } else if (biosample) {
-                                        searchTerm = biosample;
-                                        searchField = 'BioSample';
-                                    }
-
-                                    // Perform case-insensitive search
-                                    const matchingData = data.filter(row => row[searchField] && row[searchField].toLowerCase() === searchTerm.toLowerCase());
-                                    const pointType = searchField === 'Experiment ID' ? 'Experiment' : searchField === 'BioProject' ? 'BioProject' : 'BioSample';
-                                    if (matchingData.length > 0) {
-                                        // Found matching data
-                                        selectedPoints = selectedPoints.concat(matchingData);
-                                        updateTable();
-                                        highlightSelectedPoints();
-                                        showModal(`${pointType} Found`, `${pointType} ${searchTerm} found and highlighted in the table. Create a new plot to visualize the data.`);
-                                    } else {
-                                        showModal(`${pointType} Not Found`, `${pointType} ${searchTerm} not found in the data.`);
-                                    }
-                                });
-                                loadDataButton.disabled = true;
-                            } else {
-                                alert('Data not available for selected species, reference genome, and amplicon.');
-                            }
-                        }, 500);
-                    }, 500);
-                }, 500);
-            }
-
 
         });
 
@@ -644,7 +1625,7 @@
                 delimiter: "\t",
             });
             const userDataArray = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
-
+        
             if (uploadMode === 'replace') {
                 // Clear existing data and plots
                 clearAllData();
@@ -653,10 +1634,10 @@
             } else if (uploadMode === 'append') {
                 // Integrate user data with existing data
                 integrateUserData(userDataArray);
-
+        
                 // Add user data points to selectedPoints
                 selectedPoints = selectedPoints.concat(userDataArray);
-
+        
                 // Update plots and table
                 for (let i = 1; i <= plotCounter; i++) {
                     const plotId = `plot-${i}`;
@@ -682,71 +1663,21 @@
             plotsContainer.innerHTML = '';
             tableContainer.innerHTML = '';
             plotCounter = 0;
+
+            // Hide the add-view button
             document.getElementById('add-view-container').style.display = 'none';
         }
 
+        const hoverColumns = [
+            'SRA Experiment accession', 'BioProject accession', 'SRA Assay type', 'Genome coverage index',
+            'Exome coverage index', 'Genomic k-mers mean abundance', 'Exome k-mers mean abundance',
+            'Mapping index', 'Predicted contamination index', 'Empirical contamination index',
+            'Sequencing errors index', 'Autosomal k-mer mean abundance CV', 'Exome enrichment score',
+            'Predicted Assay type', 'chrX Ploidy score', 'chrY Coverage score'
+        ];
 
-        function purgeExperiment(uniqueId) {
-            if (!confirm('Are you sure you want to purge this Experiment? This action cannot be undone.')) {
-                return;
-            }
-            data = data.filter(row => row._uniqueId !== uniqueId);
-            selectedPoints = selectedPoints.filter(point => point._uniqueId !== uniqueId);
-            updateTable();
-            showNotification('Experiment purged successfully.', 'success');
-        }
-
-        function purgeBioProject(bioProject) {
-            if (!confirm(`Are you sure you want to purge all Experiments under BioProject "${bioProject}"? This action cannot be undone.`)) {
-                return;
-            }
-            data = data.filter(row => row['BioProject'] !== bioProject);
-            selectedPoints = selectedPoints.filter(point => point['BioProject'] !== bioProject);
-            updateTable();
-            showNotification(`All Experiments under BioProject "${bioProject}" have been purged successfully.`, 'success');
-        }
-        function purgeBioSample(bioSample) {
-            if (!confirm(`Are you sure you want to purge all Experiments under BioSample "${bioSample}"? This action cannot be undone.`)) {
-                return;
-            }
-            data = data.filter(row => row['BioSample'] !== bioSample);
-            selectedPoints = selectedPoints.filter(point => point['BioSample'] !== bioSample);
-            updateTable();
-            showNotification(`All Experiments under BioSample "${bioSample}" have been purged successfully.`, 'success');
-        }
-
-
-
-        // Function to parse the metadata from the header line
-        function parseMetadata(headerLine) {
-            try {
-                // Parse the JSON part from the header line
-                const parsedHeader = JSON.parse(headerLine);
-
-                // Decompress the metadata
-                const decompressedMetadata = decompressMetadata(parsedHeader.metadata);
-
-                // Parse the decompressed metadata into an object
-                const metadataObject = JSON.parse(decompressedMetadata);
-
-                return {
-                    snipe_version: parsedHeader["snipe-version"],
-                    metadata: metadataObject
-                };
-            } catch (e) {
-                console.error('Error parsing metadata:', e);
-                return {};
-            }
-        }
-
-
-        // Function to decompress metadata using LZString
-        function decompressMetadata(base64String) {
-            return LZString.decompressFromBase64(base64String);
-        }
-
+        // Updated loadData function to avoid triggering the tour again
         function loadData(filePath, callback, addInitialPlot = true) {
-            const skip_columns = ["scale", "filename", "ksize"];
             dataFilePath = filePath; // Set the global dataFilePath
 
             // Show loading modal
@@ -754,47 +1685,20 @@
 
             Papa.parse(dataFilePath, {
                 download: true,
-                header: false, // Disable header parsing to handle it manually
+                header: true,
                 delimiter: "\t",
-                skipEmptyLines: true, // Skip empty lines
                 complete: function (results) {
-                    let dataRows = results.data;
+                    const newData = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
 
-                    // Check if the first row is a metadata comment
-                    if (dataRows.length > 0 && typeof dataRows[0][0] === 'string' && dataRows[0][0].startsWith('#')) {
-                        const metadataLine = dataRows[0][0].slice(1); // Remove the leading '#'
-                        snipe_metadata = parseMetadata(metadataLine);
-                        console.log('Metadata:', snipe_metadata);
-                        dataRows.shift(); // Remove the metadata row from data
-                    }
+                    // Assign a unique ID to each data point based on a unique field
+                    newData.forEach(row => {
+                        row._uniqueId = row['SRA Experiment accession']; // Use a unique field
+                    });
 
-                    if (dataRows.length > 0) {
-                        const headers = dataRows.shift(); // Extract headers from the second row
-                        // Convert data rows into objects using the headers
-                        const parsedData = dataRows.map(row => {
-                            const obj = {};
-                            headers.forEach((header, index) => {
-                                // Exclude skipped columns
-                                if (!skip_columns.includes(header)) {
-                                    obj[header] = row[index];
-                                }
-                            });
-                            return obj;
-                        });
-
-                        // Filter out any empty rows
-                        const newData = parsedData.filter(row => Object.values(row).some(value => value !== null && value !== ''));
-
-                        // Assign a unique ID to each data point based on a unique field
-                        newData.forEach(row => {
-                            row._uniqueId = row['Experiment ID']; // Use a unique field
-                        });
-
-                        if (data) {
-                            data = data.concat(newData);
-                        } else {
-                            data = newData;
-                        }
+                    if (data) {
+                        data = data.concat(newData);
+                    } else {
+                        data = newData;
                     }
 
                     // Populate column definitions in the modal
@@ -816,6 +1720,12 @@
                     // Initialize variables
                     plotCounter = 0;
 
+                    // Now, add the first plot only if addInitialPlot is true
+                    // I Disabled this to prevent adding a plot when loading user data
+                    // TODO: fix to more professional solution
+                    //if (addInitialPlot) {addNewPlot(); }
+                    
+
                     // Show the add-view button
                     document.getElementById('add-view-container').style.display = 'block';
 
@@ -831,13 +1741,35 @@
                     if (callback) callback();
 
                     displayDataStatistics();
-                },
-                error: function (error) {
-                    console.error('Error parsing TSV:', error);
-                    document.getElementById('loading-modal').style.display = 'none';
-                    showNotification('Failed to load data.');
                 }
             });
+        }
+
+        function displayDataStatistics() {
+            const logInfoDiv = document.getElementById('log-info');
+            if (!logInfoDiv) return;
+
+            // Show the log info box
+            logInfoDiv.style.display = 'block';
+
+            const totalPoints = data.length;
+            const assayTypes = [...new Set(data.map(row => row["SRA Assay type"] || 'Unknown').filter(type => type))];
+            const assayTypeCounts = assayTypes.map(type => {
+                const count = data.filter(row => row["SRA Assay type"] === type).length;
+                return `    ${type}: ${count}`;
+            }).join(', ');
+            const uniqueBioProjects = new Set(data.map(row => row["BioProject accession"])).size;
+            const uniqueExperiments = new Set(data.map(row => row["SRA Experiment accession"])).size;
+
+            const logContent = `
+Data Statistics:
+Total Data Points: ${totalPoints}
+Assay Types: 
+\t${assayTypeCounts}
+Unique BioProjects: ${uniqueBioProjects}
+Unique Experiments: ${uniqueExperiments}
+                    `;
+            logInfoDiv.textContent = logContent.trim();
         }
 
 
@@ -890,87 +1822,142 @@
         }
 
 
+
+
+        // Column Definitions
+        const columnDefinitions = {
+            "Total unique k-mers": "It represents the unique genetic content in the sample",
+            "Genomic unique k-mers": "It represents the unique genetic content in the sample that matches the reference genome",
+            "Exome unique k-mers": "It represents the unique genetic content in the sample that matches the exome",
+            "Genome coverage index": "It shows how much of the genome bases are covered",
+            "Exome coverage index": "It shows how much of the exome bases are covered",
+            "k-mer total abundance": "It correlates with the total amount of sequencing",
+            "Genomic k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the reference genome",
+            "Exome k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the exome",
+            "Mapping index": "Genomic k-mers total Abundance as a fraction of all k-mer total abundance. It correlates with the mapped sequencing bases to the genomes",
+            "Predicted contamination index": "The fraction abundance of non-genomic k-mers if the k-mer count > 1. It represent genetic variance and increase if there is sequence contamination",
+            "Empirical contamination index": "The fraction of k-mers matching microbial sequences. It is calcuted by Sourmash software and expected to correlate with Snipe's predicted contamination index",
+            "Sequencing errors index": "The fraction abundance of non-genomic k-mers if the k-mer count = 1 (i.e., singletons). It represents sequecning errors",
+            "Autosomal k-mer mean abundance CV": "The coefficient of variation (CV) for the mean abundance of k-mers specific to each autosome. A high CV suggests variability, potentially pointing to uneven sequencing",
+            "Exome enrichment score": "A composite metric for quantifying amplicon enrichment in a sequencing experiment",
+            "chrX Ploidy score": "The ratio of the mean abundance of chrX-specific k-mers to autosomal-specific k-mers. It correlates with X chromosome ploidy",
+            "chrY Coverage score": "The ratio of sequence coverage for chrY and autosomal chromosomes.",
+            "Coverage of 1fold more sequencing": "Expected coverage with 1 fold more sequecning"
+        };
+
+        // Function to populate the modal with column definitions
+        function populateModalColumnDefinitions() {
+            const columnDefinitionsDiv = document.getElementById('modal-column-definitions');
+            if (!columnDefinitionsDiv) return;
+
+            let htmlContent = '<dl>';
+
+            const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
+
+            // This will show metrics w/o definitions as "No definition available."
+            {
+                {/*  columns.forEach(col => {
+                const definition = columnDefinitions[col] || "No definition available.";
+                htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
+            });  */}
+            }
+
+            // for only columns in columnDefinitions
+            columns.forEach(col => {
+                if (col in columnDefinitions) {
+                    const definition = columnDefinitions[col] || "No definition available.";
+                    htmlContent += `<dt>${col}</dt><dd>${definition}</dd>`;
+                }
+            });
+
+            htmlContent += '</dl>';
+            columnDefinitionsDiv.innerHTML = htmlContent;
+        }
+
+
+
         // Updated addNewPlot function
         function addNewPlot(config = {}) {
             plotCounter++;
             const plotId = `plot-${plotCounter}`;
             let plotHTML = `
-        <div class="plot-container mt-4" id="container-${plotId}">
-            <!-- Plot Frame -->
-            <div class="card">
-                <!-- Title Bar -->
-                <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-1">
-                    <!-- Left Side (Plot Type and Export) -->
-                    <div class="d-flex align-items-center">
-                        <!-- Plot Type Dropdown -->
-                        <select id="plot-type-${plotId}" class="form-control form-control-sm mr-2" style="width: auto;">
-                            <option value="scatter">Scatter Plot</option>
-                            <option value="histogram">Histogram</option>
-                            <option value="boxplot">Boxplot</option>
-                        </select>
-                        <!-- Export Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="export-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Export
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="export-menu-${plotId}">
-                                <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
-                                <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
-                                <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
+                <div class="plot-container mt-4" id="container-${plotId}">
+                    <!-- Plot Frame -->
+                    <div class="card">
+                        <!-- Title Bar -->
+                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                            <!-- File Dropdown on the Left -->
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-lg dropdown-toggle" type="button" id="file-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Options
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="file-menu-${plotId}">
+                                    <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
+                                    <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
+                                    <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
+                                </div>
+                            </div>
+                            <!-- Plot Title in the Center -->
+                            <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
+                            <!-- Title Bar Buttons (Right-Aligned) -->
+                            <div class="plot-window-controls">
+                                <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm" title="Minimize">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none" title="Maximize">
+                                    <i class="fa fa-window-maximize"></i>
+                                </button>
+                                <button id="clone-plot-${plotId}" class="btn btn-light btn-sm" title="Clone">
+                                    <i class="fa fa-clone"></i>
+                                </button>
+                                <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Plot Type Selection -->
+                        <div class="card-body" id="body-${plotId}">
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <label for="plot-type-${plotId}">Plot Type:</label>
+                                    <select id="plot-type-${plotId}" class="form-control">
+                                        <option value="scatter">Scatter Plot</option>
+                                        <option value="histogram">Histogram</option>
+                                        <option value="boxplot">Boxplot</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button id="help-button-${plotId}" class="btn btn-info btn-block">Help</button>
+                                </div>
+                            </div>
+                            <!-- Dynamic Controls will be rendered here -->
+                            <div id="dynamic-controls-${plotId}" class="mt-3"></div>
+                            <!-- Plot Area -->
+                            <div class="plot-area" style="position: relative;">
+                                <div id="${plotId}" class="plot"></div>
+                                <!-- Floating Search Button -->
+                                <div class="floating-search-button" id="floating-search-button-${plotId}">
+                                    <button class="search-button" id="search-button-${plotId}">
+                                        <i class="fa fa-search"></i> Search by accession
+                                    </button>
+                                    <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
+                                </div>
+                            </div>
+                            <!-- Title, Notes, and Export Button -->
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label for="title-${plotId}">Plot Title:</label>
+                                    <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="notes-${plotId}">Notes:</label>
+                                    <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Centered Plot Title -->
-                    <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
-                    <!-- Right-Aligned Control Buttons -->
-                    <div class="plot-window-controls d-flex align-items-center">
-                        <!-- Help Button -->
-                        <button id="help-button-${plotId}" class="btn btn-light btn-sm mr-1" title="Help">?</button>
-                        <!-- Minimize, Maximize, Clone, and Close -->
-                        <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Minimize">
-                            <i class="fa fa-minus"></i>
-                        </button>
-                        <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none mr-1" title="Maximize">
-                            <i class="fa fa-window-maximize"></i>
-                        </button>
-                        <button id="clone-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Clone">
-                            <i class="fa fa-clone"></i>
-                        </button>
-                        <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
                 </div>
-                <!-- Card Body -->
-                <div class="card-body" id="body-${plotId}">
-                    <!-- Dynamic Controls will be rendered here -->
-                    <div id="dynamic-controls-${plotId}" class="mt-3"></div>
-                    <!-- Plot Area -->
-                    <div class="plot-area" style="position: relative;">
-                        <div id="${plotId}" class="plot"></div>
-                        <!-- Floating Search Button -->
-                        <div class="floating-search-button" id="floating-search-button-${plotId}">
-                            <button class="search-button" id="search-button-${plotId}">
-                                <i class="fa fa-search"></i> Search by accession
-                            </button>
-                            <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
-                        </div>
-                    </div>
-                    <!-- Title, Notes, and Export Button -->
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <label for="title-${plotId}">Plot Title:</label>
-                            <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="notes-${plotId}">Notes:</label>
-                            <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+            `;
             plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
 
             const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
@@ -1021,7 +2008,6 @@
             }
         }
 
-
         function clonePlot(plotId) {
             // Gather the configuration of the plot with id plotId
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
@@ -1062,13 +2048,19 @@
                 }
             }
             else if (plotType === 'histogram' || plotType === 'boxplot') {
+                // Selected numerical columns
                 const numColumnCheckboxes = document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]`);
                 config.numColumns = Array.from(numColumnCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
+
+                // Group By
                 config.groupBy = document.getElementById(`group-by-${plotId}`).value;
+
+                // Assay types
                 const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]`);
                 config.assayTypes = Array.from(assayTypeCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
             }
 
+            // Now add new plot with this configuration
             addNewPlot(config);
 
             // Scroll to the new plot
@@ -1196,6 +2188,10 @@
             plotContainer.remove();
         }
 
+
+
+
+
         function renderDynamicControls(plotId, config = {}) {
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
             const dynamicControlsDiv = document.getElementById(`dynamic-controls-${plotId}`);
@@ -1204,8 +2200,8 @@
             const numericalColumns = columns.filter(col => data.some(row => isNumeric(row[col])));
             const categoricalColumns = columns.filter(col => !numericalColumns.includes(col));
 
-            const cols_for_colorby = columns.filter(col => col !== 'Experiment ID');
-            const cols_for_groupby = categoricalColumns.filter(col => col !== 'Experiment ID' && col !== 'BioSample accession');
+            const cols_for_colorby = columns.filter(col => col !== 'SRA Experiment accession');
+            const cols_for_groupby = categoricalColumns.filter(col => col !== 'SRA Experiment accession' && col !== 'BioSample accession');
 
             let controlsHTML = '';
 
@@ -1268,9 +2264,9 @@
                     </div>
                     <!-- SRA Assay Type -->
                     <div class="row mt-2 align-items-center">
-                        <label class="col-auto mb-0">Assay type:</label>
+                        <label class="col-auto mb-0">SRA Assay type:</label>
                         <div id="assay-type-checkboxes-${plotId}" class="col form-inline">
-                            ${[...new Set(data.map(row => row["Assay type"]).filter(type => type))].map((type, index) => `
+                            ${[...new Set(data.map(row => row["SRA Assay type"]).filter(type => type))].map((type, index) => `
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="checkbox" id="assay-type-${plotId}-${index}" name="assay-type-${plotId}" value="${type}" checked>
                                     <label class="form-check-label" for="assay-type-${plotId}-${index}">
@@ -1357,9 +2353,9 @@
                         </div>
                         <!-- SRA Assay Type -->
                         <div class="col-md-3 align-items-center">
-                            <label class="mb-0">Assay type:</label>
+                            <label class="mb-0">SRA Assay type:</label>
                             <div id="assay-type-checkboxes-${plotId}" class="form-inline">
-                                ${[...new Set(data.map(row => row["Assay type"]).filter(type => type))].map((type, index) => `
+                                ${[...new Set(data.map(row => row["SRA Assay type"]).filter(type => type))].map((type, index) => `
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="checkbox" id="assay-type-${plotId}-${index}" name="assay-type-${plotId}" value="${type}" checked>
                                         <label class="form-check-label" for="assay-type-${plotId}-${index}">
@@ -1598,34 +2594,40 @@
         }
 
 
+
+
+
         function searchAndSelectPoints(plotId) {
             const searchInput = document.getElementById(`search-input-${plotId}`);
             let searchText = searchInput.value.trim().toLowerCase();
-
+        
             if (searchText === '') {
                 return;
             }
-
+        
             const matchingPoints = data.filter(row => {
-                return ['BioProject', 'BioSample accession', 'Experiment ID', '_uniqueId'].some(col => {
+                return ['BioProject accession', 'BioSample accession', 'SRA Experiment accession', '_uniqueId'].some(col => {
                     return row[col] && row[col].toString().toLowerCase() === searchText;
                 });
             });
-
+        
             if (matchingPoints.length === 0) {
                 alert('No matching data points found.');
                 return;
             }
-
+        
             matchingPoints.forEach(point => {
                 if (!selectedPoints.some(p => p._uniqueId === point._uniqueId)) {
                     selectedPoints.push(point);
                 }
             });
-
+        
             updateTable();
             highlightSelectedPoints();
         }
+        
+
+
 
 
 
@@ -1634,18 +2636,19 @@
         }
 
 
+        
         function updatePlot(plotId) {
             const plotDiv = document.getElementById(plotId);
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
 
             const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
             const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
-            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => {
-                const assayType = row["Assay type"] || 'Unknown';
-                return selectedAssayTypes.includes(assayType);
-            }) : data;
+                currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => {
+                    const assayType = row["SRA Assay type"] || 'Unknown';
+                    return selectedAssayTypes.includes(assayType);
+                }) : data;
 
-            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["Assay type"])) : data;
+            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["SRA Assay type"])) : data;
 
             if (plotType === 'scatter') {
                 const xAxis = document.getElementById(`x-axis-${plotId}`).value;
@@ -2039,39 +3042,17 @@
         function updateTable() {
             const columns = data && data.length > 0 ? Object.keys(data[0]).filter(col => !col.startsWith('_')) : [];
 
-            // Start building the table with the Actions column first
-            let tableHTML = '<table class="table table-striped table-bordered"><thead><tr>';
-            tableHTML += `<th>Actions</th>`; // Actions column as the first column
+            let tableHTML = '<table><tr>';
             columns.forEach(col => {
                 tableHTML += `<th>${col}</th>`;
             });
-            tableHTML += '</tr></thead><tbody>';
+            tableHTML += '</tr>';
 
             if (selectedPoints.length === 0) {
-                tableHTML += `<tr><td colspan="${columns.length + 1}" style="text-align: center;">No points selected. Click on points in the plot to add them to the table.</td></tr>`;
+                tableHTML += '<tr><td colspan="' + columns.length + '" style="text-align: center;">No points selected. Click on points in the plot to add them to the table.</td></tr>';
             } else {
                 selectedPoints.forEach(point => {
                     tableHTML += '<tr>';
-
-                    // Actions Dropdown in the first cell
-                    tableHTML += `
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton-${point._uniqueId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Actions
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-${point._uniqueId}">
-                                    <a class="dropdown-item view-sra" href="#" data-unique-id="${point._uniqueId}">View in SRA</a>
-                                    <a class="dropdown-item show-depth" href="#" data-unique-id="${point._uniqueId}">Show depth per chromosome</a>
-                                    <a class="dropdown-item purge-experiment" href="#" data-unique-id="${point._uniqueId}">Purge Experiment</a>
-                                    <a class="dropdown-item purge-bioproject" href="#" data-bioproject="${point['BioProject']}">Purge BioProject</a>
-                                    <a class="dropdown-item purge-biosample" href="#" data-biosample="${point['BioSample']}">Purge BioSample</a>
-                                </div>
-                            </div>
-                        </td>
-                    `;
-
-                    // Add the rest of the columns
                     columns.forEach(col => {
                         tableHTML += `<td>${point[col]}</td>`;
                     });
@@ -2079,12 +3060,9 @@
                 });
             }
 
-            tableHTML += '</tbody></table>';
+            tableHTML += '</table>';
             tableContainer.innerHTML = tableHTML;
         }
-
-
-
 
 
         function clearSelections() {
@@ -2234,11 +3212,11 @@
                                 const assayTypeValue = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value).join(', ') || 'All';
 
                                 currentPlotData = data.filter(row => {
-                                    const assayType = row["Assay type"] || 'Unknown';
+                                    const assayType = row["SRA Assay type"] || 'Unknown';
                                     return selectedAssayTypes.includes(assayType);
                                 });
 
-                                doc.text(`Assay type: ${assayTypeValue}`, 60, detailsYPosition + 80);
+                                doc.text(`SRA Assay type: ${assayTypeValue}`, 60, detailsYPosition + 80);
 
                                 // Add user's notes
                                 const notesValue = document.getElementById(`notes-${plotId}`).value;
@@ -2255,6 +3233,23 @@
                     }
                 }
 
+                // Add Selected Data Table if any points are selected
+                /*
+                if (selectedPoints.length > 0) {
+                    const pageNum = doc.internal.getNumberOfPages() + promises.length + 1;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(12);
+                    doc.text("Selected Data Points", 60, tocYPosition);
+                    doc.text(`Page ${pageNum}`, pageWidth - 60, tocYPosition, null, null, 'right');
+ 
+                    const promise = new Promise((resolve) => {
+                        doc.addPage();
+                        addSelectedDataTable(doc);
+                        resolve();
+                    });
+                    promises.push(promise);
+                }*/
+
                 Promise.all(promises).then(() => {
                     // Add page numbers
                     const pageCount = doc.internal.getNumberOfPages();
@@ -2269,6 +3264,8 @@
                 });
             };
         }
+
+
 
 
         function addSelectedDataTable(doc) {
@@ -2314,6 +3311,83 @@
         }
 
 
+        let driverInstance;
+        function initOnboardingTour() {
+            // Access the Driver class from the window object
+            const driver = window.driver.js.driver; // For Driver.js version 1.0.1
+
+            const steps = [
+                {
+                    element: '.container h1',
+                    popover: {
+                        title: 'Welcome to Snipe SRA Exploration Dashboard',
+                        description: 'This dashboard helps you visualize and analyze the SRA experiments.',
+                        position: 'bottom'
+                    }
+                },
+                {
+                    element: '.floating-buttons',
+                    popover: {
+                        title: 'Control Buttons',
+                        description: 'Use these buttons to clear selections, export data, and access help.',
+                        position: 'left'
+                    }
+                },
+                {
+                    element: '.search-container',
+                    popover: {
+                        title: 'Search Bar',
+                        description: 'Search for specific data points by BioProject, BioSample, or Experiment.',
+                        position: 'bottom'
+                    }
+                },
+                {
+                    element: '.controls',
+                    popover: {
+                        title: 'Plot Controls',
+                        description: 'Use these controls to customize your plot.',
+                        position: 'bottom'
+                    }
+                },
+                {
+                    element: '.additional-inputs',
+                    popover: {
+                        title: 'Plot Details',
+                        description: 'Add a title and notes for your plot here.',
+                        position: 'bottom'
+                    }
+                }
+            ];
+
+            driverInstance = driver({
+                animate: true,
+                opacity: 0.75,
+                padding: 10,
+                allowClose: true,
+                overlayClickNext: false,
+                doneBtnText: 'Finish',
+                closeBtnText: 'Close',
+                nextBtnText: '→',
+                prevBtnText: '←',
+                showButtons: false,
+                keyboardControl: true,
+                showProgress: true,
+                steps: steps,
+            });
+
+        }
+
+        function startTour() {
+            driverInstance.drive();
+        }
+
+        // ========================================
+        // END OF STEP BY STEP TOUR
+        // ========================================
+
+        // ========================================
+        // IMPORT/EXPORT SESSIONS
+        // ========================================
 
         function exportSession() {
             const sessionData = collectSessionData();
@@ -2331,6 +3405,8 @@
             // Show notification
             showNotification('Session exported successfully.');
         }
+
+        // Function to import a session from JSON
 
         // Updated importSession function
         function importSession(jsonData, userData = null) {
@@ -2438,8 +3514,8 @@
                     let userDataIds = [];
                     if (userData) {
                         userDataIds = userData.map(row => {
-                            if (row['Experiment ID']) {
-                                return 'user_' + row['Experiment ID'];
+                            if (row['SRA Experiment accession']) {
+                                return 'user_' + row['SRA Experiment accession'];
                             } else {
                                 return 'user_' + row._uniqueId;
                             }
@@ -2471,22 +3547,22 @@
         function integrateUserData(userDataArray) {
             userDataArray.forEach(row => {
                 // Assign a unique ID with a 'user_' prefix
-                if (row['Experiment ID']) {
-                    row._uniqueId = 'user_' + row['Experiment ID'];
+                if (row['SRA Experiment accession']) {
+                    row._uniqueId = 'user_' + row['SRA Experiment accession'];
                 } else {
                     // Generate a unique ID for user data if the field is missing
                     row._uniqueId = 'user_' + Math.random().toString(36).substr(2, 9);
                 }
                 row._isUserData = true;
-
-                // Assign 'Unknown' to missing 'Assay type'
-                if (!row['Assay type']) {
-                    row['Assay type'] = 'Unknown';
+        
+                // Assign 'Unknown' to missing 'SRA Assay type'
+                if (!row['SRA Assay type']) {
+                    row['SRA Assay type'] = 'Unknown';
                 }
             });
             data = data.concat(userDataArray);
         }
-
+        
 
         // Function to export the session data to the URL
         function collectSessionData() {
@@ -2680,6 +3756,29 @@
             return sessionData;
         }
 
+        function showNotification(message, type = 'success') {
+            const notificationContainer = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            if (type === 'error') {
+                notification.style.backgroundColor = '#e74c3c';
+            } else if (type === 'warning') {
+                notification.style.backgroundColor = '#f39c12';
+            } else {
+                notification.style.backgroundColor = '#2ecc71';
+            }
+            notification.textContent = message;
+
+            notificationContainer.appendChild(notification);
+
+            // Auto-fade and remove the notification after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notificationContainer.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
 
     </script>
 
@@ -2733,14 +3832,6 @@
                 </label>
             </p>
             <button id="upload-data-confirm" class="button">Upload Data</button>
-        </div>
-    </div>
-
-    <div id="search-result-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="search-result-close">&times;</span>
-            <h2 id="search-result-title"></h2>
-            <p id="search-result-message"></p>
         </div>
     </div>
 
