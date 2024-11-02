@@ -1020,6 +1020,20 @@
             document.getElementById(`close-plot-${plotId}`).addEventListener('click', () => closePlot(plotId));
             document.getElementById(`clone-plot-${plotId}`).addEventListener('click', () => clonePlot(plotId));
 
+            const plotHeader = document.querySelector(`#container-${plotId} .card-header`);
+            const filterButton = document.createElement('button');
+            filterButton.id = `filter-plot-${plotId}`;
+            filterButton.className = 'btn btn-light btn-sm mr-1';
+            filterButton.title = 'Filter';
+            filterButton.innerHTML = '<i class="fa fa-filter"></i>';
+            plotHeader.appendChild(filterButton);
+
+            // Event listener for Filter button
+            filterButton.addEventListener('click', () => {
+                openFilterModal(plotId);
+            });
+
+
             // Initialize plot
             if (!config.plotType) {
                 updatePlot(plotId);
@@ -1645,12 +1659,42 @@
 
             const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
             const selectedAssayTypes = Array.from(assayTypeCheckboxes).map(checkbox => checkbox.value);
-            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => {
-                const assayType = row["Assay type"] || 'Unknown';
-                return selectedAssayTypes.includes(assayType);
-            }) : data;
+            let plotDataSet = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["Assay type"])) : data;
 
-            currentPlotData = selectedAssayTypes.length > 0 ? data.filter(row => selectedAssayTypes.includes(row["Assay type"])) : data;
+            // Apply filters if any
+            if (plotFilters[plotId] && plotFilters[plotId].length > 0) {
+                plotFilters[plotId].forEach(filter => {
+                    const { logic, column, operator, value } = filter;
+                    switch (operator) {
+                        case 'equals':
+                            plotDataSet = logic === 'AND' ? plotDataSet.filter(row => row[column] == value)
+                                : plotDataSet.filter(row => row[column] != value);
+                            break;
+                        case 'not_equals':
+                            plotDataSet = logic === 'AND' ? plotDataSet.filter(row => row[column] != value)
+                                : plotDataSet.filter(row => row[column] == value);
+                            break;
+                        case 'greater_than':
+                            plotDataSet = plotDataSet.filter(row => parseFloat(row[column]) > parseFloat(value));
+                            break;
+                        case 'less_than':
+                            plotDataSet = plotDataSet.filter(row => parseFloat(row[column]) < parseFloat(value));
+                            break;
+                        case 'in':
+                            const inValues = value.split(',').map(v => v.trim());
+                            plotDataSet = plotDataSet.filter(row => inValues.includes(row[column]));
+                            break;
+                        case 'not_in':
+                            const notInValues = value.split(',').map(v => v.trim());
+                            plotDataSet = plotDataSet.filter(row => !notInValues.includes(row[column]));
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            }
+
+            currentPlotData = plotDataSet;
 
             if (plotType === 'scatter') {
                 const xAxis = document.getElementById(`x-axis-${plotId}`).value;
@@ -2338,6 +2382,7 @@
         }
 
         // Updated importSession function
+        // Update importSession function to restore filters
         function importSession(jsonData, userData = null) {
             try {
                 // Show loading modal
@@ -2350,6 +2395,7 @@
                 plotsContainer.innerHTML = '';
                 plotCounter = 0;
                 selectedPoints = [];
+                plotFilters = {};
 
                 // Restore species, reference, and amplicon selections
                 document.getElementById('species-select').value = sessionData.selectedSpecies;
@@ -2380,7 +2426,7 @@
 
                         // Restore plot type
                         document.getElementById(`plot-type-${plotConfig.plotId}`).value = plotConfig.plotType;
-                        renderDynamicControls(plotConfig.plotId);
+                        renderDynamicControls(plotConfig.plotId, plotConfig);
 
                         // Restore controls
                         if (plotConfig.plotType === 'scatter') {
@@ -2418,6 +2464,11 @@
                                 }
                             });
                             document.getElementById(`group-by-${plotConfig.plotId}`).value = plotConfig.controls.groupBy;
+                        }
+
+                        // Collect filters
+                        if (plotConfig.filters && plotConfig.filters.length > 0) {
+                            plotFilters[plotConfig.plotId] = plotConfig.filters;
                         }
 
                         // Restore selected assay types
@@ -2465,9 +2516,10 @@
                     // Hide loading modal
                     document.getElementById('loading-modal').style.display = 'none';
                 }, false);
-            } catch (error) {
-                alert('Failed to import session: ' + error.message);
-                // Hide loading modal in case of error
+            }
+            catch (error) {
+                console.error('Error importing session:', error);
+                alert('Error importing session. Please check the console for more details.');
                 document.getElementById('loading-modal').style.display = 'none';
             }
         }
@@ -2517,6 +2569,7 @@
                     controls: {},
                     title: document.getElementById(`title-${plotId}`).value,
                     notes: document.getElementById(`notes-${plotId}`).value,
+                    filters: plotFilters[plotId] ? plotFilters[plotId] : []
                 };
 
                 // Collect control values based on plot type
@@ -2600,89 +2653,203 @@
         }
 
 
-        // Helper function to collect session data
-        function collectSessionData() {
-            const sessionData = {
-                metadata: {
-                    exportDate: new Date().toISOString(),
-                    dataFilePath: dataFilePath,
-                },
-                selectedSpecies: document.getElementById('species-select').value,
-                selectedReference: document.getElementById('reference-select').value,
-                selectedAmplicon: document.getElementById('amplicon-select').value,
-                plots: [],
-                selectedPoints: selectedPoints.map(p => p._uniqueId),
+
+        // Add the following JavaScript code at the end of your existing <script> section or in your main.js file
+
+        // Initialize plotFilters globally
+        let plotFilters = {};
+
+        // Function to open the Filter modal
+        let currentFilterPlotId = null;
+
+        function openFilterModal(plotId) {
+            currentFilterPlotId = plotId;
+            const modal = document.getElementById('filter-modal');
+            modal.style.display = 'flex';
+            populateFilterGroups(plotId);
+
+            // allow closing modal by clicking outside of it
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
             };
 
-            // Collect data for each plot
-            for (let i = 1; i <= plotCounter; i++) {
-                const plotId = `plot-${i}`;
-                const plotType = document.getElementById(`plot-type-${plotId}`).value;
-                const plotConfig = {
-                    plotId: plotId,
-                    plotType: plotType,
-                    controls: {},
-                    title: document.getElementById(`title-${plotId}`).value,
-                    notes: document.getElementById(`notes-${plotId}`).value,
-                };
+        }
 
-                // Collect control values based on plot type
-                if (plotType === 'scatter') {
-                    plotConfig.controls.xAxis = document.getElementById(`x-axis-${plotId}`).value;
-                    plotConfig.controls.yAxis = document.getElementById(`y-axis-${plotId}`).value;
-                    plotConfig.controls.hue = document.getElementById(`hue-${plotId}`).value;
-                    plotConfig.controls.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
-                    plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
-                    plotConfig.controls.palette = document.getElementById(`palette-${plotId}`).value;
-
-                    // Save range slider values
-                    const xSlider = document.getElementById(`x-range-slider-${plotId}`);
-                    const ySlider = document.getElementById(`y-range-slider-${plotId}`);
-                    const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
-
-                    if (xSlider.noUiSlider) {
-                        plotConfig.controls.xRange = xSlider.noUiSlider.get();
-                    }
-                    if (ySlider.noUiSlider) {
-                        plotConfig.controls.yRange = ySlider.noUiSlider.get();
-                    }
-                    if (hueSlider && hueSlider.noUiSlider) {
-                        plotConfig.controls.hueRange = hueSlider.noUiSlider.get();
-                    }
-                } else if (plotType === 'histogram' || plotType === 'boxplot') {
-                    plotConfig.controls.numColumns = Array.from(
-                        document.querySelectorAll(
-                            `#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`
-                        )
-                    ).map(checkbox => checkbox.value);
-                    plotConfig.controls.groupBy = document.getElementById(`group-by-${plotId}`).value;
-                }
-
-                // Collect selected assay types
-                plotConfig.controls.selectedAssayTypes = Array.from(
-                    document.querySelectorAll(
-                        `#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`
-                    )
-                ).map(checkbox => checkbox.value);
-
-                sessionData.plots.push(plotConfig);
-            }
-
-            // Include user data if present
-            const userDataPoints = data.filter(row => row._isUserData);
-            if (userDataPoints.length > 0) {
-                sessionData.userData = userDataPoints.map(row => {
-                    const newRow = {};
-                    for (let key in row) {
-                        if (!key.startsWith('_')) {
-                            newRow[key] = row[key];
-                        }
-                    }
-                    return newRow;
+        // Close Filter modal
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterModalClose = document.getElementById('filter-modal-close');
+            if (filterModalClose) {
+                filterModalClose.addEventListener('click', () => {
+                    document.getElementById('filter-modal').style.display = 'none';
                 });
             }
 
-            return sessionData;
+            // Add Filter Group
+            const addFilterGroupBtn = document.getElementById('add-filter-group');
+            if (addFilterGroupBtn) {
+                addFilterGroupBtn.addEventListener('click', () => {
+                    addFilterGroup();
+                });
+            }
+
+            // Apply Filters
+            const applyFiltersBtn = document.getElementById('apply-filters');
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', () => {
+                    applyFilters();
+                    document.getElementById('filter-modal').style.display = 'none';
+                });
+            }
+
+            // Add Filter button to each plot after plots are loaded
+            document.addEventListener('click', function (event) {
+                if (event.target && event.target.matches('button#add-view')) {
+                    addFilterButtonsToPlots();
+                }
+            });
+        });
+
+        // Function to add Filter button to each plot
+        function addFilterButtonsToPlots() {
+            for (let i = 1; i <= plotCounter; i++) {
+                const plotId = `plot-${i}`;
+                const plotHeader = document.querySelector(`#container-${plotId} .card-header`);
+                if (plotHeader && !document.getElementById(`filter-plot-${plotId}`)) {
+                    const filterButton = document.createElement('button');
+                    filterButton.id = `filter-plot-${plotId}`;
+                    filterButton.className = 'btn btn-light btn-sm mr-1';
+                    filterButton.title = 'Filter';
+                    filterButton.innerHTML = '<i class="fa fa-filter"></i>';
+                    plotHeader.appendChild(filterButton);
+
+                    // Event listener for Filter button
+                    filterButton.addEventListener('click', () => {
+                        openFilterModal(plotId);
+                    });
+                }
+            }
+        }
+
+        // Function to populate existing filter groups (if any)
+        function populateFilterGroups(plotId) {
+            const filterGroupsContainer = document.getElementById('filter-groups-container');
+            filterGroupsContainer.innerHTML = ''; // Clear existing
+
+            const filters = plotFilters[plotId];
+            if (filters && filters.length > 0) {
+                filters.forEach(filterGroup => {
+                    addFilterGroup(filterGroup);
+                });
+            } else {
+                addFilterGroup();
+            }
+        }
+
+        // Function to add a new filter group
+        function addFilterGroup(existingGroup = null) {
+            const filterGroupsContainer = document.getElementById('filter-groups-container');
+
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'filter-group';
+            groupDiv.style.border = '1px solid #ccc';
+            groupDiv.style.padding = '10px';
+            groupDiv.style.marginBottom = '10px';
+            groupDiv.style.borderRadius = '5px';
+            groupDiv.style.position = 'relative';
+
+            const logicSelect = document.createElement('select');
+            logicSelect.className = 'form-control form-control-sm logic-select';
+            logicSelect.innerHTML = `
+        <option value="AND">AND</option>
+        <option value="OR">OR</option>
+        <option value="NOT">NOT</option>
+    `;
+            if (existingGroup && existingGroup.logic) {
+                logicSelect.value = existingGroup.logic;
+            }
+
+            const conditionDiv = document.createElement('div');
+            conditionDiv.className = 'condition-div';
+
+            const columnSelect = document.createElement('select');
+            columnSelect.className = 'form-control form-control-sm column-select';
+            columnSelect.innerHTML = `<option value="">Select Column</option>`;
+            const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
+            columns.forEach(col => {
+                columnSelect.innerHTML += `<option value="${col}">${col}</option>`;
+            });
+            if (existingGroup && existingGroup.column) {
+                columnSelect.value = existingGroup.column;
+            }
+
+            const operatorSelect = document.createElement('select');
+            operatorSelect.className = 'form-control form-control-sm operator-select';
+            operatorSelect.innerHTML = `
+        <option value="equals">Equals</option>
+        <option value="not_equals">Not Equals</option>
+        <option value="greater_than">Greater Than</option>
+        <option value="less_than">Less Than</option>
+        <option value="in">In</option>
+        <option value="not_in">Not In</option>
+    `;
+            if (existingGroup && existingGroup.operator) {
+                operatorSelect.value = existingGroup.operator;
+            }
+
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.className = 'form-control form-control-sm value-input';
+            valueInput.placeholder = 'Value';
+            if (existingGroup && existingGroup.value) {
+                valueInput.value = existingGroup.value;
+            }
+
+            conditionDiv.appendChild(columnSelect);
+            conditionDiv.appendChild(operatorSelect);
+            conditionDiv.appendChild(valueInput);
+
+            const removeButton = document.createElement('button');
+            removeButton.className = 'btn btn-danger btn-sm remove-filter-group';
+            removeButton.style.position = 'absolute';
+            removeButton.style.top = '10px';
+            removeButton.style.right = '10px';
+            removeButton.innerHTML = '<i class="fa fa-times"></i>';
+            removeButton.addEventListener('click', () => {
+                filterGroupsContainer.removeChild(groupDiv);
+            });
+
+            groupDiv.appendChild(logicSelect);
+            groupDiv.appendChild(conditionDiv);
+            groupDiv.appendChild(removeButton);
+
+            filterGroupsContainer.appendChild(groupDiv);
+        }
+
+        // Function to apply filters
+        function applyFilters() {
+            const filterGroups = [];
+            const filterGroupDivs = document.querySelectorAll('#filter-groups-container .filter-group');
+            filterGroupDivs.forEach(groupDiv => {
+                const logic = groupDiv.querySelector('.logic-select').value;
+                const column = groupDiv.querySelector('.column-select').value;
+                const operator = groupDiv.querySelector('.operator-select').value;
+                const value = groupDiv.querySelector('.value-input').value.trim();
+                if (column && operator && value) {
+                    filterGroups.push({ logic, column, operator, value });
+                }
+            });
+
+            if (currentFilterPlotId) {
+                setPlotFilters(currentFilterPlotId, filterGroups);
+                updatePlot(currentFilterPlotId);
+            }
+        }
+
+        // Function to set filters for a plot
+        function setPlotFilters(plotId, filters) {
+            plotFilters[plotId] = filters;
         }
 
 
@@ -2748,6 +2915,23 @@
             <p id="search-result-message"></p>
         </div>
     </div>
+
+    <!-- Filter Modal -->
+    <div id="filter-modal" class="modal">
+        <div class="modal-content">
+            <span id="filter-modal-close" class="close-button">&times;</span>
+            <h2>Apply Filters</h2>
+            <div id="filter-groups-container">
+                <!-- Filter groups will be dynamically added here -->
+            </div>
+            <button id="add-filter-group" class="button">Add Filter Group</button>
+            <button id="apply-filters" class="button">Apply Filters</button>
+        </div>
+    </div>
+
+
+
+
 
 
     <div id="notification-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
