@@ -1665,34 +1665,43 @@
             if (plotFilters[plotId] && plotFilters[plotId].length > 0) {
                 plotFilters[plotId].forEach(filter => {
                     const { logic, column, operator, value } = filter;
-                    switch (operator) {
-                        case 'equals':
-                            plotDataSet = logic === 'AND' ? plotDataSet.filter(row => row[column] == value)
-                                : plotDataSet.filter(row => row[column] != value);
-                            break;
-                        case 'not_equals':
-                            plotDataSet = logic === 'AND' ? plotDataSet.filter(row => row[column] != value)
-                                : plotDataSet.filter(row => row[column] == value);
-                            break;
-                        case 'greater_than':
-                            plotDataSet = plotDataSet.filter(row => parseFloat(row[column]) > parseFloat(value));
-                            break;
-                        case 'less_than':
-                            plotDataSet = plotDataSet.filter(row => parseFloat(row[column]) < parseFloat(value));
-                            break;
-                        case 'in':
-                            const inValues = value.split(',').map(v => v.trim());
-                            plotDataSet = plotDataSet.filter(row => inValues.includes(row[column]));
-                            break;
-                        case 'not_in':
-                            const notInValues = value.split(',').map(v => v.trim());
-                            plotDataSet = plotDataSet.filter(row => !notInValues.includes(row[column]));
-                            break;
-                        default:
-                            break;
+
+                    if (typeof value === 'object' && value.min !== undefined && value.max !== undefined) {
+                        // Numerical filter
+                        plotDataSet = plotDataSet.filter(row => {
+                            const rowValue = parseFloat(row[column]);
+                            return rowValue >= value.min && rowValue <= value.max;
+                        });
+                    } else if (typeof value === 'string' || Array.isArray(value)) {
+                        // Categorical filter
+                        switch (operator) {
+                            case 'equals':
+                                plotDataSet = logic === 'AND'
+                                    ? plotDataSet.filter(row => row[column] == value)
+                                    : plotDataSet.filter(row => row[column] != value);
+                                break;
+                            case 'not_equals':
+                                plotDataSet = logic === 'AND'
+                                    ? plotDataSet.filter(row => row[column] != value)
+                                    : plotDataSet.filter(row => row[column] == value);
+                                break;
+                            case 'in':
+                                if (Array.isArray(value)) {
+                                    plotDataSet = plotDataSet.filter(row => value.includes(row[column]));
+                                }
+                                break;
+                            case 'not_in':
+                                if (Array.isArray(value)) {
+                                    plotDataSet = plotDataSet.filter(row => !value.includes(row[column]));
+                                }
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 });
             }
+
 
             currentPlotData = plotDataSet;
 
@@ -2133,9 +2142,6 @@
         }
 
 
-
-
-
         function clearSelections() {
             selectedPoints = [];
             updateTable();
@@ -2381,8 +2387,6 @@
             showNotification('Session exported successfully.');
         }
 
-        // Updated importSession function
-        // Update importSession function to restore filters
         function importSession(jsonData, userData = null) {
             try {
                 // Show loading modal
@@ -2443,18 +2447,18 @@
                             initializeHueSlider(plotConfig.plotId);
 
                             // Restore slider positions
-                            const xSlider = document.getElementById(`x-range-slider-${plotConfig.plotId}`);
-                            const ySlider = document.getElementById(`y-range-slider-${plotConfig.plotId}`);
-                            const hueSlider = document.getElementById(`hue-range-slider-${plotConfig.plotId}`);
+                            const xSlider = document.getElementById(`slider-${plotConfig.plotId}-filter-0-range`); // Adjust filter index as needed
+                            const ySlider = document.getElementById(`slider-${plotConfig.plotId}-filter-1-range`); // Adjust filter index as needed
+                            const hueSlider = document.getElementById(`slider-${plotConfig.plotId}-filter-2-range`); // Adjust filter index as needed
 
-                            if (xSlider.noUiSlider && plotConfig.controls.xRange) {
-                                xSlider.noUiSlider.set(plotConfig.controls.xRange);
+                            if (xSlider && xSlider.noUiSlider && plotConfig.controls.xRange) {
+                                xSlider.noUiSlider.set([plotConfig.controls.xRange.min, plotConfig.controls.xRange.max]);
                             }
-                            if (ySlider.noUiSlider && plotConfig.controls.yRange) {
-                                ySlider.noUiSlider.set(plotConfig.controls.yRange);
+                            if (ySlider && ySlider.noUiSlider && plotConfig.controls.yRange) {
+                                ySlider.noUiSlider.set([plotConfig.controls.yRange.min, plotConfig.controls.yRange.max]);
                             }
                             if (hueSlider && hueSlider.noUiSlider && plotConfig.controls.hueRange) {
-                                hueSlider.noUiSlider.set(plotConfig.controls.hueRange);
+                                hueSlider.noUiSlider.set([plotConfig.controls.hueRange.min, plotConfig.controls.hueRange.max]);
                             }
                         } else if (plotConfig.plotType === 'histogram' || plotConfig.plotType === 'boxplot') {
                             plotConfig.controls.numColumns.forEach(col => {
@@ -2468,7 +2472,9 @@
 
                         // Collect filters
                         if (plotConfig.filters && plotConfig.filters.length > 0) {
-                            plotFilters[plotConfig.plotId] = plotConfig.filters;
+                            plotConfig.filters.forEach(filterGroup => {
+                                addFilterGroup(filterGroup);
+                            });
                         }
 
                         // Restore selected assay types
@@ -2525,6 +2531,8 @@
         }
 
 
+
+
         function integrateUserData(userDataArray) {
             userDataArray.forEach(row => {
                 // Assign a unique ID with a 'user_' prefix
@@ -2545,7 +2553,6 @@
         }
 
 
-        // Function to export the session data to the URL
         function collectSessionData() {
             const sessionData = {
                 metadata: {
@@ -2582,18 +2589,21 @@
                     plotConfig.controls.palette = document.getElementById(`palette-${plotId}`).value;
 
                     // Save range slider values
-                    const xSlider = document.getElementById(`x-range-slider-${plotId}`);
-                    const ySlider = document.getElementById(`y-range-slider-${plotId}`);
-                    const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
+                    const xSlider = document.getElementById(`slider-${plotId}-filter-0-range`); // Adjust filter index as needed
+                    const ySlider = document.getElementById(`slider-${plotId}-filter-1-range`); // Adjust filter index as needed
+                    const hueSlider = document.getElementById(`slider-${plotId}-filter-2-range`); // Adjust filter index as needed
 
-                    if (xSlider.noUiSlider) {
-                        plotConfig.controls.xRange = xSlider.noUiSlider.get();
+                    if (xSlider && xSlider.noUiSlider) {
+                        const [xMin, xMax] = xSlider.noUiSlider.get().map(Number);
+                        plotConfig.controls.xRange = { min: xMin, max: xMax };
                     }
-                    if (ySlider.noUiSlider) {
-                        plotConfig.controls.yRange = ySlider.noUiSlider.get();
+                    if (ySlider && ySlider.noUiSlider) {
+                        const [yMin, yMax] = ySlider.noUiSlider.get().map(Number);
+                        plotConfig.controls.yRange = { min: yMin, max: yMax };
                     }
                     if (hueSlider && hueSlider.noUiSlider) {
-                        plotConfig.controls.hueRange = hueSlider.noUiSlider.get();
+                        const [hueMin, hueMax] = hueSlider.noUiSlider.get().map(Number);
+                        plotConfig.controls.hueRange = { min: hueMin, max: hueMax };
                     }
                 } else if (plotType === 'histogram' || plotType === 'boxplot') {
                     plotConfig.controls.numColumns = Array.from(
@@ -2610,6 +2620,9 @@
                         `#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`
                     )
                 ).map(checkbox => checkbox.value);
+
+                // Collect filters
+                plotConfig.filters = plotFilters[plotId] ? plotFilters[plotId] : [];
 
                 sessionData.plots.push(plotConfig);
             }
@@ -2630,6 +2643,8 @@
 
             return sessionData;
         }
+
+
 
         function exportSessionToURL() {
             const sessionData = collectSessionData();
@@ -2653,9 +2668,6 @@
         }
 
 
-
-        // Add the following JavaScript code at the end of your existing <script> section or in your main.js file
-
         // Initialize plotFilters globally
         let plotFilters = {};
 
@@ -2668,13 +2680,12 @@
             modal.style.display = 'flex';
             populateFilterGroups(plotId);
 
-            // allow closing modal by clicking outside of it
+            // Allow closing modal by clicking outside of it
             window.onclick = function (event) {
                 if (event.target == modal) {
                     modal.style.display = "none";
                 }
             };
-
         }
 
         // Close Filter modal
@@ -2702,35 +2713,7 @@
                     document.getElementById('filter-modal').style.display = 'none';
                 });
             }
-
-            // Add Filter button to each plot after plots are loaded
-            document.addEventListener('click', function (event) {
-                if (event.target && event.target.matches('button#add-view')) {
-                    addFilterButtonsToPlots();
-                }
-            });
         });
-
-        // Function to add Filter button to each plot
-        function addFilterButtonsToPlots() {
-            for (let i = 1; i <= plotCounter; i++) {
-                const plotId = `plot-${i}`;
-                const plotHeader = document.querySelector(`#container-${plotId} .card-header`);
-                if (plotHeader && !document.getElementById(`filter-plot-${plotId}`)) {
-                    const filterButton = document.createElement('button');
-                    filterButton.id = `filter-plot-${plotId}`;
-                    filterButton.className = 'btn btn-light btn-sm mr-1';
-                    filterButton.title = 'Filter';
-                    filterButton.innerHTML = '<i class="fa fa-filter"></i>';
-                    plotHeader.appendChild(filterButton);
-
-                    // Event listener for Filter button
-                    filterButton.addEventListener('click', () => {
-                        openFilterModal(plotId);
-                    });
-                }
-            }
-        }
 
         // Function to populate existing filter groups (if any)
         function populateFilterGroups(plotId) {
@@ -2747,7 +2730,12 @@
             }
         }
 
-        // Function to add a new filter group
+        // Function to determine if a column is numerical
+        function isNumerical(column) {
+            const numericCount = data.filter(row => !isNaN(parseFloat(row[column])) && isFinite(row[column])).length;
+            return (numericCount / data.length) >= 0.9; // 90% or more values are numeric
+        }
+
         function addFilterGroup(existingGroup = null) {
             const filterGroupsContainer = document.getElementById('filter-groups-container');
 
@@ -2789,8 +2777,6 @@
             operatorSelect.innerHTML = `
         <option value="equals">Equals</option>
         <option value="not_equals">Not Equals</option>
-        <option value="greater_than">Greater Than</option>
-        <option value="less_than">Less Than</option>
         <option value="in">In</option>
         <option value="not_in">Not In</option>
     `;
@@ -2798,13 +2784,8 @@
                 operatorSelect.value = existingGroup.operator;
             }
 
-            const valueInput = document.createElement('input');
-            valueInput.type = 'text';
-            valueInput.className = 'form-control form-control-sm value-input';
-            valueInput.placeholder = 'Value';
-            if (existingGroup && existingGroup.value) {
-                valueInput.value = existingGroup.value;
-            }
+            const valueInput = document.createElement('div'); // Container for dynamic inputs
+            valueInput.className = 'value-input-container';
 
             conditionDiv.appendChild(columnSelect);
             conditionDiv.appendChild(operatorSelect);
@@ -2825,18 +2806,311 @@
             groupDiv.appendChild(removeButton);
 
             filterGroupsContainer.appendChild(groupDiv);
+
+            // Determine the filter index within the plot
+            const currentPlotId = currentFilterPlotId; // Assuming currentFilterPlotId is globally set
+            const plotFilterGroups = plotFilters[currentPlotId] || [];
+            const filterIndex = plotFilterGroups.length;
+
+            // Function to get min and max of a numerical column
+            function getMinMax(column) {
+                const values = data.map(row => parseFloat(row[column])).filter(val => !isNaN(val));
+                return {
+                    min: Math.min(...values),
+                    max: Math.max(...values)
+                };
+            }
+
+            // Function to create range slider and text inputs
+            function createRangeFilter(container, column, existingValues = null) {
+                container.innerHTML = ''; // Clear existing content
+
+                const { min, max } = getMinMax(column);
+
+                // Create slider div
+                const sliderDiv = document.createElement('div');
+                sliderDiv.className = 'range-slider';
+                sliderDiv.id = `slider-${currentPlotId}-filter-${filterIndex}-range`; // Consistent ID
+                sliderDiv.style.marginBottom = '10px'; // Add some spacing
+
+                // Create min input
+                const minInput = document.createElement('input');
+                minInput.type = 'number';
+                minInput.className = 'form-control form-control-sm range-min';
+                minInput.style.width = '80px';
+                minInput.style.marginRight = '10px';
+                minInput.placeholder = `Min (${min})`;
+
+                // Create max input
+                const maxInput = document.createElement('input');
+                maxInput.type = 'number';
+                maxInput.className = 'form-control form-control-sm range-max';
+                maxInput.style.width = '80px';
+                maxInput.style.marginRight = '10px';
+                maxInput.placeholder = `Max (${max})`;
+
+                // Append elements to container
+                container.appendChild(minInput);
+                container.appendChild(sliderDiv);
+                container.appendChild(maxInput);
+
+                // Initialize noUiSlider
+                noUiSlider.create(sliderDiv, {
+                    start: existingValues ? [existingValues.min, existingValues.max] : [min, max],
+                    connect: true,
+                    range: {
+                        'min': min,
+                        'max': max
+                    },
+                    tooltips: [true, true],
+                    format: {
+                        to: function (value) {
+                            return Number(value).toFixed(2);
+                        },
+                        from: function (value) {
+                            return Number(value);
+                        }
+                    }
+                });
+
+                // Set initial values if existing
+                if (existingValues) {
+                    minInput.value = existingValues.min;
+                    maxInput.value = existingValues.max;
+                } else {
+                    minInput.value = min;
+                    maxInput.value = max;
+                }
+
+                // Synchronize slider with inputs
+                sliderDiv.noUiSlider.on('update', (values, handle) => {
+                    if (handle === 0) {
+                        minInput.value = values[0];
+                    } else {
+                        maxInput.value = values[1];
+                    }
+                });
+
+                // Update slider when inputs change
+                minInput.addEventListener('change', () => {
+                    let val = parseFloat(minInput.value);
+                    if (isNaN(val)) val = min;
+                    val = Math.max(val, min);
+                    val = Math.min(val, parseFloat(maxInput.value) || max); // Ensure min <= max
+                    sliderDiv.noUiSlider.set([val, null]);
+                });
+
+                maxInput.addEventListener('change', () => {
+                    let val = parseFloat(maxInput.value);
+                    if (isNaN(val)) val = max;
+                    val = Math.min(val, max);
+                    val = Math.max(val, parseFloat(minInput.value) || min); // Ensure max >= min
+                    sliderDiv.noUiSlider.set([null, val]);
+                });
+            }
+
+            // Function to create autocomplete for categorical columns
+            function createCategoricalFilter(container, column, existingValues = []) {
+                container.innerHTML = ''; // Clear existing content
+
+                // Create input for autocomplete
+                const autocompleteInput = document.createElement('input');
+                autocompleteInput.type = 'text';
+                autocompleteInput.className = 'form-control form-control-sm autocomplete-input';
+                autocompleteInput.placeholder = 'Type to search...';
+
+                // Create container for selected tags
+                const tagsContainer = document.createElement('div');
+                tagsContainer.className = 'tags-container';
+                tagsContainer.style.marginTop = '5px';
+                tagsContainer.style.display = 'flex';
+                tagsContainer.style.flexWrap = 'wrap';
+
+                container.appendChild(autocompleteInput);
+                container.appendChild(tagsContainer);
+
+                // Extract unique categories from data
+                const categories = Array.from(new Set(data.map(row => row[column]))).sort();
+
+                // Initialize autocomplete (using a simple datalist for demonstration)
+                const datalist = document.createElement('datalist');
+                datalist.id = `datalist-${currentPlotId}-filter-${filterIndex}`;
+                container.appendChild(datalist);
+                autocompleteInput.setAttribute('list', datalist.id);
+
+                // Function to update datalist options
+                function updateDatalistOptions() {
+                    const selectedValues = Array.from(tagsContainer.children).map(tag => tag.dataset.value);
+                    const availableCategories = categories.filter(cat => !selectedValues.includes(cat));
+
+                    datalist.innerHTML = '';
+                    availableCategories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        datalist.appendChild(option);
+                    });
+                }
+
+                // Function to add a tag
+                function addTag(value) {
+                    if (existingValues.includes(value)) return; // Avoid duplicates
+
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.style.display = 'inline-flex';
+                    tag.style.alignItems = 'center';
+                    tag.style.padding = '2px 5px';
+                    tag.style.margin = '2px';
+                    tag.style.backgroundColor = '#e0e0e0';
+                    tag.style.borderRadius = '3px';
+                    tag.dataset.value = value;
+
+                    tag.textContent = value;
+
+                    const removeBtn = document.createElement('span');
+                    removeBtn.textContent = ' ×';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.style.marginLeft = '5px';
+                    removeBtn.addEventListener('click', () => {
+                        tagsContainer.removeChild(tag);
+                        existingValues.splice(existingValues.indexOf(value), 1);
+                        updateDatalistOptions();
+                    });
+
+                    tag.appendChild(removeBtn);
+                    tagsContainer.appendChild(tag);
+                    existingValues.push(value);
+                    updateDatalistOptions();
+                }
+
+                // Add existing tags
+                existingValues.forEach(val => addTag(val));
+
+                // Handle selection from autocomplete
+                autocompleteInput.addEventListener('change', () => {
+                    const value = autocompleteInput.value.trim();
+                    if (value && categories.includes(value) && !existingValues.includes(value)) {
+                        addTag(value);
+                        autocompleteInput.value = '';
+                    }
+                });
+
+                // Handle Enter key
+                autocompleteInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const value = autocompleteInput.value.trim();
+                        if (value && categories.includes(value) && !existingValues.includes(value)) {
+                            addTag(value);
+                            autocompleteInput.value = '';
+                        }
+                    }
+                });
+
+                // Store selected values in a hidden input for form submission
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.className = 'selected-categories';
+                container.appendChild(hiddenInput);
+
+                // Update hidden input whenever tags change
+                const observer = new MutationObserver(() => {
+                    const selected = Array.from(tagsContainer.children).map(tag => tag.dataset.value);
+                    hiddenInput.value = JSON.stringify(selected);
+                });
+
+                observer.observe(tagsContainer, { childList: true, attributes: true, subtree: true });
+
+                // Initialize datalist options
+                updateDatalistOptions();
+            }
+
+            // Event listener for column selection
+            columnSelect.addEventListener('change', () => {
+                const selectedColumn = columnSelect.value;
+                valueInput.innerHTML = ''; // Clear existing content
+
+                if (!selectedColumn) {
+                    operatorSelect.style.display = 'block'; // Show operator select if no column is selected
+                    return;
+                }
+
+                if (isNumerical(selectedColumn)) {
+                    // Hide operator select for numerical columns
+                    operatorSelect.style.display = 'none';
+
+                    // Get existing filter values if any
+                    let existingValues = null;
+                    if (existingGroup && existingGroup.value && typeof existingGroup.value === 'object') {
+                        existingValues = existingGroup.value;
+                    }
+                    createRangeFilter(valueInput, selectedColumn, existingValues);
+                } else {
+                    // Show operator select for non-numerical columns
+                    operatorSelect.style.display = 'block';
+
+                    // Get existing filter values if any
+                    let existingValues = [];
+                    if (existingGroup && existingGroup.value && Array.isArray(existingGroup.value)) {
+                        existingValues = existingGroup.value;
+                    }
+                    createCategoricalFilter(valueInput, selectedColumn, existingValues);
+                }
+            });
+
+            // Trigger change event if existingGroup has a column
+            if (existingGroup && existingGroup.column) {
+                columnSelect.dispatchEvent(new Event('change'));
+
+                // Optionally, set operator value if applicable
+                if (!isNumerical(existingGroup.column) && existingGroup.operator) {
+                    operatorSelect.value = existingGroup.operator;
+                }
+            }
         }
 
-        // Function to apply filters
         function applyFilters() {
             const filterGroups = [];
             const filterGroupDivs = document.querySelectorAll('#filter-groups-container .filter-group');
-            filterGroupDivs.forEach(groupDiv => {
+            filterGroupDivs.forEach((groupDiv, index) => {
                 const logic = groupDiv.querySelector('.logic-select').value;
                 const column = groupDiv.querySelector('.column-select').value;
-                const operator = groupDiv.querySelector('.operator-select').value;
-                const value = groupDiv.querySelector('.value-input').value.trim();
-                if (column && operator && value) {
+                const operatorSelect = groupDiv.querySelector('.operator-select');
+                const operator = operatorSelect && operatorSelect.style.display !== 'none' ? operatorSelect.value : null;
+                let value = null;
+
+                if (!column) return; // Skip incomplete filters
+
+                // Determine if the column is numerical
+                const isNumericalColumn = isNumerical(column);
+
+                if (isNumericalColumn) {
+                    // Get slider values
+                    const slider = groupDiv.querySelector('.range-slider');
+                    if (slider && slider.noUiSlider) {
+                        const [min, max] = slider.noUiSlider.get().map(Number);
+                        value = { min, max };
+                    }
+                } else {
+                    // Get operator and selected categories
+                    if (!operator) return; // Operator is required for non-numerical columns
+
+                    if (operator === 'in' || operator === 'not_in') {
+                        // Get selected categories
+                        const hiddenInput = groupDiv.querySelector('.selected-categories');
+                        if (hiddenInput && hiddenInput.value) {
+                            value = JSON.parse(hiddenInput.value);
+                        }
+                    } else {
+                        // For other operators, get the single value
+                        const valueInput = groupDiv.querySelector('.value-input-container input.autocomplete-input');
+                        if (valueInput) {
+                            value = valueInput.value.trim();
+                        }
+                    }
+                }
+
+                if (value !== null && value !== undefined && (operator || isNumericalColumn)) {
                     filterGroups.push({ logic, column, operator, value });
                 }
             });
@@ -2851,6 +3125,33 @@
         function setPlotFilters(plotId, filters) {
             plotFilters[plotId] = filters;
         }
+
+        // Ensure that the Filter button is added to each plot
+        function addFilterButtonsToPlots() {
+            for (let i = 1; i <= plotCounter; i++) {
+                const plotId = `plot-${i}`;
+                const plotHeader = document.querySelector(`#container-${plotId} .card-header`);
+                if (plotHeader && !document.getElementById(`filter-plot-${plotId}`)) {
+                    const filterButton = document.createElement('button');
+                    filterButton.id = `filter-plot-${plotId}`;
+                    filterButton.className = 'btn btn-light btn-sm mr-1';
+                    filterButton.title = 'Filter';
+                    filterButton.innerHTML = '<i class="fa fa-filter"></i>';
+                    plotHeader.appendChild(filterButton);
+
+                    // Event listener for Filter button
+                    filterButton.addEventListener('click', () => {
+                        openFilterModal(plotId);
+                    });
+                }
+            }
+        }
+
+        // Call addFilterButtonsToPlots after plots are initialized
+        document.addEventListener('DOMContentLoaded', () => {
+            addFilterButtonsToPlots();
+        });
+
 
 
     </script>
