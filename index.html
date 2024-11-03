@@ -895,87 +895,91 @@
         }
 
 
-        // Updated addNewPlot function
         function addNewPlot(config = {}) {
             plotCounter++;
             const plotId = `plot-${plotCounter}`;
             let plotHTML = `
-        <div class="plot-container mt-4" id="container-${plotId}">
-            <!-- Plot Frame -->
-            <div class="card">
-                <!-- Title Bar -->
-                <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-1">
-                    <!-- Left Side (Plot Type and Export) -->
-                    <div class="d-flex align-items-center">
-                        <!-- Plot Type Dropdown -->
-                        <select id="plot-type-${plotId}" class="form-control form-control-sm mr-2" style="width: auto;">
-                            <option value="scatter">Scatter Plot</option>
-                            <option value="histogram">Histogram</option>
-                            <option value="boxplot">Boxplot</option>
-                        </select>
-                        <!-- Export Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="export-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Export
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="export-menu-${plotId}">
-                                <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
-                                <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
-                                <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
+                <!-- Plot Container -->
+                <div class="plot-container mt-4" id="container-${plotId}">
+                    <!-- Plot Frame -->
+                    <div class="card">
+                        <!-- Title Bar -->
+                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-1">
+                            <!-- Left Side (Plot Type and Export) -->
+                            <div class="d-flex align-items-center">
+                                <!-- Plot Type Dropdown -->
+                                <select id="plot-type-${plotId}" class="form-control form-control-sm mr-2" style="width: auto;">
+                                    <option value="scatter">Scatter Plot</option>
+                                    <option value="histogram">Histogram</option>
+                                    <option value="boxplot">Boxplot</option>
+                                </select>
+                                <!-- Export Dropdown -->
+                                <div class="dropdown">
+                                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="export-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        Export
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="export-menu-${plotId}">
+                                        <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
+                                        <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
+                                        <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Centered Plot Title -->
+                            <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
+                            <!-- Right-Aligned Control Buttons -->
+                            <div class="plot-window-controls d-flex align-items-center">
+                                <!-- Help Button -->
+                                <button id="help-button-${plotId}" class="btn btn-light btn-sm mr-1" title="Help">?</button>
+                                <!-- Filter Button -->
+                                <button id="filter-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Filter">
+                                    <i class="fa fa-filter"></i>
+                                </button>
+                                <!-- Minimize, Maximize, Clone, and Close -->
+                                <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Minimize">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none mr-1" title="Maximize">
+                                    <i class="fa fa-window-maximize"></i>
+                                </button>
+                                <button id="clone-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Clone">
+                                    <i class="fa fa-clone"></i>
+                                </button>
+                                <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Card Body -->
+                        <div class="card-body" id="body-${plotId}">
+                            <!-- Dynamic Controls will be rendered here -->
+                            <div id="dynamic-controls-${plotId}" class="mt-3"></div>
+                            <!-- Plot Area -->
+                            <div class="plot-area" style="position: relative;">
+                                <div id="${plotId}" class="plot"></div>
+                                <!-- Floating Search Button -->
+                                <div class="floating-search-button" id="floating-search-button-${plotId}">
+                                    <button class="search-button" id="search-button-${plotId}">
+                                        <i class="fa fa-search"></i> Search by accession
+                                    </button>
+                                    <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
+                                </div>
+                            </div>
+                            <!-- Title, Notes, and Export Button -->
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label for="title-${plotId}">Plot Title:</label>
+                                    <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="notes-${plotId}">Notes:</label>
+                                    <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Centered Plot Title -->
-                    <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
-                    <!-- Right-Aligned Control Buttons -->
-                    <div class="plot-window-controls d-flex align-items-center">
-                        <!-- Help Button -->
-                        <button id="help-button-${plotId}" class="btn btn-light btn-sm mr-1" title="Help">?</button>
-                        <!-- Minimize, Maximize, Clone, and Close -->
-                        <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Minimize">
-                            <i class="fa fa-minus"></i>
-                        </button>
-                        <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none mr-1" title="Maximize">
-                            <i class="fa fa-window-maximize"></i>
-                        </button>
-                        <button id="clone-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Clone">
-                            <i class="fa fa-clone"></i>
-                        </button>
-                        <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
                 </div>
-                <!-- Card Body -->
-                <div class="card-body" id="body-${plotId}">
-                    <!-- Dynamic Controls will be rendered here -->
-                    <div id="dynamic-controls-${plotId}" class="mt-3"></div>
-                    <!-- Plot Area -->
-                    <div class="plot-area" style="position: relative;">
-                        <div id="${plotId}" class="plot"></div>
-                        <!-- Floating Search Button -->
-                        <div class="floating-search-button" id="floating-search-button-${plotId}">
-                            <button class="search-button" id="search-button-${plotId}">
-                                <i class="fa fa-search"></i> Search by accession
-                            </button>
-                            <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
-                        </div>
-                    </div>
-                    <!-- Title, Notes, and Export Button -->
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <label for="title-${plotId}">Plot Title:</label>
-                            <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="notes-${plotId}">Notes:</label>
-                            <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+            `;
             plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
 
             const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
@@ -988,18 +992,21 @@
             }
 
             // Attach event listeners
-            plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId, config));
+            plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId, {}));
             titleInput.addEventListener('input', () => {
                 plotTitleDisplay.textContent = titleInput.value || `Plot ${plotCounter}`;
             });
 
-            // Set title if provided
+            // Set title and notes if provided
             if (config.title) {
                 titleInput.value = config.title;
                 plotTitleDisplay.textContent = config.title;
             }
+            if (config.notes) {
+                document.getElementById(`notes-${plotId}`).value = config.notes;
+            }
 
-            // Render dynamic controls with or without config
+            // Render dynamic controls with config
             renderDynamicControls(plotId, config);
 
             // Attach event listener to the dropdown items
@@ -1019,26 +1026,19 @@
             document.getElementById(`maximize-plot-${plotId}`).addEventListener('click', () => maximizePlot(plotId));
             document.getElementById(`close-plot-${plotId}`).addEventListener('click', () => closePlot(plotId));
             document.getElementById(`clone-plot-${plotId}`).addEventListener('click', () => clonePlot(plotId));
+            document.getElementById(`filter-plot-${plotId}`).addEventListener('click', () => openFilterModal(plotId));
 
-            const plotHeader = document.querySelector(`#container-${plotId} .card-header`);
-            const filterButton = document.createElement('button');
-            filterButton.id = `filter-plot-${plotId}`;
-            filterButton.className = 'btn btn-light btn-sm mr-1';
-            filterButton.title = 'Filter';
-            filterButton.innerHTML = '<i class="fa fa-filter"></i>';
-            plotHeader.appendChild(filterButton);
-
-            // Event listener for Filter button
-            filterButton.addEventListener('click', () => {
-                openFilterModal(plotId);
-            });
-
+            // Set plotFilters for this plot if filters are provided in config
+            if (config.filters) {
+                plotFilters[plotId] = config.filters;
+            } else {
+                plotFilters[plotId] = [];
+            }
 
             // Initialize plot
-            if (!config.plotType) {
-                updatePlot(plotId);
-            }
+            updatePlot(plotId);
         }
+
 
 
         function clonePlot(plotId) {
@@ -1066,18 +1066,18 @@
                 // Sliders: x-range and y-range
                 const xSlider = document.getElementById(`x-range-slider-${plotId}`);
                 if (xSlider && xSlider.noUiSlider) {
-                    config.xRange = xSlider.noUiSlider.get();
+                    config.xRange = xSlider.noUiSlider.get().map(Number);
                 }
 
                 const ySlider = document.getElementById(`y-range-slider-${plotId}`);
                 if (ySlider && ySlider.noUiSlider) {
-                    config.yRange = ySlider.noUiSlider.get();
+                    config.yRange = ySlider.noUiSlider.get().map(Number);
                 }
 
                 // Hue slider
                 const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
                 if (hueSlider && hueSlider.noUiSlider) {
-                    config.hueRange = hueSlider.noUiSlider.get();
+                    config.hueRange = hueSlider.noUiSlider.get().map(Number);
                 }
             }
             else if (plotType === 'histogram' || plotType === 'boxplot') {
@@ -1088,6 +1088,10 @@
                 config.assayTypes = Array.from(assayTypeCheckboxes).map(checkbox => ({ value: checkbox.value, checked: checkbox.checked }));
             }
 
+            // Get the filters from the original plot
+            const filters = plotFilters[plotId] || [];
+            config.filters = JSON.parse(JSON.stringify(filters)); // Deep copy to avoid reference issues
+
             addNewPlot(config);
 
             // Scroll to the new plot
@@ -1097,6 +1101,7 @@
                 newPlotContainer.scrollIntoView({ behavior: 'smooth' });
             }
         }
+
 
 
 
@@ -1616,6 +1621,59 @@
             }
         }
 
+        function applyFiltersToData(dataSet, filters) {
+            let filteredData = dataSet;
+
+            filters.forEach((filter, index) => {
+                const { logic, column, operator, value } = filter;
+
+                const isNumericalFilter = typeof value === 'object' && value.min !== undefined && value.max !== undefined;
+                let filterFunction;
+
+                if (isNumericalFilter) {
+                    // Numerical filter
+                    filterFunction = (row) => {
+                        const rowValue = parseFloat(row[column]);
+                        return rowValue >= value.min && rowValue <= value.max;
+                    };
+                } else {
+                    // Categorical filter
+                    if (operator === 'equals') {
+                        filterFunction = (row) => row[column] == value;
+                    } else if (operator === 'not_equals') {
+                        filterFunction = (row) => row[column] != value;
+                    } else if (operator === 'in' && Array.isArray(value)) {
+                        filterFunction = (row) => value.includes(row[column]);
+                    } else if (operator === 'not_in' && Array.isArray(value)) {
+                        filterFunction = (row) => !value.includes(row[column]);
+                    } else {
+                        // Unknown operator
+                        filterFunction = () => true;
+                    }
+                }
+
+                if (index === 0) {
+                    // Apply NOT logic if specified in the first filter
+                    if (logic === 'NOT') {
+                        filteredData = filteredData.filter(row => !filterFunction(row));
+                    } else {
+                        filteredData = filteredData.filter(filterFunction);
+                    }
+                } else {
+                    if (logic === 'AND') {
+                        filteredData = filteredData.filter(filterFunction);
+                    } else if (logic === 'OR') {
+                        const newData = dataSet.filter(filterFunction);
+                        filteredData = [...new Set([...filteredData, ...newData])];
+                    } else if (logic === 'NOT') {
+                        filteredData = filteredData.filter(row => !filterFunction(row));
+                    }
+                }
+            });
+
+            return filteredData;
+        }
+
 
         function searchAndSelectPoints(plotId) {
             const searchInput = document.getElementById(`search-input-${plotId}`);
@@ -1663,44 +1721,10 @@
 
             // Apply filters if any
             if (plotFilters[plotId] && plotFilters[plotId].length > 0) {
-                plotFilters[plotId].forEach(filter => {
-                    const { logic, column, operator, value } = filter;
-
-                    if (typeof value === 'object' && value.min !== undefined && value.max !== undefined) {
-                        // Numerical filter
-                        plotDataSet = plotDataSet.filter(row => {
-                            const rowValue = parseFloat(row[column]);
-                            return rowValue >= value.min && rowValue <= value.max;
-                        });
-                    } else if (typeof value === 'string' || Array.isArray(value)) {
-                        // Categorical filter
-                        switch (operator) {
-                            case 'equals':
-                                plotDataSet = logic === 'AND'
-                                    ? plotDataSet.filter(row => row[column] == value)
-                                    : plotDataSet.filter(row => row[column] != value);
-                                break;
-                            case 'not_equals':
-                                plotDataSet = logic === 'AND'
-                                    ? plotDataSet.filter(row => row[column] != value)
-                                    : plotDataSet.filter(row => row[column] == value);
-                                break;
-                            case 'in':
-                                if (Array.isArray(value)) {
-                                    plotDataSet = plotDataSet.filter(row => value.includes(row[column]));
-                                }
-                                break;
-                            case 'not_in':
-                                if (Array.isArray(value)) {
-                                    plotDataSet = plotDataSet.filter(row => !value.includes(row[column]));
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                });
+                plotDataSet = applyFiltersToData(plotDataSet, plotFilters[plotId]);
             }
+
+            currentPlotData = plotDataSet;
 
 
             currentPlotData = plotDataSet;
@@ -2579,10 +2603,10 @@
                     plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
                     plotConfig.controls.palette = document.getElementById(`palette-${plotId}`).value;
 
-                    // Save range slider values
-                    const xSlider = document.getElementById(`slider-${plotId}-filter-0-range`); // Adjust filter index as needed
-                    const ySlider = document.getElementById(`slider-${plotId}-filter-1-range`); // Adjust filter index as needed
-                    const hueSlider = document.getElementById(`slider-${plotId}-filter-2-range`); // Adjust filter index as needed
+                    // Save range slider values (using correct IDs)
+                    const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+                    const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+                    const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
 
                     if (xSlider && xSlider.noUiSlider) {
                         const [xMin, xMax] = xSlider.noUiSlider.get().map(Number);
@@ -2729,6 +2753,7 @@
 
         function addFilterGroup(existingGroup = null) {
             const filterGroupsContainer = document.getElementById('filter-groups-container');
+            const isFirstGroup = filterGroupsContainer.children.length === 0;
 
             const groupDiv = document.createElement('div');
             groupDiv.className = 'filter-group';
@@ -2740,13 +2765,23 @@
 
             const logicSelect = document.createElement('select');
             logicSelect.className = 'form-control form-control-sm logic-select';
-            logicSelect.innerHTML = `
-        <option value="AND">AND</option>
-        <option value="OR">OR</option>
-        <option value="NOT">NOT</option>
-    `;
-            if (existingGroup && existingGroup.logic) {
-                logicSelect.value = existingGroup.logic;
+            logicSelect.style.width = '80px';
+
+            if (isFirstGroup) {
+                logicSelect.innerHTML = `
+                    <option value="AND">AND</option>
+                    <option value="NOT">NOT</option>
+                `;
+                logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : 'AND';
+            } else {
+                logicSelect.innerHTML = `
+                    <option value="AND">AND</option>
+                    <option value="OR">OR</option>
+                    <option value="NOT">NOT</option>
+                `;
+                if (existingGroup && existingGroup.logic) {
+                    logicSelect.value = existingGroup.logic;
+                }
             }
 
             const conditionDiv = document.createElement('div');
@@ -2821,8 +2856,9 @@
                 // Create slider div
                 const sliderDiv = document.createElement('div');
                 sliderDiv.className = 'range-slider';
-                sliderDiv.id = `slider-${currentPlotId}-filter-${filterIndex}-range`; // Consistent ID
+                sliderDiv.id = `slider-${currentFilterPlotId}-filter-${filterIndex}-range`; // Consistent ID
                 sliderDiv.style.marginBottom = '10px'; // Add some spacing
+                sliderDiv.style.width = '100%'; // Make the slider fill the width
 
                 // Create min input
                 const minInput = document.createElement('input');
