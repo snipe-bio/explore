@@ -1638,16 +1638,12 @@
                     };
                 } else {
                     // Categorical filter
-                    if (operator === 'equals') {
-                        filterFunction = (row) => row[column] == value;
-                    } else if (operator === 'not_equals') {
-                        filterFunction = (row) => row[column] != value;
-                    } else if (operator === 'in' && Array.isArray(value)) {
+                    if (operator === 'in' && Array.isArray(value)) {
                         filterFunction = (row) => value.includes(row[column]);
                     } else if (operator === 'not_in' && Array.isArray(value)) {
                         filterFunction = (row) => !value.includes(row[column]);
                     } else {
-                        // Unknown operator
+                        // Unknown operator or missing value
                         filterFunction = () => true;
                     }
                 }
@@ -2769,21 +2765,20 @@
 
             if (isFirstGroup) {
                 logicSelect.innerHTML = `
-                    <option value="AND">AND</option>
+                    <option value="">(Select Logic)</option>
                     <option value="NOT">NOT</option>
                 `;
-                logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : 'AND';
+                logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : '';
             } else {
                 logicSelect.innerHTML = `
                     <option value="AND">AND</option>
                     <option value="OR">OR</option>
                     <option value="NOT">NOT</option>
                 `;
-                if (existingGroup && existingGroup.logic) {
-                    logicSelect.value = existingGroup.logic;
-                }
+                logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : 'AND';
             }
 
+            // Condition Div
             const conditionDiv = document.createElement('div');
             conditionDiv.className = 'condition-div';
 
@@ -2800,15 +2795,6 @@
 
             const operatorSelect = document.createElement('select');
             operatorSelect.className = 'form-control form-control-sm operator-select';
-            operatorSelect.innerHTML = `
-        <option value="equals">Equals</option>
-        <option value="not_equals">Not Equals</option>
-        <option value="in">In</option>
-        <option value="not_in">Not In</option>
-    `;
-            if (existingGroup && existingGroup.operator) {
-                operatorSelect.value = existingGroup.operator;
-            }
 
             const valueInput = document.createElement('div'); // Container for dynamic inputs
             valueInput.className = 'value-input-container';
@@ -3058,7 +3044,7 @@
                 valueInput.innerHTML = ''; // Clear existing content
 
                 if (!selectedColumn) {
-                    operatorSelect.style.display = 'block'; // Show operator select if no column is selected
+                    operatorSelect.style.display = 'none'; // Hide operator select if no column is selected
                     return;
                 }
 
@@ -3076,6 +3062,17 @@
                     // Show operator select for non-numerical columns
                     operatorSelect.style.display = 'block';
 
+                    // Set operator options for categorical columns
+                    operatorSelect.innerHTML = `
+                        <option value="in">In</option>
+                        <option value="not_in">Not In</option>
+                    `;
+                    if (existingGroup && existingGroup.operator) {
+                        operatorSelect.value = existingGroup.operator;
+                    } else {
+                        operatorSelect.value = 'in'; // Default to 'In' if no existing operator
+                    }
+
                     // Get existing filter values if any
                     let existingValues = [];
                     if (existingGroup && existingGroup.value && Array.isArray(existingGroup.value)) {
@@ -3088,11 +3085,6 @@
             // Trigger change event if existingGroup has a column
             if (existingGroup && existingGroup.column) {
                 columnSelect.dispatchEvent(new Event('change'));
-
-                // Optionally, set operator value if applicable
-                if (!isNumerical(existingGroup.column) && existingGroup.operator) {
-                    operatorSelect.value = existingGroup.operator;
-                }
             }
         }
 
@@ -3100,7 +3092,8 @@
             const filterGroups = [];
             const filterGroupDivs = document.querySelectorAll('#filter-groups-container .filter-group');
             filterGroupDivs.forEach((groupDiv, index) => {
-                const logic = groupDiv.querySelector('.logic-select').value;
+                const logicSelect = groupDiv.querySelector('.logic-select');
+                const logic = logicSelect ? logicSelect.value : '';
                 const column = groupDiv.querySelector('.column-select').value;
                 const operatorSelect = groupDiv.querySelector('.operator-select');
                 const operator = operatorSelect && operatorSelect.style.display !== 'none' ? operatorSelect.value : null;
@@ -3119,21 +3112,10 @@
                         value = { min, max };
                     }
                 } else {
-                    // Get operator and selected categories
-                    if (!operator) return; // Operator is required for non-numerical columns
-
-                    if (operator === 'in' || operator === 'not_in') {
-                        // Get selected categories
-                        const hiddenInput = groupDiv.querySelector('.selected-categories');
-                        if (hiddenInput && hiddenInput.value) {
-                            value = JSON.parse(hiddenInput.value);
-                        }
-                    } else {
-                        // For other operators, get the single value
-                        const valueInput = groupDiv.querySelector('.value-input-container input.autocomplete-input');
-                        if (valueInput) {
-                            value = valueInput.value.trim();
-                        }
+                    // Get selected categories
+                    const hiddenInput = groupDiv.querySelector('.selected-categories');
+                    if (hiddenInput && hiddenInput.value) {
+                        value = JSON.parse(hiddenInput.value);
                     }
                 }
 
@@ -3147,6 +3129,7 @@
                 updatePlot(currentFilterPlotId);
             }
         }
+
 
         // Function to set filters for a plot
         function setPlotFilters(plotId, filters) {
