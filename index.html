@@ -2447,9 +2447,9 @@
                             initializeHueSlider(plotConfig.plotId);
 
                             // Restore slider positions
-                            const xSlider = document.getElementById(`slider-${plotConfig.plotId}-filter-0-range`); // Adjust filter index as needed
-                            const ySlider = document.getElementById(`slider-${plotConfig.plotId}-filter-1-range`); // Adjust filter index as needed
-                            const hueSlider = document.getElementById(`slider-${plotConfig.plotId}-filter-2-range`); // Adjust filter index as needed
+                            const xSlider = document.getElementById(`x-range-slider-${plotConfig.plotId}`);
+                            const ySlider = document.getElementById(`y-range-slider-${plotConfig.plotId}`);
+                            const hueSlider = document.getElementById(`hue-range-slider-${plotConfig.plotId}`);
 
                             if (xSlider && xSlider.noUiSlider && plotConfig.controls.xRange) {
                                 xSlider.noUiSlider.set([plotConfig.controls.xRange.min, plotConfig.controls.xRange.max]);
@@ -2462,19 +2462,12 @@
                             }
                         } else if (plotConfig.plotType === 'histogram' || plotConfig.plotType === 'boxplot') {
                             plotConfig.controls.numColumns.forEach(col => {
-                                const checkbox = document.getElementById(`num-column-${col}-${plotConfig.plotId}`);
+                                const checkbox = document.querySelector(`#checkbox-group-${plotConfig.plotId} input[value="${col}"]`);
                                 if (checkbox) {
                                     checkbox.checked = true;
                                 }
                             });
                             document.getElementById(`group-by-${plotConfig.plotId}`).value = plotConfig.controls.groupBy;
-                        }
-
-                        // Collect filters
-                        if (plotConfig.filters && plotConfig.filters.length > 0) {
-                            plotConfig.filters.forEach(filterGroup => {
-                                addFilterGroup(filterGroup);
-                            });
                         }
 
                         // Restore selected assay types
@@ -2485,10 +2478,8 @@
                             checkbox.checked = plotConfig.controls.selectedAssayTypes.includes(checkbox.value);
                         });
 
-                        // Restore title and notes
-                        document.getElementById(`title-${plotConfig.plotId}`).value = plotConfig.title;
-                        document.getElementById(`plot-title-display-${plotConfig.plotId}`).textContent = plotConfig.title || `Plot ${plotConfig.plotId.split('-')[1]}`;
-                        document.getElementById(`notes-${plotConfig.plotId}`).value = plotConfig.notes;
+                        // Set plot filters from session data
+                        plotFilters[plotConfig.plotId] = plotConfig.filters || [];
 
                         // Update the plot
                         updatePlot(plotConfig.plotId);
