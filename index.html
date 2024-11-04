@@ -2774,16 +2774,16 @@
 
             if (isFirstGroup) {
                 logicSelect.innerHTML = `
-            <option value="">(Select Logic)</option>
-            <option value="NOT">NOT</option>
-        `;
+                    <option value="">(Select Logic)</option>
+                    <option value="NOT">NOT</option>
+                `;
                 logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : '';
             } else {
                 logicSelect.innerHTML = `
-            <option value="AND">AND</option>
-            <option value="OR">OR</option>
-            <option value="NOT">NOT</option>
-        `;
+                    <option value="AND">AND</option>
+                    <option value="OR">OR</option>
+                    <option value="NOT">NOT</option>
+                `;
                 logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : 'AND';
             }
 
@@ -2975,7 +2975,7 @@
                 });
             }
 
-            function createCategoricalFilter(container, column, selectedCategories) {
+            function createCategoricalFilter(container, column, selectedCategories = []) {
                 container.innerHTML = ''; // Clear existing content
 
                 // Create input for autocomplete
@@ -3051,8 +3051,13 @@
                     updateDatalistOptions();
                 }
 
-                // Add existing tags
-                selectedCategories.forEach(val => addTag(val));
+                if (Array.isArray(selectedCategories) && selectedCategories.length > 0) {
+                    selectedCategories.forEach(val => {
+                        if (categories.includes(val)) { // Ensure the value is valid
+                            addTag(val);
+                        }
+                    });
+                }
 
                 // Handle selection from autocomplete
                 autocompleteInput.addEventListener('change', () => {
@@ -3079,6 +3084,8 @@
                 updateDatalistOptions();
             }
 
+
+            // Event listener for column selection
             // Event listener for column selection
             columnSelect.addEventListener('change', () => {
                 const selectedColumn = columnSelect.value;
@@ -3182,7 +3189,17 @@
 
         // Function to set filters for a plot
         function setPlotFilters(plotId, filters) {
-            plotFilters[plotId] = filters;
+            plotFilters[plotId] = filters.map(filter => {
+                // Determine if the filter's column is numerical
+                const numerical = isNumerical(filter.column);
+
+                // If the column is categorical, ensure 'value' is an array
+                if (!numerical) {
+                    filter.value = Array.isArray(filter.value) ? filter.value : [];
+                }
+
+                return filter;
+            });
         }
 
         // Ensure that the Filter button is added to each plot

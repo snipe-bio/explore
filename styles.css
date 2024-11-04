@@ -1314,3 +1314,25 @@ tr:nth-child(even) {
     width: 100%;
 }
 
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px;
+    margin: 2px;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.tag span {
+    cursor: pointer;
+    margin-left: 5px;
+}
