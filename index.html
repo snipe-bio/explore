@@ -2678,9 +2678,9 @@
             exportSessionUrlModal.style.display = 'flex';
         }
 
-
         // Initialize plotFilters globally
         let plotFilters = {};
+        let filterGroupCounter = 0; // Global counter for unique filter indexes
 
         // Function to open the Filter modal
         let currentFilterPlotId = null;
@@ -2757,6 +2757,9 @@
             const filterGroupsContainer = document.getElementById('filter-groups-container');
             const isFirstGroup = filterGroupsContainer.children.length === 0;
 
+            filterGroupCounter++; // Increment the counter
+            const filterIndex = filterGroupCounter; // Assign a unique filterIndex
+
             const groupDiv = document.createElement('div');
             groupDiv.className = 'filter-group';
             groupDiv.style.border = '1px solid #ccc';
@@ -2771,16 +2774,16 @@
 
             if (isFirstGroup) {
                 logicSelect.innerHTML = `
-                    <option value="">(Select Logic)</option>
-                    <option value="NOT">NOT</option>
-                `;
+            <option value="">(Select Logic)</option>
+            <option value="NOT">NOT</option>
+        `;
                 logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : '';
             } else {
                 logicSelect.innerHTML = `
-                    <option value="AND">AND</option>
-                    <option value="OR">OR</option>
-                    <option value="NOT">NOT</option>
-                `;
+            <option value="AND">AND</option>
+            <option value="OR">OR</option>
+            <option value="NOT">NOT</option>
+        `;
                 logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : 'AND';
             }
 
@@ -2826,11 +2829,6 @@
             groupDiv.appendChild(removeButton);
 
             filterGroupsContainer.appendChild(groupDiv);
-
-            // Determine the filter index within the plot
-            const currentPlotId = currentFilterPlotId; // Assuming currentFilterPlotId is globally set
-            const plotFilterGroups = plotFilters[currentPlotId] || [];
-            const filterIndex = plotFilterGroups.length;
 
             // Function to get min and max of a numerical column
             function getMinMax(column) {
@@ -2977,10 +2975,7 @@
                 });
             }
 
-
-
-            // Function to create autocomplete for categorical columns
-            function createCategoricalFilter(container, column, existingValues = []) {
+            function createCategoricalFilter(container, column, selectedCategories) {
                 container.innerHTML = ''; // Clear existing content
 
                 // Create input for autocomplete
@@ -3004,14 +2999,13 @@
 
                 // Initialize autocomplete (using a simple datalist for demonstration)
                 const datalist = document.createElement('datalist');
-                datalist.id = `datalist-${currentPlotId}-filter-${filterIndex}`;
+                datalist.id = `datalist-${currentFilterPlotId}-filter-${filterIndex}`;
                 container.appendChild(datalist);
                 autocompleteInput.setAttribute('list', datalist.id);
 
                 // Function to update datalist options
                 function updateDatalistOptions() {
-                    const selectedValues = Array.from(tagsContainer.children).map(tag => tag.dataset.value);
-                    const availableCategories = categories.filter(cat => !selectedValues.includes(cat));
+                    const availableCategories = categories.filter(cat => !selectedCategories.includes(cat));
 
                     datalist.innerHTML = '';
                     availableCategories.forEach(cat => {
@@ -3023,15 +3017,16 @@
 
                 // Function to add a tag
                 function addTag(value) {
-                    if (existingValues.includes(value)) return; // Avoid duplicates
+                    if (selectedCategories.includes(value)) return; // Avoid duplicates
 
                     const tag = document.createElement('span');
                     tag.className = 'tag';
                     tag.style.display = 'inline-flex';
                     tag.style.alignItems = 'center';
-                    tag.style.padding = '2px 5px';
+                    tag.style.padding = '5px';
                     tag.style.margin = '2px';
-                    tag.style.backgroundColor = '#e0e0e0';
+                    tag.style.backgroundColor = '#007bff';
+                    tag.style.color = '#fff';
                     tag.style.borderRadius = '3px';
                     tag.dataset.value = value;
 
@@ -3043,23 +3038,26 @@
                     removeBtn.style.marginLeft = '5px';
                     removeBtn.addEventListener('click', () => {
                         tagsContainer.removeChild(tag);
-                        existingValues.splice(existingValues.indexOf(value), 1);
+                        const index = selectedCategories.indexOf(value);
+                        if (index > -1) {
+                            selectedCategories.splice(index, 1);
+                        }
                         updateDatalistOptions();
                     });
 
                     tag.appendChild(removeBtn);
                     tagsContainer.appendChild(tag);
-                    existingValues.push(value);
+                    selectedCategories.push(value);
                     updateDatalistOptions();
                 }
 
                 // Add existing tags
-                existingValues.forEach(val => addTag(val));
+                selectedCategories.forEach(val => addTag(val));
 
                 // Handle selection from autocomplete
                 autocompleteInput.addEventListener('change', () => {
                     const value = autocompleteInput.value.trim();
-                    if (value && categories.includes(value) && !existingValues.includes(value)) {
+                    if (value && categories.includes(value) && !selectedCategories.includes(value)) {
                         addTag(value);
                         autocompleteInput.value = '';
                     }
@@ -3070,26 +3068,12 @@
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         const value = autocompleteInput.value.trim();
-                        if (value && categories.includes(value) && !existingValues.includes(value)) {
+                        if (value && categories.includes(value) && !selectedCategories.includes(value)) {
                             addTag(value);
                             autocompleteInput.value = '';
                         }
                     }
                 });
-
-                // Store selected values in a hidden input for form submission
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.className = 'selected-categories';
-                container.appendChild(hiddenInput);
-
-                // Update hidden input whenever tags change
-                const observer = new MutationObserver(() => {
-                    const selected = Array.from(tagsContainer.children).map(tag => tag.dataset.value);
-                    hiddenInput.value = JSON.stringify(selected);
-                });
-
-                observer.observe(tagsContainer, { childList: true, attributes: true, subtree: true });
 
                 // Initialize datalist options
                 updateDatalistOptions();
@@ -3121,9 +3105,9 @@
 
                     // Set operator options for categorical columns
                     operatorSelect.innerHTML = `
-                        <option value="in">In</option>
-                        <option value="not_in">Not In</option>
-                    `;
+                <option value="in">In</option>
+                <option value="not_in">Not In</option>
+            `;
                     if (existingGroup && existingGroup.operator) {
                         operatorSelect.value = existingGroup.operator;
                     } else {
@@ -3135,7 +3119,14 @@
                     if (existingGroup && existingGroup.value && Array.isArray(existingGroup.value)) {
                         existingValues = existingGroup.value;
                     }
-                    createCategoricalFilter(valueInput, selectedColumn, existingValues);
+
+                    // Create a container for storing selected values
+                    let selectedCategories = existingValues.slice(); // make a copy
+
+                    // Assign selectedCategories to groupDiv for later access
+                    groupDiv.selectedCategories = selectedCategories;
+
+                    createCategoricalFilter(valueInput, selectedColumn, selectedCategories);
                 }
             });
 
@@ -3170,9 +3161,11 @@
                     }
                 } else {
                     // Get selected categories
-                    const hiddenInput = groupDiv.querySelector('.selected-categories');
-                    if (hiddenInput && hiddenInput.value) {
-                        value = JSON.parse(hiddenInput.value);
+                    let selectedCategories = groupDiv.selectedCategories;
+                    if (selectedCategories && selectedCategories.length > 0) {
+                        value = selectedCategories.slice(); // make a copy
+                    } else {
+                        value = [];
                     }
                 }
 
@@ -3186,7 +3179,6 @@
                 updatePlot(currentFilterPlotId);
             }
         }
-
 
         // Function to set filters for a plot
         function setPlotFilters(plotId, filters) {
@@ -3218,6 +3210,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             addFilterButtonsToPlots();
         });
+
 
 
 
