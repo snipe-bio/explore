@@ -1272,14 +1272,7 @@ tr:nth-child(even) {
     margin-right: 10px;
 }
 
-/* Range Slider Styling */
-.range-slider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    margin-top: 10px;
-}
+
 
 .slider-inputs {
     display: flex;
@@ -1296,16 +1289,28 @@ tr:nth-child(even) {
     border-radius: 4px;
 }
 
-.tags-container .tag {
-    font-size: 0.9em;
+
+/* Styles specific to the filter modal slider */
+.filter-group .slider-wrapper .filter-modal-slider {
+    flex-grow: 1;
+    margin-right: 10px;
 }
 
-/* Adjust slider width */
-.range-slider {
-    margin-bottom: 10px;
+.filter-group .slider-wrapper .filter-modal-slider .noUi-target {
+    width: 100%;
 }
 
-/* Optional: Adjust the width of the range inputs */
-.range-min, .range-max {
-    width: 80px;
+.filter-group .slider-wrapper .filter-modal-slider .noUi-horizontal {
+    height: 10px; /* Adjust as needed */
 }
+
+
+
+#filter-modal .range-slider {
+    width: 100%;
+}
+
+#filter-modal .slider-wrapper {
+    width: 100%;
+}
+

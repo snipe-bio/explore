@@ -2697,7 +2697,13 @@
                     modal.style.display = "none";
                 }
             };
+
+            // Trigger a window resize event after a short delay to ensure modal is rendered
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 300);
         }
+
 
         // Close Filter modal
         document.addEventListener('DOMContentLoaded', () => {
@@ -2761,7 +2767,7 @@
 
             const logicSelect = document.createElement('select');
             logicSelect.className = 'form-control form-control-sm logic-select';
-            logicSelect.style.width = '80px';
+            logicSelect.style.width = '150px';
 
             if (isFirstGroup) {
                 logicSelect.innerHTML = `
@@ -2784,6 +2790,7 @@
 
             const columnSelect = document.createElement('select');
             columnSelect.className = 'form-control form-control-sm column-select';
+            columnSelect.style.marginRight = '10px';
             columnSelect.innerHTML = `<option value="">Select Column</option>`;
             const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
             columns.forEach(col => {
@@ -2795,6 +2802,7 @@
 
             const operatorSelect = document.createElement('select');
             operatorSelect.className = 'form-control form-control-sm operator-select';
+            operatorSelect.style.marginRight = '10px';
 
             const valueInput = document.createElement('div'); // Container for dynamic inputs
             valueInput.className = 'value-input-container';
@@ -2833,39 +2841,86 @@
                 };
             }
 
-            // Function to create range slider and text inputs
             function createRangeFilter(container, column, existingValues = null) {
                 container.innerHTML = ''; // Clear existing content
 
                 const { min, max } = getMinMax(column);
 
-                // Create slider div
-                const sliderDiv = document.createElement('div');
-                sliderDiv.className = 'range-slider';
-                sliderDiv.id = `slider-${currentFilterPlotId}-filter-${filterIndex}-range`; // Consistent ID
-                sliderDiv.style.marginBottom = '10px'; // Add some spacing
-                sliderDiv.style.width = '100%'; // Make the slider fill the width
+                // Create Bootstrap grid structure
+                const outerDiv = document.createElement('div');
+                outerDiv.className = 'container-fluid';
 
-                // Create min input
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row mt-3 p-3 border rounded';
+                rowDiv.style.backgroundColor = '#f9f9f9';
+
+                // Label Column
+                const labelCol = document.createElement('div');
+                labelCol.className = 'col-12 d-flex justify-content-center align-items-center mb-2';
+                const label = document.createElement('label');
+                label.className = 'mb-0';
+                label.textContent = `${column} Range:`;
+                labelCol.appendChild(label);
+
+                // Min Input Column with "Min" label inside input
+                const minInputCol = document.createElement('div');
+                minInputCol.className = 'col-5';
+
+                const minInputGroup = document.createElement('div');
+                minInputGroup.className = 'input-group input-group-sm';
+
+                const minInputLabel = document.createElement('span');
+                minInputLabel.className = 'input-group-text';
+                minInputLabel.textContent = 'Min';
+                minInputLabel.style.fontSize = '0.8rem';
+
                 const minInput = document.createElement('input');
                 minInput.type = 'number';
-                minInput.className = 'form-control form-control-sm range-min';
-                minInput.style.width = '80px';
-                minInput.style.marginRight = '10px';
-                minInput.placeholder = `Min (${min})`;
+                minInput.className = 'form-control';
+                minInput.placeholder = min;
 
-                // Create max input
+                minInputGroup.appendChild(minInputLabel);
+                minInputGroup.appendChild(minInput);
+                minInputCol.appendChild(minInputGroup);
+
+                // Max Input Column with "Max" label inside input
+                const maxInputCol = document.createElement('div');
+                maxInputCol.className = 'col-5';
+
+                const maxInputGroup = document.createElement('div');
+                maxInputGroup.className = 'input-group input-group-sm';
+
+                const maxInputLabel = document.createElement('span');
+                maxInputLabel.className = 'input-group-text';
+                maxInputLabel.textContent = 'Max';
+                maxInputLabel.style.fontSize = '0.8rem';
+
                 const maxInput = document.createElement('input');
                 maxInput.type = 'number';
-                maxInput.className = 'form-control form-control-sm range-max';
-                maxInput.style.width = '80px';
-                maxInput.style.marginRight = '10px';
-                maxInput.placeholder = `Max (${max})`;
+                maxInput.className = 'form-control';
+                maxInput.placeholder = max;
 
-                // Append elements to container
-                container.appendChild(minInput);
-                container.appendChild(sliderDiv);
-                container.appendChild(maxInput);
+                maxInputGroup.appendChild(maxInputLabel);
+                maxInputGroup.appendChild(maxInput);
+                maxInputCol.appendChild(maxInputGroup);
+
+                // Slider Column
+                const sliderCol = document.createElement('div');
+                sliderCol.className = 'col-12 my-2';
+                const sliderDiv = document.createElement('div');
+                sliderDiv.className = 'range-slider filter-modal-slider';
+                sliderDiv.id = `slider-${currentFilterPlotId}-filter-${filterIndex}-range`;
+                sliderCol.appendChild(sliderDiv);
+
+                // Assemble the layout
+                rowDiv.appendChild(labelCol);
+                rowDiv.appendChild(sliderCol);
+                rowDiv.appendChild(minInputCol);
+                rowDiv.appendChild(maxInputCol);
+
+                // Append row to container
+                outerDiv.appendChild(rowDiv);
+                container.appendChild(outerDiv);
 
                 // Initialize noUiSlider
                 noUiSlider.create(sliderDiv, {
@@ -2875,7 +2930,7 @@
                         'min': min,
                         'max': max
                     },
-                    tooltips: [true, true],
+                    tooltips: [false, false],
                     format: {
                         to: function (value) {
                             return Number(value).toFixed(2);
@@ -2921,6 +2976,8 @@
                     sliderDiv.noUiSlider.set([null, val]);
                 });
             }
+
+
 
             // Function to create autocomplete for categorical columns
             function createCategoricalFilter(container, column, existingValues = []) {
