@@ -2739,8 +2739,79 @@
 
             const filters = plotFilters[plotId];
             if (filters && filters.length > 0) {
-                filters.forEach(filterGroup => {
+                filters.forEach((filterGroup, index) => {
+                    // Create the filter group with existing data
                     addFilterGroup(filterGroup);
+
+                    // Get the newly created filter group
+                    const groupDiv = filterGroupsContainer.children[index];
+
+                    // If this is a categorical filter with values
+                    if (filterGroup.value && Array.isArray(filterGroup.value)) {
+                        // Force column select change to create the categorical filter UI
+                        const columnSelect = groupDiv.querySelector('.column-select');
+                        if (columnSelect) {
+                            // Set the column value
+                            columnSelect.value = filterGroup.column;
+
+                            // Trigger change event to create the filter UI
+                            columnSelect.dispatchEvent(new Event('change'));
+
+                            // Short delay to ensure UI is created
+                            setTimeout(() => {
+                                // Get the container where tags should be
+                                const valueInputContainer = groupDiv.querySelector('.value-input-container');
+                                if (valueInputContainer) {
+                                    const tagsContainer = valueInputContainer.querySelector('.tags-container');
+                                    if (tagsContainer) {
+                                        // Clear any existing tags
+                                        tagsContainer.innerHTML = '';
+
+                                        // Recreate tags for each value
+                                        filterGroup.value.forEach(value => {
+                                            const tag = document.createElement('span');
+                                            tag.className = 'tag';
+                                            tag.style.display = 'inline-flex';
+                                            tag.style.alignItems = 'center';
+                                            tag.style.padding = '5px';
+                                            tag.style.margin = '2px';
+                                            tag.style.backgroundColor = '#007bff';
+                                            tag.style.color = '#fff';
+                                            tag.style.borderRadius = '3px';
+                                            tag.dataset.value = value;
+                                            tag.textContent = value;
+
+                                            const removeBtn = document.createElement('span');
+                                            removeBtn.textContent = ' ×';
+                                            removeBtn.style.cursor = 'pointer';
+                                            removeBtn.style.marginLeft = '5px';
+                                            removeBtn.addEventListener('click', () => {
+                                                tagsContainer.removeChild(tag);
+                                                const index = groupDiv.selectedCategories.indexOf(value);
+                                                if (index > -1) {
+                                                    groupDiv.selectedCategories.splice(index, 1);
+                                                }
+                                                // Update datalist options
+                                                const datalist = groupDiv.querySelector('datalist');
+                                                if (datalist) {
+                                                    const input = groupDiv.querySelector('.autocomplete-input');
+                                                    if (input) {
+                                                        input.dispatchEvent(new Event('change'));
+                                                    }
+                                                }
+                                            });
+
+                                            tag.appendChild(removeBtn);
+                                            tagsContainer.appendChild(tag);
+                                        });
+
+                                        // Ensure selectedCategories is properly set
+                                        groupDiv.selectedCategories = [...filterGroup.value];
+                                    }
+                                }
+                            }, 100);
+                        }
+                    }
                 });
             } else {
                 addFilterGroup();
