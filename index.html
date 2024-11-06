@@ -682,11 +682,11 @@
                 const newColumns = new Set(Object.keys(userDataArray[0] || {}));
                 const allColumns = new Set([...existingColumns, ...newColumns]);
 
-                // Initialize missing columns in both datasets with default value 0
+                // Initialize missing columns in both datasets with default value null
                 data.forEach(row => {
                     newColumns.forEach(col => {
                         if (!row.hasOwnProperty(col) && col !== 'Experiment ID') {
-                            row[col] = 0;
+                            row[col] = null;
                         }
                     });
                 });
@@ -694,25 +694,24 @@
                 userDataArray.forEach(row => {
                     existingColumns.forEach(col => {
                         if (!row.hasOwnProperty(col) && col !== 'Experiment ID') {
-                            row[col] = 0;
+                            row[col] = null;
                         }
                     });
                 });
 
-                // Integrate user data with existing data
+                // Integrate user data with existing data and get the list of new experiments
                 console.log('Upload Stats Before Integration:', uploadStats);
-                integrateUserData(userDataArray);
+                const newExperiments = integrateUserData(userDataArray);
                 console.log('Upload Stats After Integration:', uploadStats);
 
-                // Add user data points to selectedPoints
-                const newExperiments = userDataArray.filter(newRow =>
-                    !data.some(existingRow =>
-                        existingRow['Experiment ID'] === newRow['Experiment ID']
-                    )
-                );
-                console.log('New Experiments:', newExperiments);
-                selectedPoints = selectedPoints.concat(newExperiments);
-                console.log('Selected Points:', selectedPoints);
+                // Add newExperiments to selectedPoints
+                if (newExperiments.length > 0) {
+                    selectedPoints = selectedPoints.concat(newExperiments);
+                    operationsLog.push(`Added ${newExperiments.length} new experiments to selected points.`);
+                    console.log('Selected Points after append:', selectedPoints);
+                } else {
+                    console.log('No new experiments to add to selected points.');
+                }
 
                 // Update plots and table
                 for (let i = 1; i <= plotCounter; i++) {
@@ -845,6 +844,7 @@
                     metadata: metadataObject
                 };
             } catch (e) {
+                showNotification('Error parsing metadata. Please check the console for more details.', 'error');
                 console.error('Error parsing metadata:', e);
                 return {};
             }
@@ -3003,8 +3003,8 @@
                 }, false);
             }
             catch (error) {
+                showNotification('Error importing session.', 'error');
                 console.error('Error importing session:', error);
-                alert('Error importing session. Please check the console for more details.');
                 document.getElementById('loading-modal').style.display = 'none';
             }
         }
@@ -3023,6 +3023,9 @@
                     existingDataMap.set(row['Experiment ID'], row);
                 }
             });
+
+            // Initialize an array to hold new experiments
+            const newExperimentsList = [];
 
             for (let i = 0; i < userDataArray.length; i += chunkSize) {
                 const chunk = userDataArray.slice(i, i + chunkSize);
@@ -3074,6 +3077,8 @@
                         if (experimentId) {
                             existingDataMap.set(experimentId, userRow);
                             uploadStats.totalNewExperiments++;
+                            // Add to newExperimentsList
+                            newExperimentsList.push(userRow);
                         }
                     }
                 });
@@ -3082,26 +3087,20 @@
             }
 
             console.log('Data integration complete. Total records:', data.length);
+
+            return newExperimentsList;
         }
+
 
 
 
         function exportSessionToURL() {
             const sessionData = collectSessionData();
-
             const jsonData = JSON.stringify(sessionData);
-
-            // Compress and encode the JSON string
             const compressedData = LZString.compressToEncodedURIComponent(jsonData);
-
-            // Create the shareable URL
             const newURL = window.location.protocol + "//" + window.location.host + window.location.pathname + '?session=' + compressedData;
-
-            // Display the URL in the modal
             const sessionUrlInput = document.getElementById('session-url-input');
             sessionUrlInput.value = newURL;
-
-            // Show the modal
             const exportSessionUrlModal = document.getElementById('export-session-url-modal');
             exportSessionUrlModal.style.display = 'flex';
         }
