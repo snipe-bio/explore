@@ -40,8 +40,8 @@
     <!-- Driver.js CSS and JS -->
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css" />
-    <link rel="stylesheet" href="styles.css">
-    <script src="snipe-explore.js"></script>
+    <link rel="stylesheet" href="styles/styles.css">
+    <script src="scripts/snipe-explore.js"></script>
 
 </head>
 
@@ -720,20 +720,11 @@
             showNotification(`All Experiments under BioSample "${bioSample}" have been purged successfully.`, 'success');
         }
 
-
-
-        // Function to parse the metadata from the header line
         function parseMetadata(headerLine) {
             try {
-                // Parse the JSON part from the header line
                 const parsedHeader = JSON.parse(headerLine);
-
-                // Decompress the metadata
                 const decompressedMetadata = decompressMetadata(parsedHeader.metadata);
-
-                // Parse the decompressed metadata into an object
                 const metadataObject = JSON.parse(decompressedMetadata);
-
                 return {
                     snipe_version: parsedHeader["snipe-version"],
                     metadata: metadataObject
@@ -744,8 +735,6 @@
             }
         }
 
-
-        // Function to decompress metadata using LZString
         function decompressMetadata(base64String) {
             return LZString.decompressFromBase64(base64String);
         }
@@ -848,7 +837,6 @@
 
 
         function loadUserData(userDataArray) {
-            // Show loading modal
             document.getElementById('loading-modal').style.display = 'flex';
 
             data = [];
@@ -870,29 +858,123 @@
             document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
             document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
 
-            // Initialize variables
             plotCounter = 0;
-
-            // Now, add the first plot
-            // addNewPlot();
-
-            // Show the add-view button
             document.getElementById('add-view-container').style.display = 'block';
-
-            // Initialize and start the tour after data is loaded
-            // initOnboardingTour();
-            // startTour();
-
-            // Update the table and highlight selected points
             updateTable();
             highlightSelectedPoints();
-
-            // Hide loading modal
             document.getElementById('loading-modal').style.display = 'none';
-
-            // Show notification
             showNotification('User data loaded successfully.');
         }
+
+
+        function updateCountsDisplay(plotId) {
+            const plotDiv = document.getElementById(plotId);
+            const xAxis = document.getElementById(`x-axis-${plotId}`).value;
+            const yAxis = document.getElementById(`y-axis-${plotId}`).value;
+
+            // Ensure that both axes are selected
+            if (!xAxis || !yAxis) {
+                // Clear counts if axes are not selected
+                document.getElementById(`points-displayed-${plotId}`).textContent = '0';
+                document.getElementById(`points-selected-${plotId}`).textContent = '0';
+                document.getElementById(`assay-type-counts-${plotId}`).textContent = '';
+                return;
+            }
+
+            // Get the current x and y ranges from the plot's layout
+            const layout = plotDiv.layout;
+            const xaxisRange = layout.xaxis.range;
+            const yaxisRange = layout.yaxis.range;
+
+            // Validate axis ranges
+            if (!xaxisRange || !yaxisRange) {
+                // Axis ranges are not defined yet
+                return;
+            }
+
+            const xMin = parseFloat(xaxisRange[0]);
+            const xMax = parseFloat(xaxisRange[1]);
+            const yMin = parseFloat(yaxisRange[0]);
+            const yMax = parseFloat(yaxisRange[1]);
+
+            // Start with the data after filters and axis range sliders
+            let dataToUse = getFilteredData(plotId);
+
+            // Further filter data based on current Plotly view (zoom/pan)
+            if (!isNaN(xMin) && !isNaN(xMax) && !isNaN(yMin) && !isNaN(yMax)) {
+                dataToUse = dataToUse.filter(row => {
+                    const xValue = parseFloat(row[xAxis]);
+                    const yValue = parseFloat(row[yAxis]);
+                    return xValue >= xMin && xValue <= xMax && yValue >= yMin && yValue <= yMax;
+                });
+            }
+
+            // **Modified Part: Ensure that dataToUse matches what Plotly is displaying**
+            // Retrieve Plotly's displayed points based on current axis ranges and trace visibility
+            const plotData = plotDiv.data;
+            let displayedIds = new Set();
+
+            plotData.forEach(trace => {
+                // **Check if the trace is visible**
+                if (trace.visible === true || trace.visible === undefined) {
+                    if (trace.ids && trace.x && trace.y) {
+                        trace.x.forEach((xVal, index) => {
+                            const yVal = trace.y[index];
+                            const id = trace.ids[index];
+                            if (!isNaN(xVal) && !isNaN(yVal)) {
+                                // Handle log scales if applicable
+                                const isXLog = layout.xaxis.type === 'log';
+                                const isYLog = layout.yaxis.type === 'log';
+                                const validX = isXLog ? (xVal > 0) : true;
+                                const validY = isYLog ? (yVal > 0) : true;
+
+                                if (validX && validY) {
+                                    // Adjust values if log scale is used
+                                    const plotXMin = isXLog ? Math.log10(xMin) : xMin;
+                                    const plotXMax = isXLog ? Math.log10(xMax) : xMax;
+                                    const plotYMin = isYLog ? Math.log10(yMin) : yMin;
+                                    const plotYMax = isYLog ? Math.log10(yMax) : yMax;
+
+                                    const currentX = isXLog ? Math.log10(xVal) : xVal;
+                                    const currentY = isYLog ? Math.log10(yVal) : yVal;
+
+                                    if (currentX >= plotXMin && currentX <= plotXMax &&
+                                        currentY >= plotYMin && currentY <= plotYMax) {
+                                        displayedIds.add(id);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Now, filter dataToUse to include only those with displayedIds
+            const currentViewData = dataToUse.filter(row => displayedIds.has(row._uniqueId));
+
+            // Compute counts
+            const pointsDisplayed = currentViewData.length;
+            const pointsSelectedInPlot = currentViewData.filter(row => selectedPoints.some(p => p._uniqueId === row._uniqueId)).length;
+
+            // Compute points per assay type
+            const assayTypeCounts = {};
+            currentViewData.forEach(row => {
+                const assayType = row["Assay type"] || "Unknown";
+                assayTypeCounts[assayType] = (assayTypeCounts[assayType] || 0) + 1;
+            });
+
+            // Update counts display
+            const pointsDisplayedElem = document.getElementById(`points-displayed-${plotId}`);
+            const pointsSelectedElem = document.getElementById(`points-selected-${plotId}`);
+            const assayTypeCountsElem = document.getElementById(`assay-type-counts-${plotId}`);
+
+            if (pointsDisplayedElem) pointsDisplayedElem.textContent = pointsDisplayed;
+            if (pointsSelectedElem) pointsSelectedElem.textContent = pointsSelectedInPlot;
+            if (assayTypeCountsElem) assayTypeCountsElem.textContent = Object.entries(assayTypeCounts)
+                .map(([type, count]) => `${type}: ${count}`)
+                .join(', ');
+        }
+
 
 
         function addNewPlot(config = {}) {
@@ -929,6 +1011,11 @@
                             <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
                             <!-- Right-Aligned Control Buttons -->
                             <div class="plot-window-controls d-flex align-items-center">
+                                <!-- Info Button -->
+                                <button id="info-plot-${plotId}" class="btn btn-light btn-sm mr-1 plot-info-button" title="Info" data-plot-id="${plotId}">
+                                    <i class="fa fa-info-circle"></i>
+                                </button>
+
                                 <!-- Help Button -->
                                 <button id="help-button-${plotId}" class="btn btn-light btn-sm mr-1" title="Help">?</button>
                                 <!-- Filter Button -->
@@ -954,6 +1041,12 @@
                         <div class="card-body" id="body-${plotId}">
                             <!-- Dynamic Controls will be rendered here -->
                             <div id="dynamic-controls-${plotId}" class="mt-3"></div>
+                            <!-- Counts Display -->
+                            <div id="counts-display-${plotId}" class="counts-display mt-2">
+                                <strong>Points displayed:</strong> <span id="points-displayed-${plotId}">0</span>,
+                                <strong>Points selected:</strong> <span id="points-selected-${plotId}">0</span>,
+                                <strong>Points per assay type:</strong> <span id="assay-type-counts-${plotId}"></span>
+                            </div>
                             <!-- Plot Area -->
                             <div class="plot-area" style="position: relative;">
                                 <div id="${plotId}" class="plot"></div>
@@ -1042,6 +1135,8 @@
 
 
         function clonePlot(plotId) {
+
+
             // Gather the configuration of the plot with id plotId
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
 
@@ -1116,55 +1211,159 @@
         }
 
         function exportCurrentViewAsTSV(plotId) {
-            // Retrieve current plot data, which is filtered by axes, range sliders, etc.
-            let currentViewData = getFilteredData(plotId);
+            const plotDiv = document.getElementById(plotId);
+            const plotData = plotDiv.data;
+            const layout = plotDiv.layout;
 
-            if (currentViewData.length === 0) {
-                alert('No data to export. Please apply filters or selections first.');
+            // Ensure that xaxis and yaxis ranges are defined
+            if (!layout || !layout.xaxis || !layout.yaxis || !layout.xaxis.range || !layout.yaxis.range) {
+                alert('Cannot determine the current view range.');
                 return;
             }
 
-            const columns = Object.keys(currentViewData[0]).filter(col => !col.startsWith('_'));
-            let tsvContent = columns.join('\t') + '\n';
+            const xRange = layout.xaxis.range;
+            const yRange = layout.yaxis.range;
 
-            currentViewData.forEach(point => {
-                const row = columns.map(col => point[col]).join('\t');
-                tsvContent += row + '\n';
+            let currentViewData = new Set();
+
+            // Iterate over each trace in the plot
+            plotData.forEach(trace => {
+                // Ensure the trace has x, y, and ids
+                if (trace.x && trace.y && trace.ids) {
+                    trace.x.forEach((xVal, index) => {
+                        const yVal = trace.y[index];
+                        const id = trace.ids[index];
+
+                        // Check if the point is within the current x and y ranges
+                        if (xVal >= xRange[0] && xVal <= xRange[1] &&
+                            yVal >= yRange[0] && yVal <= yRange[1]) {
+                            currentViewData.add(id);
+                        }
+                    });
+                }
             });
 
+            // Convert the Set to an Array for easier processing
+            currentViewData = Array.from(currentViewData);
+
+            if (currentViewData.length === 0) {
+                alert('No data to export in the current view. Please adjust your plot.');
+                return;
+            }
+
+            // Retrieve the full data rows based on the unique IDs
+            const rowsToExport = data.filter(row => currentViewData.includes(row._uniqueId));
+
+            // Prepare TSV content
+            const columns = Object.keys(rowsToExport[0]).filter(col => !col.startsWith('_'));
+            let tsvContent = columns.join('\t') + '\n';
+
+            rowsToExport.forEach(row => {
+                const rowContent = columns.map(col => row[col]).join('\t');
+                tsvContent += rowContent + '\n';
+            });
+
+            // Create and trigger download
             const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `current_view_${plotId}.tsv`;
             link.click();
+
+            // Log the export operation
+            logOperation(plotId, `Exported current view: ${rowsToExport.length} points.`);
         }
 
-        function exportSelectedPointsAsTSV(plotId) {
-            // Get the current view's filtered data
-            let filteredData = getFilteredData(plotId);
 
-            // Intersect filteredData with selectedPoints
-            let selectedFilteredData = filteredData.filter(row => selectedPoints.some(p => p._uniqueId === row._uniqueId));
-
-            if (selectedFilteredData.length === 0) {
-                alert('No selected points to export for the current view.');
+        function exportTableToTSV() {
+            if (selectedPoints.length === 0) {
+                alert('No data to export. Please select some points first.');
                 return;
             }
 
-            const columns = Object.keys(selectedFilteredData[0]).filter(col => !col.startsWith('_'));
-            let tsvContent = columns.join('\t') + '\n';
+            const columns = Object.keys(selectedPoints[0]).filter(col => !col.startsWith('_'));
+            let csvContent = columns.join('\t') + '\n';
 
-            selectedFilteredData.forEach(point => {
+            selectedPoints.forEach(point => {
                 const row = columns.map(col => point[col]).join('\t');
-                tsvContent += row + '\n';
+                csvContent += row + '\n';
             });
 
+            const blob = new Blob([csvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'selected_points.tsv';
+            link.click();
+
+            // Show notification
+            showNotification('Table exported successfully.');
+        }
+
+        function exportSelectedPointsAsTSV(plotId) {
+            const plotDiv = document.getElementById(plotId);
+            const plotData = plotDiv.data;
+            const layout = plotDiv.layout;
+
+            // Ensure that xaxis and yaxis ranges are defined
+            if (!layout || !layout.xaxis || !layout.yaxis || !layout.xaxis.range || !layout.yaxis.range) {
+                alert('Cannot determine the current view range.');
+                return;
+            }
+
+            const xRange = layout.xaxis.range;
+            const yRange = layout.yaxis.range;
+
+            let visibleSelectedIds = new Set();
+
+            // Iterate over each trace in the plot
+            plotData.forEach(trace => {
+                // Ensure the trace has x, y, and ids
+                if (trace.x && trace.y && trace.ids) {
+                    trace.x.forEach((xVal, index) => {
+                        const yVal = trace.y[index];
+                        const id = trace.ids[index];
+
+                        // Check if the point is within the current x and y ranges and is selected
+                        if (xVal >= xRange[0] && xVal <= xRange[1] &&
+                            yVal >= yRange[0] && yVal <= yRange[1] &&
+                            selectedPoints.some(p => p._uniqueId === id)) {
+                            visibleSelectedIds.add(id);
+                        }
+                    });
+                }
+            });
+
+            // Convert the Set to an Array for easier processing
+            visibleSelectedIds = Array.from(visibleSelectedIds);
+
+            if (visibleSelectedIds.length === 0) {
+                alert('No selected points to export in the current view.');
+                return;
+            }
+
+            // Retrieve the full data rows based on the unique IDs
+            const rowsToExport = data.filter(row => visibleSelectedIds.includes(row._uniqueId));
+
+            // Prepare TSV content
+            const columns = Object.keys(rowsToExport[0]).filter(col => !col.startsWith('_'));
+            let tsvContent = columns.join('\t') + '\n';
+
+            rowsToExport.forEach(row => {
+                const rowContent = columns.map(col => row[col]).join('\t');
+                tsvContent += rowContent + '\n';
+            });
+
+            // Create and trigger download
             const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `selected_points_${plotId}.tsv`;
             link.click();
+
+            // Log the export operation
+            logOperation(plotId, `Exported selected points: ${rowsToExport.length} points.`);
         }
+
 
         function getFilteredData(plotId) {
             const xAxis = document.getElementById(`x-axis-${plotId}`).value;
@@ -1523,6 +1722,13 @@
                 helpModal.style.display = 'flex';
             });
 
+            // Info Button Event Listener
+            const infoButton = document.getElementById(`info-plot-${plotId}`);
+            infoButton.addEventListener('click', () => {
+                showPlotInfo(plotId);
+            });
+
+
             // Update the plot
             updatePlot(plotId);
         }
@@ -1621,7 +1827,7 @@
             }
         }
 
-        function applyFiltersToData(dataSet, filters) {
+        function applyFiltersToData(dataSet, filters, plotId) {
             let filteredData = dataSet;
 
             filters.forEach((filter, index) => {
@@ -1636,12 +1842,15 @@
                         const rowValue = parseFloat(row[column]);
                         return rowValue >= value.min && rowValue <= value.max;
                     };
+                    logOperation(plotId, `Applied numerical filter: ${logic} ${column} between ${value.min} and ${value.max}`);
                 } else {
                     // Categorical filter
                     if (operator === 'in' && Array.isArray(value)) {
                         filterFunction = (row) => value.includes(row[column]);
+                        logOperation(plotId, `Applied numerical filter: ${logic} ${column} between ${value.min} and ${value.max}`);
                     } else if (operator === 'not_in' && Array.isArray(value)) {
                         filterFunction = (row) => !value.includes(row[column]);
+                        logOperation(plotId, `Applied numerical filter: ${logic} ${column} between ${value.min} and ${value.max}`);
                     } else {
                         // Unknown operator or missing value
                         filterFunction = () => true;
@@ -1687,12 +1896,14 @@
 
             if (matchingPoints.length === 0) {
                 alert('No matching data points found.');
+                operationsLog.push(`Search performed with no matches for: ${searchText}`);
                 return;
             }
 
             matchingPoints.forEach(point => {
                 if (!selectedPoints.some(p => p._uniqueId === point._uniqueId)) {
                     selectedPoints.push(point);
+                    operationsLog.push(`Selected point via search: ${point._uniqueId}`);
                 }
             });
 
@@ -1717,13 +1928,15 @@
 
             // Apply filters if any
             if (plotFilters[plotId] && plotFilters[plotId].length > 0) {
-                plotDataSet = applyFiltersToData(plotDataSet, plotFilters[plotId]);
+                plotDataSet = applyFiltersToData(plotDataSet, plotFilters[plotId], plotId);
             }
 
             currentPlotData = plotDataSet;
 
-
-            currentPlotData = plotDataSet;
+            // Initialize plotViewRanges for this plot if not already initialized
+            if (!plotViewRanges[plotId]) {
+                plotViewRanges[plotId] = { xMin: null, xMax: null, yMin: null, yMax: null };
+            }
 
             if (plotType === 'scatter') {
                 const xAxis = document.getElementById(`x-axis-${plotId}`).value;
@@ -1770,6 +1983,28 @@
                         !isNaN(yValue) && yValue >= yMin && yValue <= yMax
                     );
                 });
+
+                const pointsDisplayed = filteredData.length;
+                const pointsSelectedInPlot = filteredData.filter(row => selectedPoints.some(p => p._uniqueId === row._uniqueId)).length;
+
+                // Compute points per assay type
+                const assayTypeCounts = {};
+                filteredData.forEach(row => {
+                    const assayType = row["Assay type"] || "Unknown";
+                    assayTypeCounts[assayType] = (assayTypeCounts[assayType] || 0) + 1;
+                });
+
+                // Update counts display
+                document.getElementById(`points-displayed-${plotId}`).textContent = pointsDisplayed;
+                document.getElementById(`points-selected-${plotId}`).textContent = pointsSelectedInPlot;
+
+                const assayTypeCountsArray = Object.entries(assayTypeCounts).map(([assayType, count]) => `${assayType}: ${count}`);
+                document.getElementById(`assay-type-counts-${plotId}`).textContent = assayTypeCountsArray.join(', ');
+
+                // Log the filter operation
+                logOperation(plotId, `Updated plot ${plotId}: Displayed ${pointsDisplayed} points, Selected ${pointsSelectedInPlot} points.`);
+
+
 
                 let traces = [];
 
@@ -1931,9 +2166,35 @@
 
                 Plotly.newPlot(plotDiv, traces, layout).then(() => {
                     plotDiv.on('plotly_click', (eventData) => onPointClick(eventData, plotId));
-                    // Handle multiple points selection (lasso/box selection)
-                    //plotDiv.on('plotly_selected', (eventData) => onPointsSelected(eventData, plotId));
                     highlightSelectedPoints();
+
+                    // Attach Plotly Event Listeners for Real-Time Updates
+                    plotDiv.on('plotly_relayout', function (eventdata) {
+                        // When the plot is zoomed or panned, update the summary
+                        updateCountsDisplay(plotId);
+                    });
+
+                    plotDiv.on('plotly_selected', function (eventData) {
+                        // When points are selected via Plotly's lasso or box select
+                        handlePlotlySelection(eventData, plotId);
+                        updateCountsDisplay(plotId);
+                    });
+
+                    plotDiv.on('plotly_deselect', function (eventData) {
+                        // When points are deselected
+                        handlePlotlyDeselection(eventData, plotId);
+                        updateCountsDisplay(plotId);
+                    });
+
+                    plotDiv.on('plotly_restyle', function (eventData) {
+                        updateCountsDisplay(plotId);
+                    });
+
+
+                    // Initial counts update
+                    updateCountsDisplay(plotId);
+
+
                 });
 
             } else if (plotType === 'boxplot') {
@@ -2040,8 +2301,8 @@
             else {
                 plotDiv.innerHTML = '<p style="text-align: center; color: #e74c3c;">Invalid plot type selected.</p>';
             }
+            updateCountsDisplay(plotId);
         }
-
 
         function onPointClick(eventData, plotId) {
             const pt = eventData.points[0];
@@ -2055,8 +2316,10 @@
 
             if (index === -1) {
                 selectedPoints.push(clickedPoint);
+                logOperation(plotId, `Selected point: ${clickedId}`);
             } else {
                 selectedPoints.splice(index, 1);
+                logOperation(plotId, `Selected point: ${clickedId}`);
             }
             updateTable();
             highlightSelectedPoints();
@@ -2093,6 +2356,7 @@
                                 }
                             }
                         };
+                        updateCountsDisplay(plotId);
 
                         plotDiv.data.forEach((trace) => {
                             const selectedIndices = [];
@@ -2141,9 +2405,11 @@
                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton-${point._uniqueId}">
                                     <a class="dropdown-item view-sra" href="#" data-unique-id="${point._uniqueId}">View in SRA</a>
                                     <a class="dropdown-item show-depth" href="#" data-unique-id="${point._uniqueId}">Show depth per chromosome</a>
+                                    <!-- TODO: disabled for now because useless
                                     <a class="dropdown-item purge-experiment" href="#" data-unique-id="${point._uniqueId}">Purge Experiment</a>
                                     <a class="dropdown-item purge-bioproject" href="#" data-bioproject="${point['BioProject']}">Purge BioProject</a>
                                     <a class="dropdown-item purge-biosample" href="#" data-biosample="${point['BioSample']}">Purge BioSample</a>
+                                    -->
                                 </div>
                             </div>
                         </td>
@@ -2166,44 +2432,9 @@
             selectedPoints = [];
             updateTable();
             highlightSelectedPoints();
-
-            // Show notification
             showNotification('Selections cleared.');
         }
 
-        function exportTableToTSV() {
-            if (selectedPoints.length === 0) {
-                alert('No data to export. Please select some points first.');
-                return;
-            }
-
-            const columns = Object.keys(selectedPoints[0]).filter(col => !col.startsWith('_'));
-            let csvContent = columns.join('\t') + '\n';
-
-            selectedPoints.forEach(point => {
-                const row = columns.map(col => point[col]).join('\t');
-                csvContent += row + '\n';
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'selected_points.tsv';
-            link.click();
-
-            // Show notification
-            showNotification('Table exported successfully.');
-        }
-
-        function exportPlot(plotId) {
-            const plotDiv = document.getElementById(plotId);
-            Plotly.toImage(plotDiv, { format: 'png', width: 1200, height: 800 }).then(function (dataUrl) {
-                const link = document.createElement('a');
-                link.download = `${plotId}.png`;
-                link.href = dataUrl;
-                link.click();
-            });
-        }
 
         function exportAllDataAsPDF() {
             const { jsPDF } = window.jspdf;
@@ -2220,7 +2451,7 @@
                 // Cover Page
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(24);
-                doc.text("Snipe SRA Exploration Dashboard?", pageWidth / 2, 120, null, null, 'center');
+                doc.text("Snipe Explore Report", pageWidth / 2, 120, null, null, 'center');
 
                 // Date and Time
                 doc.setFont('helvetica', 'normal');
@@ -2331,6 +2562,62 @@
                 }
 
                 Promise.all(promises).then(() => {
+                    doc.addPage();
+
+                    // Data Statistics
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(16);
+                    doc.text("Data Statistics", 40, 80);
+
+                    // Example: Display total points displayed and selected
+                    let statsYPosition = 110;
+                    const totalPointsDisplayed = data.length;
+                    const totalPointsSelected = selectedPoints.length;
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(12);
+                    doc.text(`Total Points in Dataset: ${totalPointsDisplayed}`, 60, statsYPosition);
+                    statsYPosition += 20;
+                    doc.text(`Total Points Selected: ${totalPointsSelected}`, 60, statsYPosition);
+                    statsYPosition += 20;
+
+                    // Points per assay type
+                    const assayTypeCounts = {};
+                    data.forEach(row => {
+                        const assayType = row["Assay type"] || "Unknown";
+                        assayTypeCounts[assayType] = (assayTypeCounts[assayType] || 0) + 1;
+                    });
+                    const assayTypeCountsArray = Object.entries(assayTypeCounts).map(([assayType, count]) => `${assayType}: ${count}`);
+
+                    doc.text(`Points per Assay Type:`, 60, statsYPosition);
+                    statsYPosition += 20;
+                    assayTypeCountsArray.forEach(line => {
+                        doc.text(`- ${line}`, 80, statsYPosition);
+                        statsYPosition += 20;
+                    });
+
+                    // Operations Log
+                    doc.addPage();
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(16);
+                    doc.text("Operations Log", 40, 80);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(12);
+
+                    let logYPosition = 110;
+                    operationsLog.forEach((logEntry, index) => {
+                        const logText = `${index + 1}. ${logEntry}`;
+                        const lines = doc.splitTextToSize(logText, pageWidth - 80);
+                        doc.text(lines, 60, logYPosition);
+                        logYPosition += lines.length * 14 + 10;
+                        if (logYPosition > pageHeight - 80) {
+                            doc.addPage();
+                            logYPosition = 80;
+                        }
+                    });
+
+
                     // Add page numbers
                     const pageCount = doc.internal.getNumberOfPages();
                     for (let i = 1; i <= pageCount; i++) {
@@ -2346,48 +2633,96 @@
         }
 
 
-        function addSelectedDataTable(doc) {
-            doc.addPage();
-            doc.setFontSize(16);
-            doc.text("Selected Data Points", 20, 20);
+        function collectSessionData() {
+            const sessionData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    dataFilePath: dataFilePath,
+                },
+                selectedSpecies: document.getElementById('species-select').value,
+                selectedReference: document.getElementById('reference-select').value,
+                selectedAmplicon: document.getElementById('amplicon-select').value,
+                plots: [],
+                selectedPoints: selectedPoints.map(p => p._uniqueId),
+            };
 
-            const columns = Object.keys(selectedPoints[0]);
-            let yOffset = 30;
-            const pageWidth = doc.internal.pageSize.width;
+            // Collect data for each plot
+            for (let i = 1; i <= plotCounter; i++) {
+                const plotId = `plot-${i}`;
+                const plotType = document.getElementById(`plot-type-${plotId}`).value;
+                const plotConfig = {
+                    plotId: plotId,
+                    plotType: plotType,
+                    controls: {},
+                    title: document.getElementById(`title-${plotId}`).value,
+                    notes: document.getElementById(`notes-${plotId}`).value,
+                    filters: plotFilters[plotId] ? plotFilters[plotId] : []
+                };
 
-            // Calculate column widths
-            const columnWidths = columns.map(col =>
-                Math.min(40, Math.max(...selectedPoints.map(row => doc.getTextWidth(String(row[col])))))
-            );
-            const totalWidth = columnWidths.reduce((a, b) => a + b, 0);
-            const scaleFactor = (pageWidth - 40) / totalWidth;
-            const scaledWidths = columnWidths.map(w => w * scaleFactor);
+                // Collect control values based on plot type
+                if (plotType === 'scatter') {
+                    plotConfig.controls.xAxis = document.getElementById(`x-axis-${plotId}`).value;
+                    plotConfig.controls.yAxis = document.getElementById(`y-axis-${plotId}`).value;
+                    plotConfig.controls.hue = document.getElementById(`hue-${plotId}`).value;
+                    plotConfig.controls.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
+                    plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
+                    plotConfig.controls.palette = document.getElementById(`palette-${plotId}`).value;
 
-            // Add headers
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            columns.forEach((col, index) => {
-                doc.text(col, 20 + scaledWidths.slice(0, index).reduce((a, b) => a + b, 0), yOffset);
-            });
-            yOffset += 10;
+                    // Save range slider values (using correct IDs)
+                    const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+                    const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+                    const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
 
-            // Add data rows
-            doc.setTextColor(0);
-            selectedPoints.forEach((point, rowIndex) => {
-                if (yOffset > 280) {
-                    doc.addPage();
-                    yOffset = 20;
+                    if (xSlider && xSlider.noUiSlider) {
+                        const [xMin, xMax] = xSlider.noUiSlider.get().map(Number);
+                        plotConfig.controls.xRange = { min: xMin, max: xMax };
+                    }
+                    if (ySlider && ySlider.noUiSlider) {
+                        const [yMin, yMax] = ySlider.noUiSlider.get().map(Number);
+                        plotConfig.controls.yRange = { min: yMin, max: yMax };
+                    }
+                    if (hueSlider && hueSlider.noUiSlider) {
+                        const [hueMin, hueMax] = hueSlider.noUiSlider.get().map(Number);
+                        plotConfig.controls.hueRange = { min: hueMin, max: hueMax };
+                    }
+                } else if (plotType === 'histogram' || plotType === 'boxplot') {
+                    plotConfig.controls.numColumns = Array.from(
+                        document.querySelectorAll(
+                            `#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`
+                        )
+                    ).map(checkbox => checkbox.value);
+                    plotConfig.controls.groupBy = document.getElementById(`group-by-${plotId}`).value;
                 }
-                columns.forEach((col, colIndex) => {
-                    doc.text(String(point[col]), 20 + scaledWidths.slice(0, colIndex).reduce((a, b) => a + b, 0), yOffset);
+
+                // Collect selected assay types
+                plotConfig.controls.selectedAssayTypes = Array.from(
+                    document.querySelectorAll(
+                        `#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`
+                    )
+                ).map(checkbox => checkbox.value);
+
+                // Collect filters
+                plotConfig.filters = plotFilters[plotId] ? plotFilters[plotId] : [];
+
+                sessionData.plots.push(plotConfig);
+            }
+
+            // Include user data if present
+            const userDataPoints = data.filter(row => row._isUserData);
+            if (userDataPoints.length > 0) {
+                sessionData.userData = userDataPoints.map(row => {
+                    const newRow = {};
+                    for (let key in row) {
+                        if (!key.startsWith('_')) {
+                            newRow[key] = row[key];
+                        }
+                    }
+                    return newRow;
                 });
-                yOffset += 7;
-            });
+            }
 
-            // Save the PDF
-            doc.save("snipe_visualization_report.pdf");
+            return sessionData;
         }
-
 
 
         function exportSession() {
@@ -2541,9 +2876,6 @@
             }
         }
 
-
-
-
         function integrateUserData(userDataArray) {
             userDataArray.forEach(row => {
                 // Assign a unique ID with a 'user_' prefix
@@ -2562,99 +2894,6 @@
             });
             data = data.concat(userDataArray);
         }
-
-
-        function collectSessionData() {
-            const sessionData = {
-                metadata: {
-                    exportDate: new Date().toISOString(),
-                    dataFilePath: dataFilePath,
-                },
-                selectedSpecies: document.getElementById('species-select').value,
-                selectedReference: document.getElementById('reference-select').value,
-                selectedAmplicon: document.getElementById('amplicon-select').value,
-                plots: [],
-                selectedPoints: selectedPoints.map(p => p._uniqueId),
-            };
-
-            // Collect data for each plot
-            for (let i = 1; i <= plotCounter; i++) {
-                const plotId = `plot-${i}`;
-                const plotType = document.getElementById(`plot-type-${plotId}`).value;
-                const plotConfig = {
-                    plotId: plotId,
-                    plotType: plotType,
-                    controls: {},
-                    title: document.getElementById(`title-${plotId}`).value,
-                    notes: document.getElementById(`notes-${plotId}`).value,
-                    filters: plotFilters[plotId] ? plotFilters[plotId] : []
-                };
-
-                // Collect control values based on plot type
-                if (plotType === 'scatter') {
-                    plotConfig.controls.xAxis = document.getElementById(`x-axis-${plotId}`).value;
-                    plotConfig.controls.yAxis = document.getElementById(`y-axis-${plotId}`).value;
-                    plotConfig.controls.hue = document.getElementById(`hue-${plotId}`).value;
-                    plotConfig.controls.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
-                    plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
-                    plotConfig.controls.palette = document.getElementById(`palette-${plotId}`).value;
-
-                    // Save range slider values (using correct IDs)
-                    const xSlider = document.getElementById(`x-range-slider-${plotId}`);
-                    const ySlider = document.getElementById(`y-range-slider-${plotId}`);
-                    const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
-
-                    if (xSlider && xSlider.noUiSlider) {
-                        const [xMin, xMax] = xSlider.noUiSlider.get().map(Number);
-                        plotConfig.controls.xRange = { min: xMin, max: xMax };
-                    }
-                    if (ySlider && ySlider.noUiSlider) {
-                        const [yMin, yMax] = ySlider.noUiSlider.get().map(Number);
-                        plotConfig.controls.yRange = { min: yMin, max: yMax };
-                    }
-                    if (hueSlider && hueSlider.noUiSlider) {
-                        const [hueMin, hueMax] = hueSlider.noUiSlider.get().map(Number);
-                        plotConfig.controls.hueRange = { min: hueMin, max: hueMax };
-                    }
-                } else if (plotType === 'histogram' || plotType === 'boxplot') {
-                    plotConfig.controls.numColumns = Array.from(
-                        document.querySelectorAll(
-                            `#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`
-                        )
-                    ).map(checkbox => checkbox.value);
-                    plotConfig.controls.groupBy = document.getElementById(`group-by-${plotId}`).value;
-                }
-
-                // Collect selected assay types
-                plotConfig.controls.selectedAssayTypes = Array.from(
-                    document.querySelectorAll(
-                        `#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`
-                    )
-                ).map(checkbox => checkbox.value);
-
-                // Collect filters
-                plotConfig.filters = plotFilters[plotId] ? plotFilters[plotId] : [];
-
-                sessionData.plots.push(plotConfig);
-            }
-
-            // Include user data if present
-            const userDataPoints = data.filter(row => row._isUserData);
-            if (userDataPoints.length > 0) {
-                sessionData.userData = userDataPoints.map(row => {
-                    const newRow = {};
-                    for (let key in row) {
-                        if (!key.startsWith('_')) {
-                            newRow[key] = row[key];
-                        }
-                    }
-                    return newRow;
-                });
-            }
-
-            return sessionData;
-        }
-
 
 
         function exportSessionToURL() {
@@ -2678,629 +2917,167 @@
             exportSessionUrlModal.style.display = 'flex';
         }
 
-        // Initialize plotFilters globally
-        let plotFilters = {};
-        let filterGroupCounter = 0; // Global counter for unique filter indexes
 
-        // Function to open the Filter modal
-        let currentFilterPlotId = null;
+        // --------------------------------------------
+        // Plot information modal
+        // --------------------------------------------
 
-        function openFilterModal(plotId) {
-            currentFilterPlotId = plotId;
-            const modal = document.getElementById('filter-modal');
+
+        let operationsLog = [];
+        const plotViewRanges = {};
+        function logOperation(plotId, message) {
+            const entry = { plotId: plotId, message: message };
+            if (!operationsLog.some(e => e.plotId === plotId && e.message === message)) {
+                operationsLog.push(entry);
+            }
+        }
+
+        function showPlotInfo(plotId) {
+            const modal = document.getElementById('plot-info-modal');
+            const modalTitle = document.getElementById('plot-info-title');
+            const modalContent = document.getElementById('plot-info-content');
+            const closeBtn = document.getElementById('plot-info-modal-close');
+
+            modalTitle.textContent = `Plot Information - ${plotId}`;
+
+            const plotOperationsLog = operationsLog.filter(entry => entry.plotId === plotId);
+            const uniqueLogEntries = [...new Set(plotOperationsLog.map(entry => entry.message))];
+            const parameters = collectPlotParameters(plotId);
+
+            // Build the content HTML with semantic structure and collapsible operations log
+            let contentHTML = `
+                <div class="parameters-section">
+                    <h3>Parameters</h3>
+                    <pre>${JSON.stringify(parameters, null, 2)}</pre>
+                </div>
+                <div class="operations-section">
+                    <h3>
+                        Operations Log
+                        <button class="btn btn-sm btn-link" type="button" data-toggle="collapse" data-target="#operations-log-${plotId}" aria-expanded="false" aria-controls="operations-log-${plotId}">
+                            <i class="fa fa-chevron-down"></i>
+                        </button>
+                    </h3>
+                    <div class="collapse" id="operations-log-${plotId}">
+                        <ul>
+                            ${uniqueLogEntries.map(logEntry => `<li>${logEntry}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="mt-2">
+                        <button id="export-json-${plotId}" class="btn btn-primary btn-sm mr-2">Export JSON</button>
+                        <button id="copy-json-${plotId}" class="btn btn-secondary btn-sm">Copy JSON</button>
+                    </div>
+                </div>
+            `;
+
+            // Display content
+            modalContent.innerHTML = contentHTML;
             modal.style.display = 'flex';
-            populateFilterGroups(plotId);
 
-            // Allow closing modal by clicking outside of it
-            window.onclick = function (event) {
-                if (event.target == modal) {
-                    modal.style.display = "none";
+            // Setup event listeners for Export JSON and Copy JSON buttons
+            const exportJsonBtn = document.getElementById(`export-json-${plotId}`);
+            const copyJsonBtn = document.getElementById(`copy-json-${plotId}`);
+
+            exportJsonBtn.addEventListener('click', () => {
+                const jsonStr = JSON.stringify(parameters, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${plotId}_parameters.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            copyJsonBtn.addEventListener('click', () => {
+                const jsonStr = JSON.stringify(parameters, null, 2);
+                navigator.clipboard.writeText(jsonStr).then(() => {
+                    alert('Plot parameters copied to clipboard!');
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert('Failed to copy parameters.');
+                });
+            });
+
+            // Setup event listeners for modal close
+            const handleClose = () => {
+                modal.style.display = 'none';
+                // Remove event listeners when modal is closed
+                closeBtn.removeEventListener('click', handleClose);
+                window.removeEventListener('click', handleClickOutside);
+                window.removeEventListener('keydown', handleEscKey);
+            };
+
+            const handleClickOutside = (event) => {
+                if (event.target === modal) {
+                    handleClose();
                 }
             };
 
-            // Trigger a window resize event after a short delay to ensure modal is rendered
-            setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-            }, 300);
+            const handleEscKey = (event) => {
+                if (event.key === 'Escape') {
+                    handleClose();
+                }
+            };
+
+            // Add event listeners
+            closeBtn.addEventListener('click', handleClose);
+            window.addEventListener('click', handleClickOutside);
+            window.addEventListener('keydown', handleEscKey);
         }
 
 
-        // Close Filter modal
-        document.addEventListener('DOMContentLoaded', () => {
-            const filterModalClose = document.getElementById('filter-modal-close');
-            if (filterModalClose) {
-                filterModalClose.addEventListener('click', () => {
-                    document.getElementById('filter-modal').style.display = 'none';
-                });
+        function collectPlotParameters(plotId) {
+            const plotType = document.getElementById(`plot-type-${plotId}`).value;
+            const parameters = {
+                plotType: plotType,
+                controls: {},
+                title: document.getElementById(`title-${plotId}`).value,
+                notes: document.getElementById(`notes-${plotId}`).value,
+                filters: plotFilters[plotId] ? plotFilters[plotId] : []
+            };
+
+            // Collect control values based on plot type
+            if (plotType === 'scatter') {
+                parameters.controls.xAxis = document.getElementById(`x-axis-${plotId}`).value;
+                parameters.controls.yAxis = document.getElementById(`y-axis-${plotId}`).value;
+                parameters.controls.hue = document.getElementById(`hue-${plotId}`).value;
+                parameters.controls.xLogScale = document.getElementById(`x-log-scale-${plotId}`).checked;
+                parameters.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
+                parameters.controls.palette = document.getElementById(`palette-${plotId}`).value;
+
+                // Range sliders
+                const xSlider = document.getElementById(`x-range-slider-${plotId}`);
+                const ySlider = document.getElementById(`y-range-slider-${plotId}`);
+                const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
+
+                if (xSlider && xSlider.noUiSlider) {
+                    const [xMin, xMax] = xSlider.noUiSlider.get().map(Number);
+                    parameters.controls.xRange = { min: xMin, max: xMax };
+                }
+                if (ySlider && ySlider.noUiSlider) {
+                    const [yMin, yMax] = ySlider.noUiSlider.get().map(Number);
+                    parameters.controls.yRange = { min: yMin, max: yMax };
+                }
+                if (hueSlider && hueSlider.noUiSlider) {
+                    const [hueMin, hueMax] = hueSlider.noUiSlider.get().map(Number);
+                    parameters.controls.hueRange = { min: hueMin, max: hueMax };
+                }
+            } else if (plotType === 'histogram' || plotType === 'boxplot') {
+                parameters.controls.numColumns = Array.from(
+                    document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)
+                ).map(checkbox => checkbox.value);
+                parameters.controls.groupBy = document.getElementById(`group-by-${plotId}`).value;
             }
 
-            // Add Filter Group
-            const addFilterGroupBtn = document.getElementById('add-filter-group');
-            if (addFilterGroupBtn) {
-                addFilterGroupBtn.addEventListener('click', () => {
-                    addFilterGroup();
-                });
-            }
+            // Collect selected assay types
+            parameters.controls.selectedAssayTypes = Array.from(
+                document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`)
+            ).map(checkbox => checkbox.value);
 
-            // Apply Filters
-            const applyFiltersBtn = document.getElementById('apply-filters');
-            if (applyFiltersBtn) {
-                applyFiltersBtn.addEventListener('click', () => {
-                    applyFilters();
-                    document.getElementById('filter-modal').style.display = 'none';
-                });
-            }
-        });
-
-        // Function to populate existing filter groups (if any)
-        function populateFilterGroups(plotId) {
-            const filterGroupsContainer = document.getElementById('filter-groups-container');
-            filterGroupsContainer.innerHTML = ''; // Clear existing
-
-            const filters = plotFilters[plotId];
-            if (filters && filters.length > 0) {
-                filters.forEach((filterGroup, index) => {
-                    // Create the filter group with existing data
-                    addFilterGroup(filterGroup);
-
-                    // Get the newly created filter group
-                    const groupDiv = filterGroupsContainer.children[index];
-
-                    // If this is a categorical filter with values
-                    if (filterGroup.value && Array.isArray(filterGroup.value)) {
-                        // Force column select change to create the categorical filter UI
-                        const columnSelect = groupDiv.querySelector('.column-select');
-                        if (columnSelect) {
-                            // Set the column value
-                            columnSelect.value = filterGroup.column;
-
-                            // Trigger change event to create the filter UI
-                            columnSelect.dispatchEvent(new Event('change'));
-
-                            // Short delay to ensure UI is created
-                            setTimeout(() => {
-                                // Get the container where tags should be
-                                const valueInputContainer = groupDiv.querySelector('.value-input-container');
-                                if (valueInputContainer) {
-                                    const tagsContainer = valueInputContainer.querySelector('.tags-container');
-                                    if (tagsContainer) {
-                                        // Clear any existing tags
-                                        tagsContainer.innerHTML = '';
-
-                                        // Recreate tags for each value
-                                        filterGroup.value.forEach(value => {
-                                            const tag = document.createElement('span');
-                                            tag.className = 'tag';
-                                            tag.style.display = 'inline-flex';
-                                            tag.style.alignItems = 'center';
-                                            tag.style.padding = '5px';
-                                            tag.style.margin = '2px';
-                                            tag.style.backgroundColor = '#007bff';
-                                            tag.style.color = '#fff';
-                                            tag.style.borderRadius = '3px';
-                                            tag.dataset.value = value;
-                                            tag.textContent = value;
-
-                                            const removeBtn = document.createElement('span');
-                                            removeBtn.textContent = ' ×';
-                                            removeBtn.style.cursor = 'pointer';
-                                            removeBtn.style.marginLeft = '5px';
-                                            removeBtn.addEventListener('click', () => {
-                                                tagsContainer.removeChild(tag);
-                                                const index = groupDiv.selectedCategories.indexOf(value);
-                                                if (index > -1) {
-                                                    groupDiv.selectedCategories.splice(index, 1);
-                                                }
-                                                // Update datalist options
-                                                const datalist = groupDiv.querySelector('datalist');
-                                                if (datalist) {
-                                                    const input = groupDiv.querySelector('.autocomplete-input');
-                                                    if (input) {
-                                                        input.dispatchEvent(new Event('change'));
-                                                    }
-                                                }
-                                            });
-
-                                            tag.appendChild(removeBtn);
-                                            tagsContainer.appendChild(tag);
-                                        });
-
-                                        // Ensure selectedCategories is properly set
-                                        groupDiv.selectedCategories = [...filterGroup.value];
-                                    }
-                                }
-                            }, 100);
-                        }
-                    }
-                });
-            } else {
-                addFilterGroup();
-            }
+            return parameters;
         }
-
-        // Function to determine if a column is numerical
-        function isNumerical(column) {
-            const numericCount = data.filter(row => !isNaN(parseFloat(row[column])) && isFinite(row[column])).length;
-            return (numericCount / data.length) >= 0.9; // 90% or more values are numeric
-        }
-
-        function addFilterGroup(existingGroup = null) {
-            const filterGroupsContainer = document.getElementById('filter-groups-container');
-            const isFirstGroup = filterGroupsContainer.children.length === 0;
-
-            filterGroupCounter++; // Increment the counter
-            const filterIndex = filterGroupCounter; // Assign a unique filterIndex
-
-            const groupDiv = document.createElement('div');
-            groupDiv.className = 'filter-group';
-            groupDiv.style.border = '1px solid #ccc';
-            groupDiv.style.padding = '10px';
-            groupDiv.style.marginBottom = '10px';
-            groupDiv.style.borderRadius = '5px';
-            groupDiv.style.position = 'relative';
-
-            const logicSelect = document.createElement('select');
-            logicSelect.className = 'form-control form-control-sm logic-select';
-            logicSelect.style.width = '150px';
-
-            if (isFirstGroup) {
-                logicSelect.innerHTML = `
-                    <option value="">(Select Logic)</option>
-                    <option value="NOT">NOT</option>
-                `;
-                logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : '';
-            } else {
-                logicSelect.innerHTML = `
-                    <option value="AND">AND</option>
-                    <option value="OR">OR</option>
-                    <option value="NOT">NOT</option>
-                `;
-                logicSelect.value = existingGroup && existingGroup.logic ? existingGroup.logic : 'AND';
-            }
-
-            // Condition Div
-            const conditionDiv = document.createElement('div');
-            conditionDiv.className = 'condition-div';
-
-            const columnSelect = document.createElement('select');
-            columnSelect.className = 'form-control form-control-sm column-select';
-            columnSelect.style.marginRight = '10px';
-            columnSelect.innerHTML = `<option value="">Select Column</option>`;
-            const columns = Object.keys(data[0]).filter(col => !col.startsWith('_'));
-            columns.forEach(col => {
-                columnSelect.innerHTML += `<option value="${col}">${col}</option>`;
-            });
-            if (existingGroup && existingGroup.column) {
-                columnSelect.value = existingGroup.column;
-            }
-
-            const operatorSelect = document.createElement('select');
-            operatorSelect.className = 'form-control form-control-sm operator-select';
-            operatorSelect.style.marginRight = '10px';
-
-            const valueInput = document.createElement('div'); // Container for dynamic inputs
-            valueInput.className = 'value-input-container';
-
-            conditionDiv.appendChild(columnSelect);
-            conditionDiv.appendChild(operatorSelect);
-            conditionDiv.appendChild(valueInput);
-
-            const removeButton = document.createElement('button');
-            removeButton.className = 'btn btn-danger btn-sm remove-filter-group';
-            removeButton.style.position = 'absolute';
-            removeButton.style.top = '10px';
-            removeButton.style.right = '10px';
-            removeButton.innerHTML = '<i class="fa fa-times"></i>';
-            removeButton.addEventListener('click', () => {
-                filterGroupsContainer.removeChild(groupDiv);
-            });
-
-            groupDiv.appendChild(logicSelect);
-            groupDiv.appendChild(conditionDiv);
-            groupDiv.appendChild(removeButton);
-
-            filterGroupsContainer.appendChild(groupDiv);
-
-            // Function to get min and max of a numerical column
-            function getMinMax(column) {
-                const values = data.map(row => parseFloat(row[column])).filter(val => !isNaN(val));
-                return {
-                    min: Math.min(...values),
-                    max: Math.max(...values)
-                };
-            }
-
-            function createRangeFilter(container, column, existingValues = null) {
-                container.innerHTML = ''; // Clear existing content
-
-                const { min, max } = getMinMax(column);
-
-                // Create Bootstrap grid structure
-                const outerDiv = document.createElement('div');
-                outerDiv.className = 'container-fluid';
-
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'row mt-3 p-3 border rounded';
-                rowDiv.style.backgroundColor = '#f9f9f9';
-
-                // Label Column
-                const labelCol = document.createElement('div');
-                labelCol.className = 'col-12 d-flex justify-content-center align-items-center mb-2';
-                const label = document.createElement('label');
-                label.className = 'mb-0';
-                label.textContent = `${column} Range:`;
-                labelCol.appendChild(label);
-
-                // Min Input Column with "Min" label inside input
-                const minInputCol = document.createElement('div');
-                minInputCol.className = 'col-5';
-
-                const minInputGroup = document.createElement('div');
-                minInputGroup.className = 'input-group input-group-sm';
-
-                const minInputLabel = document.createElement('span');
-                minInputLabel.className = 'input-group-text';
-                minInputLabel.textContent = 'Min';
-                minInputLabel.style.fontSize = '0.8rem';
-
-                const minInput = document.createElement('input');
-                minInput.type = 'number';
-                minInput.className = 'form-control';
-                minInput.placeholder = min;
-
-                minInputGroup.appendChild(minInputLabel);
-                minInputGroup.appendChild(minInput);
-                minInputCol.appendChild(minInputGroup);
-
-                // Max Input Column with "Max" label inside input
-                const maxInputCol = document.createElement('div');
-                maxInputCol.className = 'col-5';
-
-                const maxInputGroup = document.createElement('div');
-                maxInputGroup.className = 'input-group input-group-sm';
-
-                const maxInputLabel = document.createElement('span');
-                maxInputLabel.className = 'input-group-text';
-                maxInputLabel.textContent = 'Max';
-                maxInputLabel.style.fontSize = '0.8rem';
-
-                const maxInput = document.createElement('input');
-                maxInput.type = 'number';
-                maxInput.className = 'form-control';
-                maxInput.placeholder = max;
-
-                maxInputGroup.appendChild(maxInputLabel);
-                maxInputGroup.appendChild(maxInput);
-                maxInputCol.appendChild(maxInputGroup);
-
-                // Slider Column
-                const sliderCol = document.createElement('div');
-                sliderCol.className = 'col-12 my-2';
-                const sliderDiv = document.createElement('div');
-                sliderDiv.className = 'range-slider filter-modal-slider';
-                sliderDiv.id = `slider-${currentFilterPlotId}-filter-${filterIndex}-range`;
-                sliderCol.appendChild(sliderDiv);
-
-                // Assemble the layout
-                rowDiv.appendChild(labelCol);
-                rowDiv.appendChild(sliderCol);
-                rowDiv.appendChild(minInputCol);
-                rowDiv.appendChild(maxInputCol);
-
-                // Append row to container
-                outerDiv.appendChild(rowDiv);
-                container.appendChild(outerDiv);
-
-                // Initialize noUiSlider
-                noUiSlider.create(sliderDiv, {
-                    start: existingValues ? [existingValues.min, existingValues.max] : [min, max],
-                    connect: true,
-                    range: {
-                        'min': min,
-                        'max': max
-                    },
-                    tooltips: [false, false],
-                    format: {
-                        to: function (value) {
-                            return Number(value).toFixed(2);
-                        },
-                        from: function (value) {
-                            return Number(value);
-                        }
-                    }
-                });
-
-                // Set initial values if existing
-                if (existingValues) {
-                    minInput.value = existingValues.min;
-                    maxInput.value = existingValues.max;
-                } else {
-                    minInput.value = min;
-                    maxInput.value = max;
-                }
-
-                // Synchronize slider with inputs
-                sliderDiv.noUiSlider.on('update', (values, handle) => {
-                    if (handle === 0) {
-                        minInput.value = values[0];
-                    } else {
-                        maxInput.value = values[1];
-                    }
-                });
-
-                // Update slider when inputs change
-                minInput.addEventListener('change', () => {
-                    let val = parseFloat(minInput.value);
-                    if (isNaN(val)) val = min;
-                    val = Math.max(val, min);
-                    val = Math.min(val, parseFloat(maxInput.value) || max); // Ensure min <= max
-                    sliderDiv.noUiSlider.set([val, null]);
-                });
-
-                maxInput.addEventListener('change', () => {
-                    let val = parseFloat(maxInput.value);
-                    if (isNaN(val)) val = max;
-                    val = Math.min(val, max);
-                    val = Math.max(val, parseFloat(minInput.value) || min); // Ensure max >= min
-                    sliderDiv.noUiSlider.set([null, val]);
-                });
-            }
-
-            function createCategoricalFilter(container, column, selectedCategories = []) {
-                container.innerHTML = ''; // Clear existing content
-
-                // Create input for autocomplete
-                const autocompleteInput = document.createElement('input');
-                autocompleteInput.type = 'text';
-                autocompleteInput.className = 'form-control form-control-sm autocomplete-input';
-                autocompleteInput.placeholder = 'Type to search...';
-
-                // Create container for selected tags
-                const tagsContainer = document.createElement('div');
-                tagsContainer.className = 'tags-container';
-                tagsContainer.style.marginTop = '5px';
-                tagsContainer.style.display = 'flex';
-                tagsContainer.style.flexWrap = 'wrap';
-
-                container.appendChild(autocompleteInput);
-                container.appendChild(tagsContainer);
-
-                // Extract unique categories from data
-                const categories = Array.from(new Set(data.map(row => row[column]))).sort();
-
-                // Initialize autocomplete (using a simple datalist for demonstration)
-                const datalist = document.createElement('datalist');
-                datalist.id = `datalist-${currentFilterPlotId}-filter-${filterIndex}`;
-                container.appendChild(datalist);
-                autocompleteInput.setAttribute('list', datalist.id);
-
-                // Function to update datalist options
-                function updateDatalistOptions() {
-                    const availableCategories = categories.filter(cat => !selectedCategories.includes(cat));
-
-                    datalist.innerHTML = '';
-                    availableCategories.forEach(cat => {
-                        const option = document.createElement('option');
-                        option.value = cat;
-                        datalist.appendChild(option);
-                    });
-                }
-
-                // Function to add a tag
-                function addTag(value) {
-                    if (selectedCategories.includes(value)) return; // Avoid duplicates
-
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.style.display = 'inline-flex';
-                    tag.style.alignItems = 'center';
-                    tag.style.padding = '5px';
-                    tag.style.margin = '2px';
-                    tag.style.backgroundColor = '#007bff';
-                    tag.style.color = '#fff';
-                    tag.style.borderRadius = '3px';
-                    tag.dataset.value = value;
-
-                    tag.textContent = value;
-
-                    const removeBtn = document.createElement('span');
-                    removeBtn.textContent = ' ×';
-                    removeBtn.style.cursor = 'pointer';
-                    removeBtn.style.marginLeft = '5px';
-                    removeBtn.addEventListener('click', () => {
-                        tagsContainer.removeChild(tag);
-                        const index = selectedCategories.indexOf(value);
-                        if (index > -1) {
-                            selectedCategories.splice(index, 1);
-                        }
-                        updateDatalistOptions();
-                    });
-
-                    tag.appendChild(removeBtn);
-                    tagsContainer.appendChild(tag);
-                    selectedCategories.push(value);
-                    updateDatalistOptions();
-                }
-
-                if (Array.isArray(selectedCategories) && selectedCategories.length > 0) {
-                    selectedCategories.forEach(val => {
-                        if (categories.includes(val)) { // Ensure the value is valid
-                            addTag(val);
-                        }
-                    });
-                }
-
-                // Handle selection from autocomplete
-                autocompleteInput.addEventListener('change', () => {
-                    const value = autocompleteInput.value.trim();
-                    if (value && categories.includes(value) && !selectedCategories.includes(value)) {
-                        addTag(value);
-                        autocompleteInput.value = '';
-                    }
-                });
-
-                // Handle Enter key
-                autocompleteInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const value = autocompleteInput.value.trim();
-                        if (value && categories.includes(value) && !selectedCategories.includes(value)) {
-                            addTag(value);
-                            autocompleteInput.value = '';
-                        }
-                    }
-                });
-
-                // Initialize datalist options
-                updateDatalistOptions();
-            }
-
-
-            // Event listener for column selection
-            // Event listener for column selection
-            columnSelect.addEventListener('change', () => {
-                const selectedColumn = columnSelect.value;
-                valueInput.innerHTML = ''; // Clear existing content
-
-                if (!selectedColumn) {
-                    operatorSelect.style.display = 'none'; // Hide operator select if no column is selected
-                    return;
-                }
-
-                if (isNumerical(selectedColumn)) {
-                    // Hide operator select for numerical columns
-                    operatorSelect.style.display = 'none';
-
-                    // Get existing filter values if any
-                    let existingValues = null;
-                    if (existingGroup && existingGroup.value && typeof existingGroup.value === 'object') {
-                        existingValues = existingGroup.value;
-                    }
-                    createRangeFilter(valueInput, selectedColumn, existingValues);
-                } else {
-                    // Show operator select for non-numerical columns
-                    operatorSelect.style.display = 'block';
-
-                    // Set operator options for categorical columns
-                    operatorSelect.innerHTML = `
-                <option value="in">In</option>
-                <option value="not_in">Not In</option>
-            `;
-                    if (existingGroup && existingGroup.operator) {
-                        operatorSelect.value = existingGroup.operator;
-                    } else {
-                        operatorSelect.value = 'in'; // Default to 'In' if no existing operator
-                    }
-
-                    // Get existing filter values if any
-                    let existingValues = [];
-                    if (existingGroup && existingGroup.value && Array.isArray(existingGroup.value)) {
-                        existingValues = existingGroup.value;
-                    }
-
-                    // Create a container for storing selected values
-                    let selectedCategories = existingValues.slice(); // make a copy
-
-                    // Assign selectedCategories to groupDiv for later access
-                    groupDiv.selectedCategories = selectedCategories;
-
-                    createCategoricalFilter(valueInput, selectedColumn, selectedCategories);
-                }
-            });
-
-            // Trigger change event if existingGroup has a column
-            if (existingGroup && existingGroup.column) {
-                columnSelect.dispatchEvent(new Event('change'));
-            }
-        }
-
-        function applyFilters() {
-            const filterGroups = [];
-            const filterGroupDivs = document.querySelectorAll('#filter-groups-container .filter-group');
-            filterGroupDivs.forEach((groupDiv, index) => {
-                const logicSelect = groupDiv.querySelector('.logic-select');
-                const logic = logicSelect ? logicSelect.value : '';
-                const column = groupDiv.querySelector('.column-select').value;
-                const operatorSelect = groupDiv.querySelector('.operator-select');
-                const operator = operatorSelect && operatorSelect.style.display !== 'none' ? operatorSelect.value : null;
-                let value = null;
-
-                if (!column) return; // Skip incomplete filters
-
-                // Determine if the column is numerical
-                const isNumericalColumn = isNumerical(column);
-
-                if (isNumericalColumn) {
-                    // Get slider values
-                    const slider = groupDiv.querySelector('.range-slider');
-                    if (slider && slider.noUiSlider) {
-                        const [min, max] = slider.noUiSlider.get().map(Number);
-                        value = { min, max };
-                    }
-                } else {
-                    // Get selected categories
-                    let selectedCategories = groupDiv.selectedCategories;
-                    if (selectedCategories && selectedCategories.length > 0) {
-                        value = selectedCategories.slice(); // make a copy
-                    } else {
-                        value = [];
-                    }
-                }
-
-                if (value !== null && value !== undefined && (operator || isNumericalColumn)) {
-                    filterGroups.push({ logic, column, operator, value });
-                }
-            });
-
-            if (currentFilterPlotId) {
-                setPlotFilters(currentFilterPlotId, filterGroups);
-                updatePlot(currentFilterPlotId);
-            }
-        }
-
-        // Function to set filters for a plot
-        function setPlotFilters(plotId, filters) {
-            plotFilters[plotId] = filters.map(filter => {
-                // Determine if the filter's column is numerical
-                const numerical = isNumerical(filter.column);
-
-                // If the column is categorical, ensure 'value' is an array
-                if (!numerical) {
-                    filter.value = Array.isArray(filter.value) ? filter.value : [];
-                }
-
-                return filter;
-            });
-        }
-
-        // Ensure that the Filter button is added to each plot
-        function addFilterButtonsToPlots() {
-            for (let i = 1; i <= plotCounter; i++) {
-                const plotId = `plot-${i}`;
-                const plotHeader = document.querySelector(`#container-${plotId} .card-header`);
-                if (plotHeader && !document.getElementById(`filter-plot-${plotId}`)) {
-                    const filterButton = document.createElement('button');
-                    filterButton.id = `filter-plot-${plotId}`;
-                    filterButton.className = 'btn btn-light btn-sm mr-1';
-                    filterButton.title = 'Filter';
-                    filterButton.innerHTML = '<i class="fa fa-filter"></i>';
-                    plotHeader.appendChild(filterButton);
-
-                    // Event listener for Filter button
-                    filterButton.addEventListener('click', () => {
-                        openFilterModal(plotId);
-                    });
-                }
-            }
-        }
-
-        // Call addFilterButtonsToPlots after plots are initialized
-        document.addEventListener('DOMContentLoaded', () => {
-            addFilterButtonsToPlots();
-        });
-
-
-
 
     </script>
 
@@ -3331,8 +3108,8 @@
     <!-- Loading Modal -->
     <div id="loading-modal" class="modal">
         <div class="modal-content" style="text-align: center;">
-            <h2>Loading...</h2>
-            <p>Please wait while the data is being processed.</p>
+            <div class="spinner"></div>
+            <p>Please wait...</p>
         </div>
     </div>
 
@@ -3378,8 +3155,20 @@
         </div>
     </div>
 
-
-
+    <!-- Plot Info Modal -->
+    <div id="plot-info-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="plot-info-title">Plot Information</h2>
+                <button class="close-button" id="plot-info-modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="plot-info-content">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 

@@ -987,6 +987,7 @@ function applyFilters() {
     if (currentFilterPlotId) {
         setPlotFilters(currentFilterPlotId, filterGroups);
         updatePlot(currentFilterPlotId);
+        updateCountsDisplay(currentFilterPlotId);
     }
 }
 
@@ -1036,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // -------- PLOT INFO MODAL HANDLER --------
 
 // Wait for the DOM to fully load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Function to open the Plot Info Modal with specific content
     function openPlotInfoModal(plotId) {
         const modal = document.getElementById('plot-info-modal');
@@ -1096,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const plotInfoButtons = document.querySelectorAll('.plot-info-button');
 
     plotInfoButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const plotId = this.getAttribute('data-plot-id');
             openPlotInfoModal(plotId);
         });
@@ -1107,20 +1108,24 @@ document.addEventListener('DOMContentLoaded', function() {
     closeButton.addEventListener('click', closePlotInfoModal);
 
     // Event Listener to Close the Modal by Clicking Outside the Modal Content
-    window.addEventListener('click', function(event) {
+    window.addEventListener('click', function (event) {
         const modal = document.getElementById('plot-info-modal');
         if (event.target === modal) {
             closePlotInfoModal();
         }
     });
-
-    /*
-    // Optional: If you have a trigger button for testing
-    const testButton = document.getElementById('open-plot-info-modal');
-    if (testButton) {
-        testButton.addEventListener('click', function() {
-            openPlotInfoModal('1'); // Example plotId
-        });
-    }
-    */
 });
+
+
+// -------- SNIPE PLOT EXPORT --------
+
+function exportPlot(plotId) {
+    const plotDiv = document.getElementById(plotId);
+    Plotly.toImage(plotDiv, { format: 'png', width: 1200, height: 800 }).then(function (dataUrl) {
+        const link = document.createElement('a');
+        link.download = `${plotId}.png`;
+        link.href = dataUrl;
+        link.click();
+    });
+}
+
