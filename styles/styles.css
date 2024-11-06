@@ -1,0 +1,1556 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 1200px;
+    margin: 2rem auto;
+}
+
+h1,
+h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+h2 {
+    font-size: 1.8rem;
+    margin-top: 2rem;
+}
+
+
+select[multiple] {
+    height: auto;
+}
+
+/* Adjust the plot container to accommodate the controls */
+.plot-container {
+    margin-top: 1rem;
+    margin-bottom: 3rem;
+}
+
+
+
+/* END: CHECKBOXES in Assay type */
+
+
+
+label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #34495e;
+}
+
+select {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #bdc3c7;
+    background-color: #ecf0f1;
+    transition: all 0.3s ease;
+}
+
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #3498db;
+}
+
+.plot {
+    width: 100%;
+    height: 600px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#plots-container {
+    margin-bottom: 2rem;
+}
+
+#data-selection-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #3498db;
+}
+
+#table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.additional-inputs {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #f9fbfd;
+    border: 1px solid #dce1e6;
+    border-radius: 8px;
+}
+
+.title-input,
+.notes-textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.title-input:focus,
+.notes-textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.notes-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+
+
+
+
+.notes-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+/* Updated styling for the search bar */
+.search-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.search-container input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.search-container button {
+    /* Existing styles */
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #3498db;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    /* Add pulse animation */
+    animation: pulse 2s infinite;
+}
+
+.search-container button:hover {
+    background-color: #2980b9;
+}
+
+
+#search-input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#search-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #0beac5;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#search-button:hover {
+    background-color: #2980b9;
+}
+
+.export-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+/* Enhanced button styles */
+.button {
+    padding: 10px 20px;
+    font-size: 14px;
+    color: white;
+    background-color: #3498db;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+    background-color: #2980b9;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.button::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 8px;
+}
+
+
+/* START: FLOATING BUTTON*/
+
+/* Floating Buttons Container */
+.floating-buttons {
+    position: fixed;
+
+    /* Floating Button Style */
+    .floating-button {
+        background-color: #e74c3c;
+        /* Default color, overridden per button */
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 50%;
+        /* Make it circular */
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        transition: width 0.3s ease, border-radius 0.3s ease;
+        width: 50px;
+        /* Initial width to fit the icon */
+        height: 50px;
+        /* Fixed height */
+        overflow: hidden;
+        /* Hide text initially */
+        position: relative;
+    }
+
+    .floating-button i {
+        font-size: 24px;
+        /* Icon size */
+        /* margin-left: 10px; */
+        margin: 0;
+        /* Center the icon */
+
+    }
+
+    .floating-button span {
+        opacity: 0;
+        /* Hide text initially */
+        margin-left: 10px;
+        transition: opacity 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .floating-button:hover {
+        width: 200px;
+        /* Expand width on hover */
+        border-radius: 25px;
+        /* Rounded rectangle when expanded */
+    }
+
+    .floating-button:hover span {
+        opacity: 1;
+        /* Show text on hover */
+    }
+
+    /* Individual Button Styles */
+    #clear-selections {
+        background-color: #e74c3c;
+    }
+
+    #clear-selections:hover {
+        background-color: #c0392b;
+    }
+
+    #export-table {
+        background-color: #f39c12;
+    }
+
+    #export-table:hover {
+        background-color: #d35400;
+    }
+
+    #export-pdf {
+        background: linear-gradient(-45deg, #405de6, #5851db, #833ab4, #c13584);
+        background-size: 400% 400%;
+        animation: gradientAnimation 15s ease infinite;
+    }
+
+    #export-pdf:hover {
+        background-size: 200% 200%;
+    }
+
+    #scroll-to-table {
+        background-color: #9b59b6;
+    }
+
+    #scroll-to-table:hover {
+        background-color: #8e44ad;
+    }
+
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+    align-items: flex-end;
+}
+
+
+/* Floating Button Style */
+.floating-button {
+    background-color: #e74c3c;
+    /* Default color, overridden per button */
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    /* Make it circular */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    transition: width 0.3s ease, border-radius 0.3s ease;
+    width: 50px;
+    /* Initial width to fit the icon */
+    height: 50px;
+    /* Fixed height */
+    overflow: hidden;
+    /* Hide text initially */
+    position: relative;
+}
+
+.floating-button i {
+    font-size: 20px;
+    /* Icon size */
+    margin-left: 10px;
+}
+
+.floating-button span {
+    opacity: 0;
+    /* Hide text initially */
+    margin-left: 10px;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+.floating-button:hover {
+    width: 200px;
+    /* Expand width on hover */
+    border-radius: 25px;
+    /* Rounded rectangle when expanded */
+}
+
+.floating-button:hover span {
+    opacity: 1;
+    /* Show text on hover */
+}
+
+/* Individual Button Styles */
+#clear-selections {
+    background-color: #e74c3c;
+}
+
+#clear-selections:hover {
+    background-color: #c0392b;
+}
+
+#export-table {
+    background-color: #f39c12;
+}
+
+#export-table:hover {
+    background-color: #d35400;
+}
+
+#export-pdf {
+    background: linear-gradient(-45deg, #405de6, #5851db, #833ab4, #c13584);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
+}
+
+#export-pdf:hover {
+    background-size: 200% 200%;
+}
+
+#scroll-to-table {
+    background-color: #9b59b6;
+}
+
+#scroll-to-table:hover {
+    background-color: #8e44ad;
+}
+
+#help-button {
+    background-color: #3498db;
+}
+
+/* Gradient Animation */
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .floating-buttons {
+        right: 10px;
+    }
+
+    .floating-button:hover {
+        width: 160px;
+        /* Reduce expansion width */
+    }
+}
+
+@media (max-width: 480px) {
+    .floating-buttons {
+        right: 5px;
+    }
+
+    .floating-button:hover {
+        width: 140px;
+        /* Further reduce expansion */
+    }
+}
+
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* DRIVERJS */
+
+
+.driver-popover.driverjs-theme {
+    background-color: #fde047;
+    color: #000;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+    font-size: 20px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title,
+.driver-popover.driverjs-theme .driver-popover-description,
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+    color: #000;
+}
+
+.driver-popover.driverjs-theme button {
+    flex: 1;
+    text-align: center;
+    background-color: #000;
+    color: #ffffff;
+    border: 2px solid #000;
+    text-shadow: none;
+    font-size: 14px;
+    padding: 5px 8px;
+    border-radius: 6px;
+}
+
+.driver-popover.driverjs-theme button:hover {
+    background-color: #000;
+    color: #ffffff;
+}
+
+.driver-popover.driverjs-theme .driver-popover-navigation-btns {
+    justify-content: space-between;
+    gap: 3px;
+}
+
+/* Hide the close button */
+.driver-popover.driverjs-theme .driver-popover-close-btn {
+    display: none;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-left.driver-popover-arrow {
+    border-left-color: #fde047;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-right.driver-popover-arrow {
+    border-right-color: #fde047;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-top.driver-popover-arrow {
+    border-top-color: #fde047;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-bottom.driver-popover-arrow {
+    border-bottom-color: #fde047;
+}
+
+/* END: DRIVERJS */
+
+/* START: HELP AREA */
+
+/* Modal overlay */
+.modal {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-direction: column;
+    /* Ensure column layout for centering */
+}
+
+/* Modal content */
+.modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 800px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    text-align: left;
+    /* Center content */
+}
+
+/* Close button */
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Modal header */
+.modal-content h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Styling for the help button */
+/* Styling for the help button */
+.help-button {
+    background-color: #426b5f;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Center the text and icon inside the button */
+    height: 50px;
+    /* Set a fixed height for consistent appearance */
+}
+
+.help-button i {
+    font-size: 24px;
+    margin-right: 8px;
+}
+
+.help-button:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.help-button:focus {
+    outline: none;
+    box-shadow: 0 0 5px 2px rgba(52, 152, 219, 0.5);
+}
+
+
+.control-group .help-button {
+    margin-left: 20px;
+    /* Space it out from the rest of the controls */
+    width: auto;
+    /* Auto width for better flexibility */
+    height: auto;
+}
+
+
+
+/* Column definitions inside modal */
+#modal-column-definitions {
+    margin-top: 2rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Styles for the definitions list */
+#modal-column-definitions dl {
+    margin: 0;
+}
+
+#modal-column-definitions dt {
+    font-weight: bold;
+    color: #34495e;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+}
+
+#modal-column-definitions dd {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Scrollbar styling (for WebKit browsers) */
+#modal-column-definitions::-webkit-scrollbar {
+    width: 8px;
+}
+
+#modal-column-definitions::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#modal-column-definitions::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#modal-column-definitions::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* END: HELP AREA */
+
+/* Styles for Species Selection */
+.species-selection {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.species-selection .control-group {
+    flex: 1;
+    margin-right: 1rem;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+}
+
+.species-selection .control-group:last-child {
+    margin-right: 0;
+}
+
+.species-selection .control-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.species-selection .control-group select,
+.species-selection button {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 1rem;
+    color: #495057;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.species-selection button {
+    margin-top: 1rem;
+    background-color: #3498db;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.species-selection button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.species-selection select:focus,
+.species-selection button:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Gentle pulsing animation for Load Data button */
+@keyframes gentlePulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px 5px rgba(46, 204, 113, 0.3);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+}
+
+#load-data-button:not(:disabled) {
+    animation: gentlePulse 2.5s infinite;
+    transition: background-color 0.3s ease;
+    background-color: #2ecc71;
+    /* Professional green color */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    /*move the button a bit to down*/
+    margin-top: 25px;
+}
+
+#load-data-button:hover {
+    background-color: #27ae60;
+    /* Darken the color slightly on hover */
+}
+
+/* if disabled, also margin-top: 25px; */
+#load-data-button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    margin-top: 25px;
+}
+
+/* Styles for Import/Export Floating Buttons */
+#import-session,
+#export-session,
+#export-session-url {
+    background-color: #16a085;
+}
+
+#import-session:hover,
+#export-session:hover,
+#export-session-url:hover {
+    background-color: #138d75;
+}
+
+#add-view-container {
+    margin: 2rem 0;
+    text-align: center;
+    width: 100%;
+    position: relative;
+}
+
+.add-view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: #3442db;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
+    background-color: white;
+    /* Added to avoid text overlap */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for button */
+    border-radius: 50px;
+    /* Rounded button for a more elegant look */
+}
+
+.add-view-button:hover {
+    color: #2980b9;
+    background-color: #ecf0f1;
+    /* Slight background color change on hover */
+}
+
+/* Horizontal divider line extending on both sides */
+.add-view-button::before,
+.add-view-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 100px;
+    height: 1px;
+    background-color: #ccc;
+    transform: translateY(-50%);
+}
+
+.add-view-button::before {
+    left: -110px;
+    /* Adjust to move before the button */
+}
+
+.add-view-button::after {
+    right: -110px;
+    /* Adjust to move after the button */
+}
+
+/* Add the icon before the text */
+.add-view-button i {
+    margin-right: 8px;
+    font-size: 1.5rem;
+}
+
+
+
+
+/* Notification Styles */
+.notification {
+    background-color: #2ecc71;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    opacity: 0.9;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.log-info {
+    font-family: monospace;
+    font-size: 14px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    height: auto;
+    /* Adjusted height */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    white-space: pre-wrap;
+    width: 100%;
+    /* Ensure full width */
+}
+
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.control-subgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.checkbox-label input {
+    margin-right: 0.25rem;
+}
+
+.plot-title {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.plot-container {
+    margin-bottom: 2rem;
+}
+
+.notes-container {
+    margin-top: 1rem;
+}
+
+.title-input,
+.notes-textarea {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.search-container input {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-container .button {
+    margin-left: 0.5rem;
+}
+
+.button {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: white;
+    background-color: #3498db;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #2980b9;
+}
+
+/* Styles for the floating search button */
+
+/* Styles for the floating search button */
+.plot-area {
+    position: relative;
+}
+
+
+/* Styles for noUiSlider */
+.range-slider {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.noUi-target {
+    background: #ecf0f1;
+    border-radius: 4px;
+}
+
+
+/* Styles for the floating search button */
+.floating-search-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+}
+
+.search-button {
+    background-color: #2b2377;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px 0 0 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-input {
+    width: 0;
+    opacity: 0;
+    padding: 5px;
+    font-size: 14px;
+    border: 1px solid #bdc3c7;
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    transition: width 0.3s ease, opacity 0.3s ease;
+}
+
+.floating-search-button:hover .search-input {
+    width: 200px;
+    opacity: 1;
+}
+
+/* Updated CSS for Filter Modal */
+
+#filter-modal {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    z-index: 1002;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+#filter-modal .modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 700px;
+    position: relative;
+}
+
+#filter-modal .close-button {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.filter-group {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+.filter-group .form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-group .form-control {
+    flex: 1;
+}
+
+.remove-filter-group {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.remove-filter-group:hover {
+    background-color: #c0392b;
+}
+
+#add-filter-group {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+#add-filter-group:hover {
+    background-color: #2980b9;
+}
+
+#apply-filters,
+#reset-filters {
+    background-color: #2ecc71;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+#apply-filters:hover,
+#reset-filters:hover {
+    background-color: #27ae60;
+}
+
+
+/* Styles for Loading Modal */
+#loading-modal {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    /* Ensure it's on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Semi-transparent background */
+}
+
+#loading-modal .modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    /* Light grey */
+    border-top: 8px solid #3498db;
+    /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto 10px auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Styles for Filter Modal */
+#filter-modal .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+    width: 500px;
+    /* Adjust width as needed */
+    padding: 20px;
+    position: relative;
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+/* Filter Group Layout */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+/* Logic Selector Styling */
+.logic-div {
+    text-align: center;
+    width: 100%;
+}
+
+.logic-select {
+    width: 150px;
+    margin-bottom: 10px;
+}
+
+/* Condition Div Styling */
+.condition-div {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Remove Button Styling */
+.filter-group .remove-filter-group {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 16px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+/* Action Buttons Styling */
+.button {
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+
+
+.slider-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.slider-inputs input[type="number"] {
+    width: 80px;
+    padding: 5px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+/* Styles specific to the filter modal slider */
+.filter-group .slider-wrapper .filter-modal-slider {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.filter-group .slider-wrapper .filter-modal-slider .noUi-target {
+    width: 100%;
+}
+
+.filter-group .slider-wrapper .filter-modal-slider .noUi-horizontal {
+    height: 10px;
+    /* Adjust as needed */
+}
+
+
+
+#filter-modal .range-slider {
+    width: 100%;
+}
+
+#filter-modal .slider-wrapper {
+    width: 100%;
+}
+
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px;
+    margin: 2px;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.tag span {
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+
+/* Ensuring the modal is centered and scrollable */
+#plot-info-modal {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    z-index: 1003;
+    /* Ensure it's above other modals if necessary */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    flex-direction: column;
+}
+
+#plot-info-modal .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    text-align: left;
+}
+
+/* Adjust the close button if needed */
+#plot-info-modal .close-button {
+    color: #aaa;
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+#plot-info-modal .close-button:hover,
+#plot-info-modal .close-button:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1003;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Modal Content Container */
+.modal-content {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Modal Header */
+.modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1a1a1a;
+}
+
+/* Modal Body */
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Close Button */
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #666;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.close-button:hover {
+    color: #1a1a1a;
+}
+
+/* Content Styling */
+#plot-info-content {
+    color: #333;
+}
+
+#plot-info-content h3 {
+    margin: 1.5rem 0 1rem;
+    color: #2d3748;
+    font-size: 1.1rem;
+}
+
+#plot-info-content pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+#plot-info-content ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+#plot-info-content li {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+}
+
+/* Custom Scrollbar */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Animation */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .modal-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+}
