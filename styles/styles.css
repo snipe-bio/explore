@@ -1178,37 +1178,50 @@ tr:nth-child(even) {
 
 
 /* Styles for Loading Modal */
-#loading-modal {
-    display: none;
-    /* Hidden by default */
+/* Styles for Loading Modal */
+/* Base Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
     position: fixed;
-    z-index: 1000;
-    /* Ensure it's on top */
+    z-index: 1003; /* Ensure it's above other elements */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
-    /* Semi-transparent background */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    backdrop-filter: blur(5px); /* Optional: adds a blur effect */
+    
+    /* Flexbox centering */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Prevent scrolling when modal is open */
+    overflow: hidden;
 }
 
+/* Specific Styles for Loading Modal */
 #loading-modal .modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     text-align: center;
+    
+    /* Optional: add a fixed width or max-width for better responsiveness */
+    width: 90%;
+    max-width: 400px;
+    
+    /* Add animation for appearance */
+    animation: modalFadeIn 0.3s ease-out;
+    
+    /* Box shadow for depth */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.spinner {
-    border: 8px solid #f3f3f3;
-    /* Light grey */
-    border-top: 8px solid #3498db;
-    /* Blue */
+/* Loading Modal Spinner */
+#loading-modal .spinner {
+    border: 8px solid #f3f3f3; /* Light grey */
+    border-top: 8px solid #3498db; /* Blue */
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -1216,13 +1229,54 @@ tr:nth-child(even) {
     margin: 0 auto 10px auto;
 }
 
+/* Close Button (if applicable) */
+#loading-modal .close-button {
+    color: #aaa;
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+#loading-modal .close-button:hover,
+#loading-modal .close-button:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Animation for Modal Appearance */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Spinner Animation */
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+    #loading-modal .modal-content {
+        width: 95%;
+        padding: 15px;
     }
 
-    100% {
-        transform: rotate(360deg);
+    #loading-modal .spinner {
+        width: 50px;
+        height: 50px;
+        border-width: 6px;
     }
 }
 

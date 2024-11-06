@@ -184,48 +184,6 @@ const hoverColumns = [
 ];
 
 
-function displayDataStatistics() {
-    const logInfoDiv = document.getElementById('log-info');
-    if (!logInfoDiv) return;
-
-    // Show the log info box
-    logInfoDiv.style.display = 'block';
-
-    const totalPoints = data.length;
-    const assayTypes = [...new Set(data.map(row => row["Assay type"] || 'Unknown').filter(type => type))];
-    const assayTypeCounts = assayTypes.map(type => {
-        const count = data.filter(row => row["Assay type"] === type).length;
-        return `\t- ${type}: ${count}`;
-    }).join('\n'); // Join with newline characters for line breaks
-
-    const uniqueBioProjects = new Set(data.map(row => row["BioProject"])).size;
-    const uniqueExperiments = new Set(data.map(row => row["Experiment ID"])).size;
-
-    // Prepare metadata information
-    let metadataInfo = '';
-    if (snipe_metadata && Object.keys(snipe_metadata).length > 0) {
-        metadataInfo = `<details style="margin-top: 0px;">
-            <summary><strong>Metadata (click to expand)</strong></summary>
-            <pre>${JSON.stringify(snipe_metadata.metadata, null, 2)}</pre></details>
-        `;
-    }
-
-    // Prepare the main stats as plain text within a <div>
-    const logContent = `
-- Total Data Points: ${totalPoints}
-- BioProjects: ${uniqueBioProjects}
-- Experiments: ${uniqueExperiments}
-<details style="margin-top: 0px;">
-            <summary>Assay types (click to expand)</summary>
-            <pre>${assayTypeCounts}</pre>
-        </details>${metadataInfo}`;
-
-    logInfoDiv.innerHTML = `
-Data Statistics: ${logContent}
-    `.trim();
-}
-
-
 // Column Definitions
 const columnDefinitions = {
     "Total unique k-mers": "It represents the unique genetic content in the sample",
@@ -552,7 +510,16 @@ function populateFilterGroups(plotId) {
 
 // Function to determine if a column is numerical
 function isNumerical(column) {
-    const numericCount = data.filter(row => !isNaN(parseFloat(row[column])) && isFinite(row[column])).length;
+    const uniqueValues = new Set(data.map(row => row[column]));
+    if (uniqueValues.size <= 3) {
+        return false;
+    }
+
+    const numericCount = data.filter(row => {
+        const value = row[column];
+        return !isNaN(parseFloat(value)) && isFinite(value);
+    }).length;
+
     return (numericCount / data.length) >= 0.9; // 90% or more values are numeric
 }
 

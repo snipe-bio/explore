@@ -163,12 +163,18 @@
     </div>
 
     <script>
-        let data;
-        let currentPlotData;
+        let data = [];
+        let currentPlotData = [];
         let selectedPoints = [];
         let plotsContainer, tableContainer, exportTableButton, clearSelectionsButton, addViewButton;
         let plotCounter = 0;
         let snipe_metadata = {};
+
+        let uploadStats = {
+            totalNewExperiments: 0,
+            totalUpdatedExperiments: 0,
+            lastUploadTimestamp: null
+        };
 
         const species_genome_amplicon_path = {
             'Canine': {
@@ -508,11 +514,7 @@
                     reader.onload = function (e) {
                         const tsvData = e.target.result;
                         parseAndLoadUserData(tsvData, uploadMode);
-                        // Close the modal
                         document.getElementById('upload-data-modal').style.display = 'none';
-
-                        // Show notification
-                        showNotification('Custom data uploaded successfully.');
                     };
                     reader.readAsText(file);
                 } else {
@@ -650,17 +652,66 @@
             });
             const userDataArray = results.data.filter(row => Object.values(row).some(value => value !== null && value !== ''));
 
-            if (uploadMode === 'replace') {
-                // Clear existing data and plots
-                clearAllData();
-                // Load user data only
-                loadUserData(userDataArray);
-            } else if (uploadMode === 'append') {
-                // Integrate user data with existing data
-                integrateUserData(userDataArray);
+            // Update the last upload timestamp
+            const currentTimestamp = new Date().toISOString();
 
-                // Add user data points to selectedPoints
-                selectedPoints = selectedPoints.concat(userDataArray);
+            if (uploadMode === 'replace') {
+                // Reset cumulative stats on replace
+                uploadStats = {
+                    totalNewExperiments: 0,
+                    totalUpdatedExperiments: 0,
+                    lastUploadTimestamp: currentTimestamp
+                };
+
+                clearAllData();
+                loadUserData(userDataArray);
+
+                uploadStats.totalNewExperiments += userDataArray.length;
+                showNotification(`Successfully loaded ${uploadStats.totalNewExperiments} experiments.`, 'success');
+            } else if (uploadMode === 'append') {
+                // Update the last upload timestamp
+                uploadStats.lastUploadTimestamp = currentTimestamp;
+
+                // Ensure existing data is present
+                if (!data || data.length === 0) {
+                    showNotification('Error: No existing data found to append to.', 'error');
+                    return;
+                }
+
+                const existingColumns = new Set(Object.keys(data[0] || {}));
+                const newColumns = new Set(Object.keys(userDataArray[0] || {}));
+                const allColumns = new Set([...existingColumns, ...newColumns]);
+
+                // Initialize missing columns in both datasets with default value null
+                data.forEach(row => {
+                    newColumns.forEach(col => {
+                        if (!row.hasOwnProperty(col) && col !== 'Experiment ID') {
+                            row[col] = null;
+                        }
+                    });
+                });
+
+                userDataArray.forEach(row => {
+                    existingColumns.forEach(col => {
+                        if (!row.hasOwnProperty(col) && col !== 'Experiment ID') {
+                            row[col] = null;
+                        }
+                    });
+                });
+
+                // Integrate user data with existing data and get the list of new experiments
+                console.log('Upload Stats Before Integration:', uploadStats);
+                const newExperiments = integrateUserData(userDataArray);
+                console.log('Upload Stats After Integration:', uploadStats);
+
+                // Add newExperiments to selectedPoints
+                if (newExperiments.length > 0) {
+                    selectedPoints = selectedPoints.concat(newExperiments);
+                    operationsLog.push(`Added ${newExperiments.length} new experiments to selected points.`);
+                    console.log('Selected Points after append:', selectedPoints);
+                } else {
+                    console.log('No new experiments to add to selected points.');
+                }
 
                 // Update plots and table
                 for (let i = 1; i <= plotCounter; i++) {
@@ -669,9 +720,72 @@
                 }
                 updateTable();
                 highlightSelectedPoints();
+
+                // Show notification with cumulative upload statistics
+                displayDataStatistics();
+                showNotification(
+                    `Data integrated successfully: ${uploadStats.totalNewExperiments} new experiments added, ${uploadStats.totalUpdatedExperiments} existing experiments updated.`,
+                    'success'
+                );
             }
-            displayDataStatistics();
         }
+
+
+        function displayDataStatistics() {
+            const logInfoDiv = document.getElementById('log-info');
+            if (!logInfoDiv) return;
+
+            // Show the log info box
+            logInfoDiv.style.display = 'block';
+
+            const totalPoints = data.length;
+            const assayTypes = [...new Set(data.map(row => row["Assay type"] || 'Unknown').filter(type => type))];
+            const assayTypeCounts = assayTypes.map(type => {
+                const count = data.filter(row => row["Assay type"] === type).length;
+                return `\t- ${type}: ${count}`;
+            }).join('\n');
+
+            const uniqueBioProjects = new Set(data.map(row => row["BioProject"])).size;
+            const uniqueExperiments = new Set(data.map(row => row["Experiment ID"])).size;
+
+            // Prepare cumulative upload statistics
+            let uploadStatsSection = '';
+            if (uploadStats.lastUploadTimestamp) {
+                const timestamp = new Date(uploadStats.lastUploadTimestamp).toLocaleString();
+                uploadStatsSection = `
+            <details style="margin-top: 0px;">
+                <summary><strong>Last Upload Statistics</strong> (${timestamp})</summary>
+                <pre>
+            - New experiments added: ${uploadStats.totalNewExperiments}
+            - Existing experiments updated: ${uploadStats.totalUpdatedExperiments}
+            - Total experiments affected: ${uploadStats.totalNewExperiments + uploadStats.totalUpdatedExperiments}</pre>
+            </details>`;
+            }
+
+            // Prepare metadata information
+            let metadataInfo = '';
+            if (snipe_metadata && Object.keys(snipe_metadata).length > 0) {
+                metadataInfo = `<details style="margin-top: 0px;">
+                    <summary><strong>Metadata (click to expand)</strong></summary>
+                    <pre>${JSON.stringify(snipe_metadata.metadata, null, 2)}</pre></details>
+                `;
+            }
+
+            // Prepare the main stats as plain text within a <div>
+            const logContent = `
+            - Total Data Points: ${totalPoints}
+            - BioProjects: ${uniqueBioProjects}
+            - Experiments: ${uniqueExperiments}
+            <details style="margin-top: 0px;">
+                <summary>Assay types (click to expand)</summary>
+                <pre>${assayTypeCounts}</pre>
+            </details>${uploadStatsSection}${metadataInfo}`;
+
+            logInfoDiv.innerHTML = `
+            Data Statistics: ${logContent}
+                `.trim();
+        }
+
 
 
         function scrollToTable() {
@@ -730,6 +844,7 @@
                     metadata: metadataObject
                 };
             } catch (e) {
+                showNotification('Error parsing metadata. Please check the console for more details.', 'error');
                 console.error('Error parsing metadata:', e);
                 return {};
             }
@@ -837,37 +952,49 @@
 
 
         function loadUserData(userDataArray) {
+            // Show the loading modal
             document.getElementById('loading-modal').style.display = 'flex';
 
-            data = [];
+            // Integrate user data with existing data
             integrateUserData(userDataArray);
 
             // Select user data points
             selectedPoints = userDataArray.slice();
 
-            // Now set up the dashboard
+            // Set up the dashboard elements
             plotsContainer = document.getElementById('plots-container');
             tableContainer = document.getElementById('table-container');
             exportTableButton = document.getElementById('export-table');
             clearSelectionsButton = document.getElementById('clear-selections');
             addViewButton = document.getElementById('add-view');
 
+            // Attach event listeners
             exportTableButton.addEventListener('click', exportTableToTSV);
             clearSelectionsButton.addEventListener('click', clearSelections);
             addViewButton.addEventListener('click', addNewPlot);
             document.getElementById('export-pdf').addEventListener('click', exportAllDataAsPDF);
             document.getElementById('scroll-to-table').addEventListener('click', scrollToTable);
 
+            // Initialize plot counter
             plotCounter = 0;
             document.getElementById('add-view-container').style.display = 'block';
+
+            // Update the table and highlight selected points
             updateTable();
             highlightSelectedPoints();
+
+            // Hide the loading modal and show a success notification
             document.getElementById('loading-modal').style.display = 'none';
             showNotification('User data loaded successfully.');
         }
 
 
+
         function updateCountsDisplay(plotId) {
+            if (!document.getElementById(`container-${plotId}`)) {
+                return;
+            }
+
             const plotDiv = document.getElementById(plotId);
             const xAxis = document.getElementById(`x-axis-${plotId}`).value;
             const yAxis = document.getElementById(`y-axis-${plotId}`).value;
@@ -1416,7 +1543,10 @@
 
         function closePlot(plotId) {
             const plotContainer = document.getElementById(`container-${plotId}`);
-            plotContainer.remove();
+            if (plotContainer) {
+                // Remove the plot container from the DOM
+                plotContainer.remove();
+            }
         }
 
         function renderDynamicControls(plotId, config = {}) {
@@ -1920,6 +2050,9 @@
 
         function updatePlot(plotId) {
             const plotDiv = document.getElementById(plotId);
+            if (!plotDiv) {
+                return;
+            }
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
 
             const assayTypeCheckboxes = document.querySelectorAll(`#assay-type-checkboxes-${plotId} input[name="assay-type-${plotId}"]:checked`);
@@ -2870,49 +3003,104 @@
                 }, false);
             }
             catch (error) {
+                showNotification('Error importing session.', 'error');
                 console.error('Error importing session:', error);
-                alert('Error importing session. Please check the console for more details.');
                 document.getElementById('loading-modal').style.display = 'none';
             }
         }
 
-        function integrateUserData(userDataArray) {
-            userDataArray.forEach(row => {
-                // Assign a unique ID with a 'user_' prefix
-                if (row['Experiment ID']) {
-                    row._uniqueId = 'user_' + row['Experiment ID'];
-                } else {
-                    // Generate a unique ID for user data if the field is missing
-                    row._uniqueId = 'user_' + Math.random().toString(36).substr(2, 9);
-                }
-                row._isUserData = true;
+        function integrateUserData(userDataArray, chunkSize = 1000) {
+            // Safety Check: Ensure 'data' is an array
+            if (!Array.isArray(data)) {
+                console.error('Global variable "data" is not initialized as an array. Current value:', data);
+                data = [];
+            }
 
-                // Assign 'Unknown' to missing 'Assay type'
-                if (!row['Assay type']) {
-                    row['Assay type'] = 'Unknown';
+            // Create a map for existing data by 'Experiment ID' for quick lookup
+            const existingDataMap = new Map();
+            data.forEach(row => {
+                if (row['Experiment ID']) {
+                    existingDataMap.set(row['Experiment ID'], row);
                 }
             });
-            data = data.concat(userDataArray);
+
+            // Initialize an array to hold new experiments
+            const newExperimentsList = [];
+
+            for (let i = 0; i < userDataArray.length; i += chunkSize) {
+                const chunk = userDataArray.slice(i, i + chunkSize);
+
+                chunk.forEach(userRow => {
+                    const experimentId = userRow['Experiment ID'];
+
+                    if (experimentId && existingDataMap.has(experimentId)) {
+                        // Existing Experiment ID found, check for updates
+                        const existingRow = existingDataMap.get(experimentId);
+                        let wasUpdated = false;
+
+                        Object.entries(userRow).forEach(([key, value]) => {
+                            if (key === 'Experiment ID') {
+                                return; // Skip the Experiment ID field
+                            }
+
+                            if (!(key in existingRow)) {
+                                // New column added
+                                existingRow[key] = value;
+                                wasUpdated = true;
+                            } else if (existingRow[key] !== value && value !== null && value !== '') {
+                                // Existing column value updated
+                                existingRow[key] = value;
+                                wasUpdated = true;
+                            }
+                        });
+
+                        if (wasUpdated) {
+                            uploadStats.totalUpdatedExperiments++;
+                        }
+                    } else {
+                        // No existing Experiment ID, add as a new entry
+                        if (experimentId) {
+                            userRow._uniqueId = 'user_' + experimentId;
+                        } else {
+                            // Generate a unique ID if 'Experiment ID' is missing
+                            userRow._uniqueId = 'user_' + Math.random().toString(36).substr(2, 9);
+                        }
+                        userRow._isUserData = true;
+
+                        // Assign 'Unknown' to missing 'Assay type'
+                        if (!userRow['Assay type']) {
+                            userRow['Assay type'] = 'Unknown';
+                        }
+
+                        // Add the new row to data
+                        data.push(userRow);
+                        if (experimentId) {
+                            existingDataMap.set(experimentId, userRow);
+                            uploadStats.totalNewExperiments++;
+                            // Add to newExperimentsList
+                            newExperimentsList.push(userRow);
+                        }
+                    }
+                });
+
+                console.log(`Integrated ${i + chunk.length} / ${userDataArray.length} records.`);
+            }
+
+            console.log('Data integration complete. Total records:', data.length);
+
+            return newExperimentsList;
         }
+
+
 
 
         function exportSessionToURL() {
             const sessionData = collectSessionData();
-
-            // Convert session data to JSON string
             const jsonData = JSON.stringify(sessionData);
-
-            // Compress and encode the JSON string
             const compressedData = LZString.compressToEncodedURIComponent(jsonData);
-
-            // Create the shareable URL
             const newURL = window.location.protocol + "//" + window.location.host + window.location.pathname + '?session=' + compressedData;
-
-            // Display the URL in the modal
             const sessionUrlInput = document.getElementById('session-url-input');
             sessionUrlInput.value = newURL;
-
-            // Show the modal
             const exportSessionUrlModal = document.getElementById('export-session-url-modal');
             exportSessionUrlModal.style.display = 'flex';
         }
