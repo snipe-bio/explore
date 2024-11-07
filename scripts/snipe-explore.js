@@ -509,18 +509,27 @@ function populateFilterGroups(plotId) {
 }
 
 // Function to determine if a column is numerical
+// Function to determine if a column is numerical
 function isNumerical(column) {
     const uniqueValues = new Set(data.map(row => row[column]));
     if (uniqueValues.size <= 3) {
         return false;
     }
 
-    const numericCount = data.filter(row => {
+    // Filter out null or undefined values
+    const nonNullData = data.filter(row => row[column] !== null && row[column] !== undefined && row[column] !== '');
+
+    const numericCount = nonNullData.filter(row => {
         const value = row[column];
         return !isNaN(parseFloat(value)) && isFinite(value);
     }).length;
 
-    return (numericCount / data.length) >= 0.9; // 90% or more values are numeric
+    // Ensure there are non-null values to avoid division by zero
+    if (nonNullData.length === 0) {
+        return false;
+    }
+
+    return (numericCount / nonNullData.length) >= 0.9; // 90% or more non-null values are numeric
 }
 
 function addFilterGroup(existingGroup = null) {
