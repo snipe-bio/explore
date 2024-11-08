@@ -509,7 +509,6 @@ function populateFilterGroups(plotId) {
 }
 
 // Function to determine if a column is numerical
-// Function to determine if a column is numerical
 function isNumerical(column) {
     const uniqueValues = new Set(data.map(row => row[column]));
     if (uniqueValues.size <= 3) {
