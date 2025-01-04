@@ -1103,4 +1103,3 @@ function exportPlot(plotId) {
         link.click();
     });
 }
-

@@ -706,7 +706,7 @@
 
                 // Add newExperiments to selectedPoints
                 if (newExperiments.length > 0) {
-                    selectedPoints = selectedPoints.concat(newExperiments);
+                    {{/*  selectedPoints = selectedPoints.concat(newExperiments);  */}}
                     operationsLog.push(`Added ${newExperiments.length} new experiments to selected points.`);
                     console.log('Selected Points after append:', selectedPoints);
                 } else {
@@ -718,8 +718,11 @@
                     const plotId = `plot-${i}`;
                     updatePlot(plotId);
                 }
+                /*
+                UNCOMMENT TO AUTO-HIGHLIGHT NEW POINTS
                 updateTable();
                 highlightSelectedPoints();
+                */
 
                 // Show notification with cumulative upload statistics
                 displayDataStatistics();
@@ -959,7 +962,8 @@
             integrateUserData(userDataArray);
 
             // Select user data points
-            selectedPoints = userDataArray.slice();
+            // UNCOMMENT TO AUTO-HIGHLIGHT SELECTED POINTS
+            // selectedPoints = userDataArray.slice();
 
             // Set up the dashboard elements
             plotsContainer = document.getElementById('plots-container');
@@ -980,9 +984,12 @@
             document.getElementById('add-view-container').style.display = 'block';
 
             // Update the table and highlight selected points
+            /*
+            UNCOMMENT TO AUTO-HIGHLIGHT SELECTED POINTS
             updateTable();
             highlightSelectedPoints();
-
+            */
+            
             // Hide the loading modal and show a success notification
             document.getElementById('loading-modal').style.display = 'none';
             showNotification('User data loaded successfully.');
