@@ -8,12 +8,12 @@ body {
 
 .container {
     background-color: white;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     width: 90%;
     max-width: 1200px;
-    margin: 2rem auto;
+    margin: 1.5rem auto;
 }
 
 h1,
@@ -42,7 +42,33 @@ select[multiple] {
     margin-bottom: 3rem;
 }
 
+/* Further Compact Navbar Styling */
+.navbar {
+    padding-top: 0.001rem !important;
+    padding-bottom: 0.001rem !important;
+}
 
+.navbar-brand {
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 1.5rem;        /* Slightly smaller font */
+    line-height: 0;
+    display: flex;
+    align-items: center;
+    margin-right: 0.5rem;
+}
+
+.navbar-brand img {
+    max-height: 24px;      /* Smaller logo height */
+    width: auto;
+    margin-right: 6px;
+}
+
+.nav-link {
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.125rem !important;
+    font-size: 1rem;    /* Smaller text size for links */
+}
 
 /* END: CHECKBOXES in Assay type */
 

@@ -63,9 +63,43 @@
             style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
 
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <!-- Brand/Logo -->
+            <a class="navbar-brand" href="#">
+                <img src="assets/scatter-plot.png" alt="Snipe Logo" width="40" height="40" class="d-inline-block align-top">
+                Snipe Explore Dashboard
+            </a>
+            <!-- Toggler for Mobile View -->
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Navbar Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <!-- Navigation Links -->
+                    <li class="nav-item active">
+                        <a class="nav-link" href="https://snipe-bio.github.io/" target="_blank">Homepage</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/snipe-bio/snipe" target="_blank">snipe CLI</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/orgs/snipe-bio/discussions" target="_blank">Discussions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/snipe-bio/explore/issues/new" target="_blank">File issue</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <!-- Updated Species and Reference Selection with Amplicon -->
     <div class="container">
-        <h1>Snipe SRA Exploration Dashboard</h1>
         <div id="data-selection-container" class="species-selection">
             <div class="control-group">
                 <label for="species-select">Species:</label>
@@ -107,8 +141,9 @@
         </div>
 
         <div id="data-selection-section">
-            <h2>Selected Data Points</h2>
-            <div id="table-container" class="table-container"></div>
+            <div id="table-container" class="table-container">
+                <!-- Table will be inserted here -->
+            </div>
         </div>
     </div>
 
@@ -2527,7 +2562,7 @@
             columns.forEach(col => {
                 tableHTML += `<th>${col}</th>`;
             });
-            tableHTML += '</tr></thead><tbody>';
+            tableHTML += '</tr></thead><tbody><h2>Selected Data Points</h2>';
 
             if (selectedPoints.length === 0) {
                 tableHTML += `<tr><td colspan="${columns.length + 1}" style="text-align: center;">No points selected. Click on points in the plot to add them to the table.</td></tr>`;
