@@ -178,31 +178,30 @@ function plot_depth_per_chromosome(selectedData) {
 }
 
 const hoverColumns = [
-    'Experiment ID', 'BioProject', 'Assay type', 'Genome coverage index',
-    'Amplicon coverage index', 'Genomic k-mers mean abundance', 'Amplicon k-mers mean abundance',
-    'Mapping index', 'Predicted contamination index', 'Sequencing errors index', 'Autosomal k-mer mean abundance CV'
+    'Experiment ID', 'BioProject', 'Assay type', 'Primitive genome coverage at 1X',
+    'Primitive amplicon coverage at 1X', 'Mean depth of genome sequencing', 'Mean depth of amplicon sequencing',
+    'Genome mapping rate', 'Non-reference multiplets', 'Non-reference singletons', 'Coverage skewness score'
 ];
-
 
 // Column Definitions
 const columnDefinitions = {
     "Total unique k-mers": "It represents the unique genetic content in the sample",
     "Genomic unique k-mers": "It represents the unique genetic content in the sample that matches the reference genome",
     "Amplicon unique k-mers": "It represents the unique genetic content in the sample that matches the exome",
-    "Genome coverage index": "It shows how much of the genome bases are covered",
-    "Amplicon coverage index": "It shows how much of the exome bases are covered",
+    "Primitive genome coverage at 1X": "It shows how much of the genome bases are covered",
+    "Primitive amplicon coverage at 1X": "It shows how much of the exome bases are covered",
     "k-mer total abundance": "It correlates with the total amount of sequencing",
     "Genomic k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the reference genome",
     "Amplicon k-mers total abundance": "It correlates with the total amount of sequencing that aligns to the exome",
-    "Mapping index": "Genomic k-mers total Abundance as a fraction of all k-mer total abundance. It correlates with the mapped sequencing bases to the genomes",
-    "Predicted contamination index": "The fraction abundance of non-genomic k-mers if the k-mer count > 1. It represent genetic variance and increase if there is sequence contamination",
-    "Empirical contamination index": "The fraction of k-mers matching microbial sequences. It is calcuted by Sourmash software and expected to correlate with Snipe's predicted contamination index",
-    "Sequencing errors index": "The fraction abundance of non-genomic k-mers if the k-mer count = 1 (i.e., singletons). It represents sequecning errors",
-    "Autosomal k-mer mean abundance CV": "The coefficient of variation (CV) for the mean abundance of k-mers specific to each autosome. A high CV suggests variability, potentially pointing to uneven sequencing",
+    "Genome mapping rate": "Genomic k-mers total abundance as a fraction of all k-mer total abundance. It correlates with the mapped sequencing bases to the genomes",
+    "Non-reference multiplets": "The fraction abundance of non-genomic k-mers if the k-mer count > 1. It represents genetic variance and increases if there is sequence contamination",
+    "Empirical contamination index": "The fraction of k-mers matching microbial sequences. It is calculated by Sourmash software and expected to correlate with Snipe's predicted contamination index",
+    "Non-reference singletons": "The fraction abundance of non-genomic k-mers if the k-mer count = 1 (i.e., singletons). It represents sequencing errors",
+    "Coverage skewness score": "The coefficient of variation (CV) for the mean abundance of k-mers specific to each autosome. A high CV suggests variability, potentially pointing to uneven sequencing",
     "Amplicon enrichment score": "A composite metric for quantifying amplicon enrichment in a sequencing experiment",
-    "chrX Ploidy score": "The ratio of the mean abundance of chrX-specific k-mers to autosomal-specific k-mers. It correlates with X chromosome ploidy",
-    "chrY Coverage score": "The ratio of sequence coverage for chrY and autosomal chromosomes.",
-    "Coverage of 1fold more sequencing": "Expected coverage with 1 fold more sequecning"
+    "chrX Ploidy": "The ratio of the mean abundance of chrX-specific k-mers to autosomal-specific k-mers. It correlates with X chromosome ploidy",
+    "chrY Coverage": "The ratio of sequence coverage for chrY and autosomal chromosomes.",
+    "Gain in genome coverage with 1 extra fold": "Expected coverage with 1 fold more sequencing"
 };
 
 // Function to populate the modal with column definitions
