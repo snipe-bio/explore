@@ -1127,7 +1127,6 @@ function updatePlotStats(plotId) {
     plotData.stats.visiblePoints = plotData.filteredData.length;
     return plotData.stats;
 }
-    }
 
     // Assign event listeners to all plot info buttons
     const plotInfoButtons = document.querySelectorAll('.plot-info-button');
