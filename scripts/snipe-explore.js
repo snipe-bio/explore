@@ -205,9 +205,16 @@ const columnDefinitions = {
 };
 
 // Function to populate the modal with column definitions
-function populateModalColumnDefinitions() {
+// Ensure the function is available globally
+window.populateModalColumnDefinitions = function() {
     const columnDefinitionsDiv = document.getElementById('modal-column-definitions');
     if (!columnDefinitionsDiv) return;
+
+    // Check if data is available
+    if (!data || !data[0]) {
+        console.error('Data not available for column definitions');
+        return;
+    }
 
     let htmlContent = '<dl>';
 
@@ -222,7 +229,14 @@ function populateModalColumnDefinitions() {
 
     htmlContent += '</dl>';
     columnDefinitionsDiv.innerHTML = htmlContent;
-}
+};
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof populateModalColumnDefinitions === 'function') {
+        populateModalColumnDefinitions();
+    }
+});
 
 
 
