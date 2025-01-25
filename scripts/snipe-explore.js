@@ -966,24 +966,62 @@ function applyFilters() {
 }
 
 // Function to set filters for a plot
+function updateCountsDisplay(plotId) {
+    const plotData = getPlotData(plotId);
+    const statsContainer = document.querySelector(`#container-${plotId} .plot-stats`);
+    if (statsContainer) {
+        statsContainer.innerHTML = `
+            <div class="stat-item">Total Points: ${plotData.stats.totalPoints}</div>
+            <div class="stat-item">Visible Points: ${plotData.stats.visiblePoints}</div>
+            <div class="stat-item">Filters Applied: ${plotData.stats.filters.length}</div>
+        `;
+    }
+}
 function setPlotFilters(plotId, filters) {
+    const plotData = getPlotData(plotId);
+    
+    // Store filters
     plotFilters[plotId] = filters.map(filter => {
-        // Determine if the filter's column is numerical
         const numerical = isNumerical(filter.column);
-
-        // If the column is categorical, ensure 'value' is an array
         if (!numerical) {
             filter.value = Array.isArray(filter.value) ? filter.value : [];
         }
-
         return filter;
     });
+
+    // Apply filters to raw data
+    plotData.filteredData = plotData.rawData.filter(row => {
+        return filters.every(filter => {
+            const value = row[filter.column];
+            if (filter.operator === '=') {
+                return filter.value.includes(value);
+            } else if (filter.operator === '>') {
+                return value > filter.value;
+            } else if (filter.operator === '<') {
+                return value < filter.value;
+            }
+            return true;
+        });
+    });
+
+    // Update plot stats
+    updatePlotStats(plotId);
+    updateCountsDisplay(plotId);
 }
 
 // Ensure that the Filter button is added to each plot
 function addFilterButtonsToPlots() {
     for (let i = 1; i <= plotCounter; i++) {
         const plotId = `plot-${i}`;
+        
+        // Initialize plot data if not already initialized
+        const plotData = getPlotData(plotId);
+        if (plotData.rawData.length === 0) {
+            plotData.rawData = [...data]; // Copy global data
+            plotData.filteredData = [...data];
+            updatePlotStats(plotId);
+        }
+
         const plotHeader = document.querySelector(`#container-${plotId} .card-header`);
         if (plotHeader && !document.getElementById(`filter-plot-${plotId}`)) {
             const filterButton = document.createElement('button');
@@ -1048,23 +1086,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Sample function to get plot data based on plotId
     // Replace this with your actual data retrieval logic (e.g., AJAX call)
-    function getPlotData(plotId) {
-        // Example data - replace with real data
-        const plots = {
-            '1': {
-                parameters: 'Parameter A: 10, Parameter B: 20',
-                operationsLog: 'Operation 1: Initialized\nOperation 2: Processed data',
-                filters: 'Filter X applied\nFilter Y applied'
-            },
-            '2': {
-                parameters: 'Parameter A: 15, Parameter B: 25',
-                operationsLog: 'Operation 1: Started\nOperation 2: Completed',
-                filters: 'Filter Z applied'
-            }
-            // Add more plot data as needed
-        };
+    // Global storage for plot-specific data and stats
+const plotDataStore = {};
 
-        return plots[plotId] || null;
+function getPlotData(plotId) {
+    if (!plotDataStore[plotId]) {
+        // Initialize new plot data structure
+        plotDataStore[plotId] = {
+            rawData: [],
+            filteredData: [],
+            stats: {
+                totalPoints: 0,
+                visiblePoints: 0,
+                filters: []
+            },
+            operationsLog: [],
+            parameters: {}
+        };
+    }
+    return plotDataStore[plotId];
+}
+
+function updatePlotStats(plotId) {
+    const plotData = getPlotData(plotId);
+    plotData.stats.totalPoints = plotData.rawData.length;
+    plotData.stats.visiblePoints = plotData.filteredData.length;
+    return plotData.stats;
+}
     }
 
     // Assign event listeners to all plot info buttons
