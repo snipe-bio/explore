@@ -231,50 +231,98 @@ function populateModalColumnDefinitions() {
 
 let driverInstance;
 function initOnboardingTour() {
-    const driver = window.driver.js.driver; // For Driver.js version 1.0.1
-
-    const steps = [
-        {
-            element: '.container h1',
-            popover: {
-                title: 'Welcome to Snipe SRA Exploration Dashboard',
-                description: 'This dashboard helps you visualize and analyze the SRA experiments.',
-                position: 'bottom'
+    const driver = window.driver.js.driver; // For Driver.js version 1.0.1   
+        // Define the steps for the onboarding tour
+        const steps = [
+            {
+                element: '.container h1',
+                popover: {
+                    title: 'Welcome to Snipe SRA Exploration Dashboard',
+                    description: 'This dashboard helps you visualize and analyze the SRA experiments.',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '.species-selection',
+                popover: {
+                    title: 'Select Your Species & Reference',
+                    description: 'Choose a species, reference genome, and amplicon here, then click "Load Data" to begin.',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '.floating-buttons',
+                popover: {
+                    title: 'Global Control Buttons',
+                    description: 'Use these buttons to clear selections, export data, generate PDF reports, and access help features.',
+                    position: 'left'
+                }
+            },
+            {
+                element: '#upload-data',
+                popover: {
+                    title: 'Upload Data',
+                    description: 'Click here to upload custom TSV data or append data to the current session.',
+                    position: 'left'
+                }
+            },
+            {
+                element: '#start-tour',
+                popover: {
+                    title: 'Guided Tour',
+                    description: 'Click this button at any time to revisit these instructions.',
+                    position: 'left'
+                }
+            },
+            {
+                element: '.controls', // Example: the dynamic plot controls container
+                popover: {
+                    title: 'Plot Controls',
+                    description: 'Use these controls (axis selectors, checkboxes, or sliders) to customize your plot in real-time.',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '.additional-inputs', // Example: a section where you have "Plot Title" and "Notes"
+                popover: {
+                    title: 'Plot Details',
+                    description: 'Give your plot a title and add notes for quick reference. They also appear in the exported PDF.',
+                    position: 'bottom'
+                }
+            },
+            {
+                element: '#filter-plot-1', // Example: a filter button on Plot #1
+                popover: {
+                    title: 'Filter Button',
+                    description: 'Click this button to open the Filters modal and refine data points by numeric ranges or categories.',
+                    position: 'left'
+                }
+            },
+            {
+                element: '#export-session',
+                popover: {
+                    title: 'Export Session',
+                    description: 'Use this to download your session (plots + data selections) to a file.',
+                    position: 'left'
+                }
+            },
+            {
+                element: '#export-session-url',
+                popover: {
+                    title: 'Export Session to URL',
+                    description: 'Generate a shareable URL containing your session data—perfect for collaboration.',
+                    position: 'left'
+                }
+            },
+            {
+                element: '#help-button',
+                popover: {
+                    title: 'Metrics Definitions',
+                    description: 'Click here to open a handy reference of Snipe’s metrics definitions.',
+                    position: 'left'
+                }
             }
-        },
-        {
-            element: '.floating-buttons',
-            popover: {
-                title: 'Control Buttons',
-                description: 'Use these buttons to clear selections, export data, and access help.',
-                position: 'left'
-            }
-        },
-        {
-            element: '.search-container',
-            popover: {
-                title: 'Search Bar',
-                description: 'Search for specific data points by BioProject, BioSample, or Experiment.',
-                position: 'bottom'
-            }
-        },
-        {
-            element: '.controls',
-            popover: {
-                title: 'Plot Controls',
-                description: 'Use these controls to customize your plot.',
-                position: 'bottom'
-            }
-        },
-        {
-            element: '.additional-inputs',
-            popover: {
-                title: 'Plot Details',
-                description: 'Add a title and notes for your plot here.',
-                position: 'bottom'
-            }
-        }
-    ];
+        ];
 
     driverInstance = driver({
         animate: true,
