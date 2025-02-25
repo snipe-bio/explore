@@ -118,7 +118,7 @@
             <div class="control-group">
                 <label for="amplicon-select">Amplicon:</label>
                 <select id="amplicon-select" disabled>
-                    <option value="">Select Amplicon:</option>
+                    <option value="">Select Amplicon (Optional)</option>
                     <!-- Options will be populated dynamically -->
                 </select>
             </div>
@@ -601,7 +601,7 @@
                     const uniqueId = event.target.getAttribute('data-unique-id');
                     const selectedData = data.find(row => row._uniqueId === uniqueId);
                     if (selectedData && selectedData['Experiment ID']) {
-                        const sraUrl = `https://ncbi.nlm.nih.gov/sra/${selectedData['Experiment ID']}`;
+                        const sraUrl = `https://www.ncbi.nlm.nih.gov/sra/${selectedData['Experiment ID']}`;
                         window.open(sraUrl, '_blank', 'noopener,noreferrer');
                     } else {
                         alert('Experiment ID not found for the selected Experiment.');
@@ -2702,7 +2702,7 @@
                                 }
                                 else if (plotType === 'histogram' || plotType === 'boxplot') {
                                     // Updated retrieval of selected numerical columns
-                                    const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value).join(', ');
+                                    const numColumns = Array.from(document.querySelectorAll(`#checkbox-group-${plotId} input[name="num-columns-${plotId}"]:checked`)).map(checkbox => checkbox.value);
                                     const groupBy = document.getElementById(`group-by-${plotId}`).value || 'None';
                                     doc.text(`Numerical Columns: ${numColumns}`, 60, detailsYPosition + 20);
                                     doc.text(`Group By: ${groupBy}`, 60, detailsYPosition + 40);
@@ -2841,7 +2841,7 @@
                     plotConfig.controls.yLogScale = document.getElementById(`y-log-scale-${plotId}`).checked;
                     plotConfig.controls.palette = document.getElementById(`palette-${plotId}`).value;
 
-                    // Save range slider values (using correct IDs)
+                    // Range sliders
                     const xSlider = document.getElementById(`x-range-slider-${plotId}`);
                     const ySlider = document.getElementById(`y-range-slider-${plotId}`);
                     const hueSlider = document.getElementById(`hue-range-slider-${plotId}`);
