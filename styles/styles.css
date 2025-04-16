@@ -51,7 +51,8 @@ select[multiple] {
 .navbar-brand {
     padding-top: 0;
     padding-bottom: 0;
-    font-size: 1.5rem;        /* Slightly smaller font */
+    font-size: 1.5rem;
+    /* Slightly smaller font */
     line-height: 0;
     display: flex;
     align-items: center;
@@ -59,7 +60,8 @@ select[multiple] {
 }
 
 .navbar-brand img {
-    max-height: 24px;      /* Smaller logo height */
+    max-height: 24px;
+    /* Smaller logo height */
     width: auto;
     margin-right: 6px;
 }
@@ -67,7 +69,8 @@ select[multiple] {
 .nav-link {
     padding-top: 0.125rem !important;
     padding-bottom: 0.125rem !important;
-    font-size: 1rem;    /* Smaller text size for links */
+    font-size: 1rem;
+    /* Smaller text size for links */
 }
 
 /* END: CHECKBOXES in Assay type */
@@ -1207,21 +1210,25 @@ tr:nth-child(even) {
 /* Styles for Loading Modal */
 /* Base Modal Styles */
 .modal {
-    display: none; /* Hidden by default */
+    display: none;
+    /* Hidden by default */
     position: fixed;
-    z-index: 1003; /* Ensure it's above other elements */
+    z-index: 1003;
+    /* Ensure it's above other elements */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    backdrop-filter: blur(5px); /* Optional: adds a blur effect */
-    
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Semi-transparent background */
+    backdrop-filter: blur(5px);
+    /* Optional: adds a blur effect */
+
     /* Flexbox centering */
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     /* Prevent scrolling when modal is open */
     overflow: hidden;
 }
@@ -1232,22 +1239,24 @@ tr:nth-child(even) {
     padding: 20px;
     border-radius: 8px;
     text-align: center;
-    
+
     /* Optional: add a fixed width or max-width for better responsiveness */
     width: 90%;
     max-width: 400px;
-    
+
     /* Add animation for appearance */
     animation: modalFadeIn 0.3s ease-out;
-    
+
     /* Box shadow for depth */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Loading Modal Spinner */
 #loading-modal .spinner {
-    border: 8px solid #f3f3f3; /* Light grey */
-    border-top: 8px solid #3498db; /* Blue */
+    border: 8px solid #f3f3f3;
+    /* Light grey */
+    border-top: 8px solid #3498db;
+    /* Blue */
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -1280,6 +1289,7 @@ tr:nth-child(even) {
         opacity: 0;
         transform: scale(0.9);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -1288,8 +1298,13 @@ tr:nth-child(even) {
 
 /* Spinner Animation */
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive Adjustments */
@@ -1633,4 +1648,120 @@ tr:nth-child(even) {
     .modal-body {
         padding: 1rem;
     }
+}
+
+/* Tabs Styling */
+.tabs-container {
+    width: 100%;
+    margin: 2rem 0;
+}
+
+.nav-tabs {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    white-space: nowrap;
+}
+
+.nav-tabs .nav-item {
+    margin-bottom: -1px;
+    flex: 0 0 auto;
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    color: #495057;
+    cursor: pointer;
+}
+
+.nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+    border-color: #e9ecef #e9ecef #dee2e6;
+    background-color: #e9ecef;
+}
+
+.tab-content {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    padding: 1rem;
+    background-color: #fff;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.tab-close {
+    margin-left: 8px;
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+.tab-close:hover {
+    opacity: 1;
+}
+
+/* New tab button */
+.new-tab-button {
+    border: none;
+    background: transparent;
+    padding: 0.5rem 1rem;
+    color: #3498db;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.new-tab-button:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Special styling for the first tab button when no tabs exist */
+.nav-tabs:not(:has(.nav-item:first-child:not(:last-child))) .new-tab-button {
+    background-color: #3498db;
+    color: white;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-tabs:not(:has(.nav-item:first-child:not(:last-child))) .new-tab-button:hover {
+    background-color: #2980b9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.nav-tabs:not(:has(.nav-item:first-child:not(:last-child))) .new-tab-button .tab-button-text {
+    display: inline;
+    margin-left: 5px;
+    font-size: 1rem;
+}
+
+.nav-tabs .new-tab-button .tab-button-text {
+    display: none;
+}
+
+/* Make original add view button invisible as we'll use new tab button instead */
+#add-view-container {
+    display: none !important;
 }
