@@ -1728,10 +1728,37 @@ tr:nth-child(even) {
     display: flex;
     align-items: center;
     font-size: 1.2rem;
+    transition: all 0.3s ease;
 }
 
 .new-tab-button:hover {
     background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Special styling for the first tab button when no tabs exist */
+.nav-tabs:not(:has(.nav-item:first-child:not(:last-child))) .new-tab-button {
+    background-color: #3498db;
+    color: white;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-tabs:not(:has(.nav-item:first-child:not(:last-child))) .new-tab-button:hover {
+    background-color: #2980b9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.nav-tabs:not(:has(.nav-item:first-child:not(:last-child))) .new-tab-button .tab-button-text {
+    display: inline;
+    margin-left: 5px;
+    font-size: 1rem;
+}
+
+.nav-tabs .new-tab-button .tab-button-text {
+    display: none;
 }
 
 /* Make original add view button invisible as we'll use new tab button instead */
