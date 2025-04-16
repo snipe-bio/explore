@@ -69,12 +69,13 @@
         <div class="container">
             <!-- Brand/Logo -->
             <a class="navbar-brand" href="#">
-                <img src="assets/scatter-plot.png" alt="Snipe Logo" width="40" height="40" class="d-inline-block align-top">
+                <img src="assets/scatter-plot.png" alt="Snipe Logo" width="40" height="40"
+                    class="d-inline-block align-top">
                 Snipe Explore Dashboard
             </a>
             <!-- Toggler for Mobile View -->
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <!-- Navbar Links -->
@@ -88,10 +89,12 @@
                         <a class="nav-link" href="https://github.com/snipe-bio/snipe" target="_blank">snipe CLI</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://github.com/orgs/snipe-bio/discussions" target="_blank">Discussions</a>
+                        <a class="nav-link" href="https://github.com/orgs/snipe-bio/discussions"
+                            target="_blank">Discussions</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://github.com/snipe-bio/explore/issues/new" target="_blank">File issue</a>
+                        <a class="nav-link" href="https://github.com/snipe-bio/explore/issues/new" target="_blank">File
+                            issue</a>
                     </li>
                 </ul>
             </div>
@@ -131,8 +134,20 @@
         </div>
 
 
-
-        <div id="plots-container"></div>
+        <!-- Tabbed Plot Container -->
+        <div class="tabs-container">
+            <ul class="nav nav-tabs" id="plot-tabs">
+                <!-- Tabs will be added here dynamically -->
+                <li class="nav-item">
+                    <button class="new-tab-button" id="new-tab-button">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="plots-container">
+                <!-- Plot content will be added here dynamically -->
+            </div>
+        </div>
 
         <div id="add-view-container" style="display: none;">
             <button id="add-view" class="add-view-button">
@@ -253,6 +268,9 @@
             clearSelectionsButton = document.getElementById('clear-selections');
             addViewButton = document.getElementById('add-view');
 
+            // Initialize the tabs container
+            initTabsContainer();
+
             exportTableButton.addEventListener('click', exportTableToTSV);
             clearSelectionsButton.addEventListener('click', clearSelections);
             addViewButton.addEventListener('click', addNewPlot);
@@ -302,6 +320,17 @@
 
                     // Trigger change event to populate amplicon
                     referenceSelect.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // Add the new tab button event listener
+            document.getElementById('new-tab-button').addEventListener('click', function () {
+                // Create new plot using the addNewPlot function from snipe-explore.js
+                const plotId = addNewPlot();
+
+                // Make sure to activate the newly created tab
+                if (plotId) {
+                    activateTab(plotId);
                 }
             });
 
@@ -741,7 +770,7 @@
 
                 // Add newExperiments to selectedPoints
                 if (newExperiments.length > 0) {
-                    {{/*  selectedPoints = selectedPoints.concat(newExperiments);  */}}
+                    { {/*  selectedPoints = selectedPoints.concat(newExperiments);  */ } }
                     operationsLog.push(`Added ${newExperiments.length} new experiments to selected points.`);
                     console.log('Selected Points after append:', selectedPoints);
                 } else {
@@ -1024,7 +1053,7 @@
             updateTable();
             highlightSelectedPoints();
             */
-            
+
             // Hide the loading modal and show a success notification
             document.getElementById('loading-modal').style.display = 'none';
             showNotification('User data loaded successfully.');
@@ -1145,166 +1174,7 @@
         }
 
 
-
-        function addNewPlot(config = {}) {
-            plotCounter++;
-            const plotId = `plot-${plotCounter}`;
-            let plotHTML = `
-                <!-- Plot Container -->
-                <div class="plot-container mt-4" id="container-${plotId}">
-                    <!-- Plot Frame -->
-                    <div class="card">
-                        <!-- Title Bar -->
-                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-1">
-                            <!-- Left Side (Plot Type and Export) -->
-                            <div class="d-flex align-items-center">
-                                <!-- Plot Type Dropdown -->
-                                <select id="plot-type-${plotId}" class="form-control form-control-sm mr-2" style="width: auto;">
-                                    <option value="scatter">Scatter Plot</option>
-                                    <option value="histogram">Histogram</option>
-                                    <option value="boxplot">Boxplot</option>
-                                </select>
-                                <!-- Export Dropdown -->
-                                <div class="dropdown">
-                                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="export-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Export
-                                    </button>
-                                    <div class="dropdown-menu" aria-labelledby="export-menu-${plotId}">
-                                        <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
-                                        <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
-                                        <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Centered Plot Title -->
-                            <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
-                            <!-- Right-Aligned Control Buttons -->
-                            <div class="plot-window-controls d-flex align-items-center">
-                                <!-- Info Button -->
-                                <button id="info-plot-${plotId}" class="btn btn-light btn-sm mr-1 plot-info-button" title="Info" data-plot-id="${plotId}">
-                                    <i class="fa fa-info-circle"></i>
-                                </button>
-
-                                <!-- Help Button -->
-                                <button id="help-button-${plotId}" class="btn btn-light btn-sm mr-1" title="Help">?</button>
-                                <!-- Filter Button -->
-                                <button id="filter-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Filter">
-                                    <i class="fa fa-filter"></i>
-                                </button>
-                                <!-- Minimize, Maximize, Clone, and Close -->
-                                <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Minimize">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                                <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none mr-1" title="Maximize">
-                                    <i class="fa fa-window-maximize"></i>
-                                </button>
-                                <button id="clone-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Clone">
-                                    <i class="fa fa-clone"></i>
-                                </button>
-                                <button id="close-plot-${plotId}" class="btn btn-danger btn-sm" title="Close">
-                                    <i class="fa fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <!-- Card Body -->
-                        <div class="card-body" id="body-${plotId}">
-                            <!-- Dynamic Controls will be rendered here -->
-                            <div id="dynamic-controls-${plotId}" class="mt-3"></div>
-                            <!-- Counts Display -->
-                            <div id="counts-display-${plotId}" class="counts-display mt-2">
-                                <strong>Points displayed:</strong> <span id="points-displayed-${plotId}">0</span>,
-                                <strong>Points selected:</strong> <span id="points-selected-${plotId}">0</span>,
-                                <strong>Points per assay type:</strong> <span id="assay-type-counts-${plotId}"></span>
-                            </div>
-                            <!-- Plot Area -->
-                            <div class="plot-area" style="position: relative;">
-                                <div id="${plotId}" class="plot"></div>
-                                <!-- Floating Search Button -->
-                                <div class="floating-search-button" id="floating-search-button-${plotId}">
-                                    <button class="search-button" id="search-button-${plotId}">
-                                        <i class="fa fa-search"></i> Search by accession
-                                    </button>
-                                    <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
-                                </div>
-                            </div>
-                            <!-- Title, Notes, and Export Button -->
-                            <div class="row mt-3">
-                                <div class="col-md-6">
-                                    <label for="title-${plotId}">Plot Title:</label>
-                                    <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="notes-${plotId}">Notes:</label>
-                                    <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            plotsContainer.insertAdjacentHTML('beforeend', plotHTML);
-
-            const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
-            const titleInput = document.getElementById(`title-${plotId}`);
-            const plotTitleDisplay = document.getElementById(`plot-title-display-${plotId}`);
-
-            // Set initial values if config is provided
-            if (config.plotType) {
-                plotTypeSelect.value = config.plotType;
-            }
-
-            // Attach event listeners
-            plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId, {}));
-            titleInput.addEventListener('input', () => {
-                plotTitleDisplay.textContent = titleInput.value || `Plot ${plotCounter}`;
-            });
-
-            // Set title and notes if provided
-            if (config.title) {
-                titleInput.value = config.title;
-                plotTitleDisplay.textContent = config.title;
-            }
-            if (config.notes) {
-                document.getElementById(`notes-${plotId}`).value = config.notes;
-            }
-
-            // Render dynamic controls with config
-            renderDynamicControls(plotId, config);
-
-            // Attach event listener to the dropdown items
-            document.getElementById(`save-as-png-${plotId}`).addEventListener('click', () => savePlotAsPNG(plotId));
-            document.getElementById(`export-tsv-${plotId}`).addEventListener('click', () => exportCurrentViewAsTSV(plotId));
-            document.getElementById(`export-selected-tsv-${plotId}`).addEventListener('click', () => exportSelectedPointsAsTSV(plotId));
-
-            document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints(plotId));
-            document.getElementById(`search-input-${plotId}`).addEventListener('keyup', function (event) {
-                if (event.key === 'Enter') {
-                    searchAndSelectPoints(plotId);
-                }
-            });
-
-            // Event listeners for control buttons
-            document.getElementById(`minimize-plot-${plotId}`).addEventListener('click', () => minimizePlot(plotId));
-            document.getElementById(`maximize-plot-${plotId}`).addEventListener('click', () => maximizePlot(plotId));
-            document.getElementById(`close-plot-${plotId}`).addEventListener('click', () => closePlot(plotId));
-            document.getElementById(`clone-plot-${plotId}`).addEventListener('click', () => clonePlot(plotId));
-            document.getElementById(`filter-plot-${plotId}`).addEventListener('click', () => openFilterModal(plotId));
-
-            // Set plotFilters for this plot if filters are provided in config
-            if (config.filters) {
-                plotFilters[plotId] = config.filters;
-            } else {
-                plotFilters[plotId] = [];
-            }
-
-            // Initialize plot
-            updatePlot(plotId);
-        }
-
-
-
         function clonePlot(plotId) {
-
 
             // Gather the configuration of the plot with id plotId
             const plotType = document.getElementById(`plot-type-${plotId}`).value;
@@ -3406,3 +3276,5 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
+</html>

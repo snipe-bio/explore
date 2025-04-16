@@ -1150,3 +1150,298 @@ function exportPlot(plotId) {
         link.click();
     });
 }
+
+// Tab Management Functions
+function initTabsContainer() {
+    // Ensure the container exists
+    const tabsContainer = document.querySelector('.tabs-container');
+    if (!tabsContainer) return;
+
+    // Initialize the tabs UI
+    const tabsList = document.getElementById('plot-tabs');
+    const tabsContent = document.getElementById('plots-container');
+
+    // Empty both containers except for the new tab button
+    const newTabButton = tabsList.querySelector('.nav-item:last-child');
+    tabsList.innerHTML = '';
+    tabsList.appendChild(newTabButton);
+
+    tabsContent.innerHTML = '';
+}
+
+function addNewPlot(config = {}) {
+    plotCounter++;
+    const plotId = `plot-${plotCounter}`;
+    const tabId = `tab-${plotId}`;
+    const contentId = `content-${plotId}`;
+
+    // Create a new tab
+    const tabsList = document.getElementById('plot-tabs');
+    const newTabButton = tabsList.querySelector('.nav-item:last-child');
+
+    const tabItem = document.createElement('li');
+    tabItem.className = 'nav-item';
+    tabItem.innerHTML = `
+        <a class="nav-link" id="${tabId}" data-plot-id="${plotId}">
+            Plot ${plotCounter}
+            <span class="tab-close" data-plot-id="${plotId}">&times;</span>
+        </a>
+    `;
+
+    // Insert the tab before the new tab button
+    tabsList.insertBefore(tabItem, newTabButton);
+
+    // Create the tab content
+    const tabsContent = document.getElementById('plots-container');
+
+    const contentDiv = document.createElement('div');
+    contentDiv.id = contentId;
+    contentDiv.className = 'tab-pane';
+    contentDiv.innerHTML = `
+        <!-- Plot Container -->
+        <div class="plot-container mt-4" id="container-${plotId}">
+            <!-- Plot Frame -->
+            <div class="card">
+                <!-- Title Bar -->
+                <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-1">
+                    <!-- Left Side (Plot Type and Export) -->
+                    <div class="d-flex align-items-center">
+                        <!-- Plot Type Dropdown -->
+                        <select id="plot-type-${plotId}" class="form-control form-control-sm mr-2" style="width: auto;">
+                            <option value="scatter">Scatter Plot</option>
+                            <option value="histogram">Histogram</option>
+                            <option value="boxplot">Boxplot</option>
+                        </select>
+                        <!-- Export Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="export-menu-${plotId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Export
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="export-menu-${plotId}">
+                                <button class="dropdown-item" id="save-as-png-${plotId}">Save as PNG</button>
+                                <button class="dropdown-item" id="export-tsv-${plotId}">Export table for current view</button>
+                                <button class="dropdown-item" id="export-selected-tsv-${plotId}">Export table for selected points in current view</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Centered Plot Title -->
+                    <h5 id="plot-title-display-${plotId}" class="mb-0 text-center">Plot ${plotCounter}</h5>
+                    <!-- Right-Aligned Control Buttons -->
+                    <div class="plot-window-controls d-flex align-items-center">
+                        <!-- Info Button -->
+                        <button id="info-plot-${plotId}" class="btn btn-light btn-sm mr-1 plot-info-button" title="Info" data-plot-id="${plotId}">
+                            <i class="fa fa-info-circle"></i>
+                        </button>
+
+                        <!-- Help Button -->
+                        <button id="help-button-${plotId}" class="btn btn-light btn-sm mr-1" title="Help">?</button>
+                        <!-- Filter Button -->
+                        <button id="filter-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Filter">
+                            <i class="fa fa-filter"></i>
+                        </button>
+                        <!-- Minimize, Maximize, Clone, and Close -->
+                        <button id="minimize-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Minimize">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <button id="maximize-plot-${plotId}" class="btn btn-light btn-sm d-none mr-1" title="Maximize">
+                            <i class="fa fa-window-maximize"></i>
+                        </button>
+                        <button id="clone-plot-${plotId}" class="btn btn-light btn-sm mr-1" title="Clone">
+                            <i class="fa fa-clone"></i>
+                        </button>
+                        <button id="close-plot-${plotId}" class="btn btn-light btn-sm" title="Close">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body" id="body-${plotId}">
+                    <!-- Dynamic Controls will be rendered here -->
+                    <div id="dynamic-controls-${plotId}" class="mt-3"></div>
+                    <!-- Counts Display -->
+                    <div id="counts-display-${plotId}" class="counts-display mt-2">
+                        <strong>Points displayed:</strong> <span id="points-displayed-${plotId}">0</span>,
+                        <strong>Points selected:</strong> <span id="points-selected-${plotId}">0</span>,
+                        <strong>Points per assay type:</strong> <span id="assay-type-counts-${plotId}"></span>
+                    </div>
+                    <!-- Plot Area -->
+                    <div class="plot-area" style="position: relative;">
+                        <div id="${plotId}" class="plot"></div>
+                        <!-- Floating Search Button -->
+                        <div class="floating-search-button" id="floating-search-button-${plotId}">
+                            <button class="search-button" id="search-button-${plotId}">
+                                <i class="fa fa-search"></i> Search by accession
+                            </button>
+                            <input type="text" class="search-input" id="search-input-${plotId}" placeholder="Search...">
+                        </div>
+                    </div>
+                    <!-- Title, Notes, and Export Button -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="title-${plotId}">Plot Title:</label>
+                            <input type="text" id="title-${plotId}" class="form-control" placeholder="Enter plot title...">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="notes-${plotId}">Notes:</label>
+                            <textarea id="notes-${plotId}" class="form-control" placeholder="Enter your notes here..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    tabsContent.appendChild(contentDiv);
+
+    // Activate the new tab
+    activateTab(plotId);
+
+    // Set up event listeners for tab interaction
+    document.getElementById(tabId).addEventListener('click', (e) => {
+        // Prevent activation when clicking the close button
+        if (!e.target.classList.contains('tab-close')) {
+            activateTab(plotId);
+        }
+    });
+
+    // Close tab event
+    const closeBtn = document.querySelector(`#${tabId} .tab-close`);
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent tab activation
+            closeTab(plotId);
+        });
+    }
+
+    const plotTypeSelect = document.getElementById(`plot-type-${plotId}`);
+    const titleInput = document.getElementById(`title-${plotId}`);
+    const plotTitleDisplay = document.getElementById(`plot-title-display-${plotId}`);
+
+    // Set initial values if config is provided
+    if (config.plotType) {
+        plotTypeSelect.value = config.plotType;
+    }
+
+    // Attach event listeners
+    plotTypeSelect.addEventListener('change', () => renderDynamicControls(plotId, {}));
+    titleInput.addEventListener('input', () => {
+        const newTitle = titleInput.value || `Plot ${plotCounter}`;
+        plotTitleDisplay.textContent = newTitle;
+
+        // Also update the tab title
+        const tabLink = document.getElementById(tabId);
+        if (tabLink) {
+            tabLink.childNodes[0].nodeValue = newTitle + ' '; // Add a space for the close button
+        }
+    });
+
+    // Set title and notes if provided
+    if (config.title) {
+        titleInput.value = config.title;
+        plotTitleDisplay.textContent = config.title;
+
+        // Update tab title
+        const tabLink = document.getElementById(tabId);
+        if (tabLink) {
+            tabLink.childNodes[0].nodeValue = config.title + ' '; // Add a space for the close button
+        }
+    }
+
+    if (config.notes) {
+        document.getElementById(`notes-${plotId}`).value = config.notes;
+    }
+
+    // Render dynamic controls with config
+    renderDynamicControls(plotId, config);
+
+    // Attach event listener to the dropdown items
+    document.getElementById(`save-as-png-${plotId}`).addEventListener('click', () => savePlotAsPNG(plotId));
+    document.getElementById(`export-tsv-${plotId}`).addEventListener('click', () => exportCurrentViewAsTSV(plotId));
+    document.getElementById(`export-selected-tsv-${plotId}`).addEventListener('click', () => exportSelectedPointsAsTSV(plotId));
+
+    document.getElementById(`search-button-${plotId}`).addEventListener('click', () => searchAndSelectPoints(plotId));
+    document.getElementById(`search-input-${plotId}`).addEventListener('keyup', function (event) {
+        if (event.key === 'Enter') {
+            searchAndSelectPoints(plotId);
+        }
+    });
+
+    // Event listeners for control buttons
+    document.getElementById(`minimize-plot-${plotId}`).addEventListener('click', () => minimizePlot(plotId));
+    document.getElementById(`maximize-plot-${plotId}`).addEventListener('click', () => maximizePlot(plotId));
+    document.getElementById(`close-plot-${plotId}`).addEventListener('click', () => closeTab(plotId));
+    document.getElementById(`clone-plot-${plotId}`).addEventListener('click', () => clonePlot(plotId));
+    document.getElementById(`filter-plot-${plotId}`).addEventListener('click', () => openFilterModal(plotId));
+
+    // Set plotFilters for this plot if filters are provided in config
+    if (config.filters) {
+        plotFilters[plotId] = config.filters;
+    } else {
+        plotFilters[plotId] = [];
+    }
+
+    // Initialize plot
+    updatePlot(plotId);
+
+    return plotId;
+}
+
+function activateTab(plotId) {
+    // Deactivate all tabs
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Activate the selected tab
+    const tabId = `tab-${plotId}`;
+    const contentId = `content-${plotId}`;
+
+    document.getElementById(tabId).classList.add('active');
+    document.getElementById(contentId).classList.add('active');
+
+    // Redraw any plots that might need it after becoming visible
+    setTimeout(() => {
+        const plotDiv = document.getElementById(plotId);
+        if (plotDiv && plotDiv.data) {
+            Plotly.relayout(plotDiv, {});
+        }
+    }, 10);
+}
+
+function closeTab(plotId) {
+    const tabId = `tab-${plotId}`;
+    const contentId = `content-${plotId}`;
+    const tab = document.getElementById(tabId);
+    const content = document.getElementById(contentId);
+
+    if (!tab || !content) return;
+
+    // Check if this is the active tab
+    const isActive = tab.classList.contains('active');
+
+    // Remove tab and content
+    tab.parentNode.remove();
+    content.remove();
+
+    // If this was the active tab, activate another one if available
+    if (isActive) {
+        const firstTab = document.querySelector('.nav-link[data-plot-id]');
+        if (firstTab) {
+            const firstPlotId = firstTab.getAttribute('data-plot-id');
+            activateTab(firstPlotId);
+        }
+    }
+
+    // Clean up any resources associated with this plot
+    if (plotFilters[plotId]) {
+        delete plotFilters[plotId];
+    }
+}
+
+function closePlot(plotId) {
+    // Redirect to use the tab close functionality
+    closeTab(plotId);
+}
