@@ -1425,7 +1425,10 @@ function closeTab(plotId) {
     const isActive = tab.classList.contains('active');
 
     // Remove tab and content
-    tab.parentNode.remove();
+    const tabParent = tab.closest('li');
+    if (tabParent) {
+        tabParent.remove();
+    }
     content.remove();
 
     // If this was the active tab, activate another one if available
