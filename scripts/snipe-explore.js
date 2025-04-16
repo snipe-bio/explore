@@ -1331,8 +1331,10 @@ function addNewPlot(config = {}) {
         // Also update the tab title
         const tabLink = document.getElementById(tabId);
         if (tabLink) {
-            tabLink.childNodes[0].nodeValue = newTitle + ' '; // Add a space for the close button
-        }
+            const titleSpan = tabLink.querySelector('.tab-title');
+            if (titleSpan) {
+                titleSpan.textContent = newTitle;
+            }
     });
 
     // Set title and notes if provided
